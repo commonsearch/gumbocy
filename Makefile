@@ -23,5 +23,5 @@ test: build_ext
 gumbo_install:
 	curl -L https://github.com/google/gumbo-parser/archive/v$(GUMBO_VERSION).tar.gz > gumbo.tgz
 	tar zxf gumbo.tgz
-	cd gumbo-parser-$(GUMBO_VERSION) && ./autogen.sh && ./configure && make && make install
+	cd gumbo-parser-$(GUMBO_VERSION) && ./autogen.sh && ./configure && make && sudo make install
 	rm -rf gumbo-parser-$(GUMBO_VERSION) gumbo.tgz
