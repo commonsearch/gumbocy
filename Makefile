@@ -17,3 +17,10 @@ virtualenv:
 
 test: build_ext
 	py.test tests/ -vs
+
+gumbo_install:
+	curl https://github.com/google/gumbo-parser/archive/v$(GUMBO_VERSION).tar.gz >> gumbo.tgz
+	tar zxf gumbo.tgz
+	cd gumbo-parser-$(GUMBO_VERSION)
+  	./autogen.sh && ./configure && make && make install
+  	cd .. && rm -rf gumbo-parser-$(GUMBO_VERSION) gumbo.tgz

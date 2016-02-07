@@ -1,0 +1,30 @@
+
+# Use container-based infrastructure
+# https://docs.travis-ci.com/user/workers/container-based-infrastructure/
+sudo: false
+
+language: python
+python:
+  - "2.7"
+
+env:
+  - GUMBO_VERSION=0.10.1
+
+before_script:
+  - make gumbo_install
+
+install:
+  - pip install -r requirements.txt
+
+addons:
+  apt:
+    packages:
+      - automake
+      - gcc
+      - curl
+
+script:
+  - make test
+
+notifications:
+  irc: "chat.freenode.net#commonsearch"
