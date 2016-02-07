@@ -1,0 +1,6 @@
+include *.md
+include *.c
+include *.pyx
+include *.pyd
+include LICENSE
+include Makefile
