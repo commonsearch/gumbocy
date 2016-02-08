@@ -11,7 +11,7 @@ It differs from the [official Python binding](https://github.com/google/gumbo-pa
 
 ## Installation
 
-The only dependency is [Gumbo](https://github.com/google/gumbo-parser), which should be installed prior to anything else.
+The only dependency is [Gumbo](https://github.com/google/gumbo-parser). You need to install it (possibly with `make gumbo_build`) if you are not using the Docker method below.
 
 ### From PyPI
 
@@ -19,9 +19,20 @@ The only dependency is [Gumbo](https://github.com/google/gumbo-parser), which sh
 pip install gumbocy
 ```
 
-### From source
+### From source with Docker
 
 Clone this repository, then:
+
+```
+make docker_build
+make docker_ssh
+```
+
+You will end up in a container with Gumbo already installed.
+
+### From source without Docker
+
+This is an unsupported method.
 
 ```
 make virtualenv

@@ -11,10 +11,8 @@ python:
 env:
   - GUMBO_VERSION=0.10.1
 
-before_script:
-  - make gumbo_install
-
 install:
+  - make gumbo_build
   - pip install -r requirements.txt
 
 cache:

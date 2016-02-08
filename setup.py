@@ -5,7 +5,9 @@ from distutils.extension import Extension
 ext_modules = [
     Extension("gumbocy",
               ["gumbocy.c"],
+              # extra_link_args=['-static'],
               libraries=["gumbo"])
+
 ]
 
 setup(
