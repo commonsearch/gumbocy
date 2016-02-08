@@ -1,14 +1,30 @@
 from distutils.core import setup
 from distutils.extension import Extension
+import os
 
-# Use "make cythonize" to build the c file from the .pyx source
-ext_modules = [
-    Extension("gumbocy",
-              ["gumbocy.c"],
-              # extra_link_args=['-static'],
-              libraries=["gumbo"])
+# gumbocy.c will be present when installing from the source distribution on PyPI
+if os.path.isfile("gumbocy.c"):
 
-]
+  # Use "make cythonize" to build the c file from the .pyx source
+  ext_modules = [
+      Extension("gumbocy",
+                ["gumbocy.c"],
+                # extra_link_args=['-static'],
+                libraries=["gumbo"])
+
+  ]
+
+# If the .c file is missing, we must be in local or installing from GitHub.
+# In this case, we need Cython to be already installed.
+else:
+  from Cython.Build import cythonize
+
+  ext_modules = cythonize([
+      Extension("gumbocy",
+                ["gumbocy.pyx"],
+                libraries=["gumbo"])
+  ])
+
 
 setup(
   name="gumbocy",
