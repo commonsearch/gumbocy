@@ -66,3 +66,4 @@ gumbocy.c
 gumbocy.html
 venv/
 *.rst
+gumbo-parser

@@ -6,7 +6,9 @@ sudo: false
 language: python
 python:
   - "2.7"
-  - "pypy"
+
+# https://github.com/commonsearch/gumbocy/issues/5
+#  - "pypy"
 
 env:
   - GUMBO_VERSION=0.10.1
