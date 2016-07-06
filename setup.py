@@ -3,27 +3,35 @@ from distutils.extension import Extension
 import os
 
 # gumbocy.c will be present when installing from the source distribution on PyPI
-if os.path.isfile("gumbocy.c"):
+if os.path.isfile("gumbocy.cpp"):
 
   # Use "make cythonize" to build the c file from the .pyx source
   ext_modules = [
       Extension("gumbocy",
-                ["gumbocy.c"],
-                # extra_link_args=['-static'],
-                libraries=["gumbo"])
+                ["gumbocy.cpp"],
+                libraries=["gumbo"],
+                language="c++",
+                extra_compile_args=["-std=c++11", '-O3', '-static-libstdc++'],
+                extra_link_args=["-std=c++11"])  # , "-static"
 
   ]
 
-# If the .c file is missing, we must be in local or installing from GitHub.
-# In this case, we need Cython to be already installed.
 else:
-  from Cython.Build import cythonize
+  raise Exception("Must run 'make cythonize' first!")
 
-  ext_modules = cythonize([
-      Extension("gumbocy",
-                ["gumbocy.pyx"],
-                libraries=["gumbo"])
-  ])
+# # If the .c file is missing, we must be in local or installing from GitHub.
+# # In this case, we need Cython to be already installed.
+# else:
+#   from Cython.Build import cythonize
+
+#   ext_modules = cythonize([
+#       Extension("gumbocy",
+#                 ["gumbocy.pyx"],
+#                 libraries=["gumbo"],
+#                 language="c++",
+#                 extra_compile_args=["-std=c++11"],
+#                 extra_link_args=["-std=c++11"])
+#   ])
 
 
 setup(
@@ -40,8 +48,8 @@ setup(
     "Programming Language :: Python :: 2.7",
     # 'Development Status :: 1 - Planning',
     # 'Development Status :: 2 - Pre-Alpha',
-    'Development Status :: 3 - Alpha',
-    # 'Development Status :: 4 - Beta',
+    # 'Development Status :: 3 - Alpha',
+    'Development Status :: 4 - Beta',
     # 'Development Status :: 5 - Production/Stable',
     # 'Development Status :: 6 - Mature',
     # 'Development Status :: 7 - Inactive',

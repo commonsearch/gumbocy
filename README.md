@@ -25,7 +25,7 @@ Clone this repository, then:
 
 ```
 make docker_build
-make docker_ssh
+make docker_shell
 ```
 
 You will end up in a container with Gumbo already installed.

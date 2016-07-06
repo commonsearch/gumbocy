@@ -15,7 +15,9 @@ def test_basic():
         </html >
     """
 
-    nodes = listnodes(html, {"attributes_whitelist": ["href"]})
+    iterations = 1  # 300000
+    for _ in range(0, iterations):
+        nodes = listnodes(html, {"attributes_whitelist": ["href"]})
     assert nodes == [
         (0, "html"),
             (1, "head"),
@@ -65,4 +67,38 @@ def test_ignore():
             (1, "head"),
             (1, "body"),
                 (2, None, " Hello ")
+    ]
+
+
+def test_head_only():
+    html = """
+        <html>
+            <HEAD><title>HW</title></head>
+            <body> Hello <a href="http://example.com" id="i">world</a><br class="c ign"/></body>
+        </html >
+    """
+
+    nodes = listnodes(html, {
+        "head_only": True
+    })
+    assert nodes == [
+        (0, "html"),
+            (1, "head"),
+                (2, "title"),
+                    (3, None, "HW")
+    ]
+
+    html = """
+        <html>
+            <p>test</p><title>HW</title>
+            <body> Hello <a href="http://example.com" id="i">world</a><br class="c ign"/></body>
+        </html >
+    """
+
+    nodes = listnodes(html, {
+        "head_only": True
+    })
+    assert nodes == [
+        (0, "html"),
+            (1, "head")
     ]

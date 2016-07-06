@@ -1,10 +1,10 @@
 GUMBO_VERSION ?= 0.10.1
 
 clean:
-	rm -rf *.so build *.c *.html dist .cache tests/__pycache__ *.rst
+	rm -rf *.so build *.c *.cpp *.html dist .cache tests/__pycache__ *.rst
 
 cythonize:
-	cython --warning-extra --annotate gumbocy.pyx
+	cython --cplus -2 --warning-extra --annotate gumbocy.pyx
 
 build_ext: clean cythonize
 	python setup.py build_ext --inplace -Igumbo-parser/src -Lgumbo-parser/.libs -Rgumbo-parser/.libs
@@ -31,5 +31,5 @@ gumbo_build:
 docker_build:
 	docker build -t commonsearch/gumbocy .
 
-docker_ssh:
+docker_shell:
 	docker run -v "$(PWD):/cosr/gumbocy:rw" -w /cosr/gumbocy -i -t commonsearch/gumbocy bash
