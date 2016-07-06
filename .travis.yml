@@ -11,7 +11,7 @@ before_install:
   - docker ps
   - docker info
   - docker version
-  - docker pull commonsearch/gumbocy
+#  - docker pull commonsearch/gumbocy
   - make docker_build
 
 script:
