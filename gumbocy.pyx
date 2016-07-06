@@ -35,6 +35,8 @@ cdef class HTMLParser:
     cdef bint _traverse_node(self, int level, gumbocy.GumboNode* node):
         """ Traverses the node tree. Return 1 to stop at this level """
 
+        cdef GumboStringPiece gsp
+
         if level > self.nesting_limit:
             return 0
 
@@ -52,6 +54,13 @@ cdef class HTMLParser:
                 return 0
 
             tag_name = gumbocy.gumbo_normalized_tagname(node.v.element.tag)
+
+            # When we find an unknown tag, find its tag_name in the buffer
+            if tag_name == b"":
+                gsp = node.v.element.original_tag
+                gumbo_tag_from_original_text(&gsp)
+                py_tag_name = str(gsp.data)[0:gsp.length].lower()  # TODO try to do that only in C!
+                tag_name = <const char *> py_tag_name
 
             if self.has_attributes_whitelist:
 
@@ -136,7 +145,9 @@ cdef class HTMLParser:
         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_SPAN)
 
         for tag_name in options.get("tags_ignore", []):
-            self.tags_ignore.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
+            tag = gumbocy.gumbo_tag_enum(tag_name)
+            if tag != gumbocy.GUMBO_TAG_UNKNOWN:
+                self.tags_ignore.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
 
         self.nodes = []
 

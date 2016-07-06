@@ -37,7 +37,7 @@ else:
 setup(
   name="gumbocy",
   version="0.1",
-  description="Python binding for gumbo-parser using Cython",
+  description="Python binding for gumbo-parser (an HTML5-compliant parser) using Cython",
   author="Common Search contributors",
   license="Apache License, Version 2.0",
   url="https://github.com/commonsearch/gumbocy",
@@ -53,6 +53,8 @@ setup(
     # 'Development Status :: 5 - Production/Stable',
     # 'Development Status :: 6 - Mature',
     # 'Development Status :: 7 - Inactive',
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
     "Environment :: Other Environment",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",

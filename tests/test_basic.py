@@ -102,3 +102,26 @@ def test_head_only():
         (0, "html"),
             (1, "head")
     ]
+
+
+def test_unknown_tags():
+    html = """
+        <html>
+            <head></head>
+            <body><NEW_TAG class='xx'>inline text</NEW_TAG><new_tag_2 /></body>
+        </html >
+    """
+
+    nodes = listnodes(html, {
+        "attributes_whitelist": ["class"],
+        "tags_ignore": "new_tag"  # We can't ignore unknown tags at the Gumbocy level (for now?)
+    })
+
+    assert nodes == [
+        (0, "html"),
+            (1, "head"),
+            (1, "body"),
+                (2, "new_tag", {'class': frozenset(['xx'])}),
+                    (3, None, "inline text"),
+                (2, "new_tag_2")
+    ]

@@ -65,7 +65,7 @@ print parser.listnodes(options={})
 => [(0, "html"), (1, "head"), (2, "title"), (3, None, "Hello"), (1, "body"), (2, None, "world!")]
 ```
 
-For more examples, see the tests.
+For more usage examples, see the [tests](https://github.com/commonsearch/gumbocy/blob/master/tests/test_basic.py).
 
 ## Options reference
 
