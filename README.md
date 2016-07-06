@@ -30,6 +30,13 @@ make docker_shell
 
 You will end up in a container with Gumbo already installed.
 
+
+You can then run the tests for Python, 2.7 and PyPy:
+```
+make docker_test
+GUMBOCY_PYTHON_VERSION=pypy make docker_test
+```
+
 ### From source without Docker
 
 This is an unsupported method.

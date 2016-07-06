@@ -1,35 +1,21 @@
+sudo: required
 
-# Use container-based infrastructure
-# https://docs.travis-ci.com/user/workers/container-based-infrastructure/
-sudo: false
-
-language: python
-python:
-  - "2.7"
-
-# https://github.com/commonsearch/gumbocy/issues/5
-#  - "pypy"
+services:
+  - docker
 
 env:
-  - GUMBO_VERSION=0.10.1
+  - GUMBOCY_PYTHON_VERSION=py27
+  - GUMBOCY_PYTHON_VERSION=pypy
 
-install:
-  - make gumbo_build
-  - pip install -r requirements.txt
-
-cache:
-  directories:
-    - $HOME/.cache/pip
-
-addons:
-  apt:
-    packages:
-      - automake
-      - gcc
-      - curl
+before_install:
+  - docker ps
+  - docker info
+  - docker version
+  - docker pull commonsearch/gumbocy
+  - make docker_build
 
 script:
-  - make test
+  - make docker_test
 
 notifications:
   irc: "chat.freenode.net#commonsearch"

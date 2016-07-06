@@ -9,9 +9,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 	libtool \
 	ca-certificates \
 	python-pip \
-	python-dev
-
-
+	python-dev \
+	bzip2
 
 RUN mkdir -p /cosr/gumbocy
 
@@ -35,3 +34,13 @@ RUN apt-get install -y --no-install-recommends \
 ADD requirements-benchmark.txt /requirements-benchmark.txt
 RUN pip install -r requirements-benchmark.txt
 RUN ln -s /usr/local/lib/libgumbo.so /usr/local/lib/python2.7/dist-packages/gumbo/libgumbo.so
+
+
+# Install PyPy
+RUN curl -L 'https://bitbucket.org/squeaky/portable-pypy/downloads/pypy-5.3.1-linux_x86_64-portable.tar.bz2' -o /pypy.tar.bz2 && \
+  mkdir -p /opt/pypy/ && tar jxvf /pypy.tar.bz2 -C /opt/pypy/  --strip-components=1 && \
+  rm /pypy.tar.bz2
+
+RUN /opt/pypy/bin/pypy -m ensurepip
+RUN /opt/pypy/bin/pip install -r /requirements.txt
+RUN /opt/pypy/bin/pip install -r /requirements-benchmark.txt
