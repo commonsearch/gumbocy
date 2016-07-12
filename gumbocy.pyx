@@ -12,7 +12,6 @@ _RE_SPLIT_WHITESPACE = re.compile(r"\s+")
 
 cdef class HTMLParser:
 
-    cdef char* html
     cdef gumbocy.GumboOutput* output
     cdef list nodes
 
@@ -29,8 +28,33 @@ cdef class HTMLParser:
     cdef frozenset ids_ignore
 
 
-    def __cinit__(self, char* html):
-        self.html = html
+    def __cinit__(self, dict options=None):
+
+        options = options or {}
+        self.nesting_limit = options.get("nesting_limit", 999)
+        self.head_only = options.get("head_only")
+
+        self.has_classes_ignore = options.get("classes_ignore")
+        if self.has_classes_ignore:
+            self.classes_ignore = frozenset(options["classes_ignore"])
+
+        self.has_ids_ignore = options.get("ids_ignore")
+        if self.has_ids_ignore:
+            self.ids_ignore = frozenset(options["ids_ignore"])
+
+        self.has_attributes_whitelist = options.get("attributes_whitelist")
+        if self.has_attributes_whitelist:
+            self.attributes_whitelist = frozenset(options.get("attributes_whitelist") or [])
+
+        self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_BODY)
+        self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_P)
+        self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_DIV)
+        self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_SPAN)
+
+        for tag_name in options.get("tags_ignore", []):
+            tag = gumbocy.gumbo_tag_enum(tag_name)
+            if tag != gumbocy.GUMBO_TAG_UNKNOWN:
+                self.tags_ignore.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
 
     cdef bint _traverse_node(self, int level, gumbocy.GumboNode* node):
         """ Traverses the node tree. Return 1 to stop at this level """
@@ -116,38 +140,13 @@ cdef class HTMLParser:
 
         return 0
 
-    def parse(self):
+    def parse(self, char* html):
         """ Do the actual parsing of the HTML with gumbo """
-        self.output = gumbocy.gumbo_parse(self.html)
 
-    def listnodes(self, dict options=None):
+        self.output = gumbocy.gumbo_parse(html)
+
+    def listnodes(self):
         """ Return the nodes as a flat list of tuples """
-
-        options = options or {}
-        self.nesting_limit = options.get("nesting_limit", 999)
-        self.head_only = options.get("head_only")
-
-        self.has_classes_ignore = options.get("classes_ignore")
-        if self.has_classes_ignore:
-            self.classes_ignore = frozenset(options["classes_ignore"])
-
-        self.has_ids_ignore = options.get("ids_ignore")
-        if self.has_ids_ignore:
-            self.ids_ignore = frozenset(options["ids_ignore"])
-
-        self.has_attributes_whitelist = options.get("attributes_whitelist")
-        if self.has_attributes_whitelist:
-            self.attributes_whitelist = frozenset(options.get("attributes_whitelist") or [])
-
-        self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_BODY)
-        self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_P)
-        self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_DIV)
-        self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_SPAN)
-
-        for tag_name in options.get("tags_ignore", []):
-            tag = gumbocy.gumbo_tag_enum(tag_name)
-            if tag != gumbocy.GUMBO_TAG_UNKNOWN:
-                self.tags_ignore.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
 
         self.nodes = []
 

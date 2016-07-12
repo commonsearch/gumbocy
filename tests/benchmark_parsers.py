@@ -22,11 +22,11 @@ def bench(name, func):
 
 
 def benchmark_gumbocy():
-    parser = gumbocy.HTMLParser(html)
-    parser.parse()
-    nodes = parser.listnodes(options={
+    parser = gumbocy.HTMLParser(options={
         "attributes_whitelist": ["id", "class", "style"]
     })
+    parser.parse(html)
+    nodes = parser.listnodes()
 
     divs_count = 0
     for node in nodes:

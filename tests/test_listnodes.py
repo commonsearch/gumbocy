@@ -2,9 +2,9 @@ import gumbocy
 
 
 def listnodes(html, options=None):
-    parser = gumbocy.HTMLParser(html)
-    parser.parse()
-    return parser.listnodes(options=options)
+    parser = gumbocy.HTMLParser(options=options)
+    parser.parse(html)
+    return parser.listnodes()
 
 
 def test_basic():
