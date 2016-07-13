@@ -12,9 +12,15 @@ import gumbocy
 import gumbo
 import bs4
 
-url = 'https://raw.githubusercontent.com/whatwg/html/d8717d8831c276ca65d2d44bbf2ce4ce673997b9/source'
-html = requests.get(url).content
-html_unicode = html.decode("utf-8")
+if not os.path.isfile("tests/_benchmark_fixture.html"):
+    url = 'https://raw.githubusercontent.com/whatwg/html/d8717d8831c276ca65d2d44bbf2ce4ce673997b9/source'
+    html = requests.get(url).content
+    with open("tests/_benchmark_fixture.html", "w") as f:
+        f.write(html)
+
+with open("tests/_benchmark_fixture.html", "r") as f:
+    html = f.read()
+    html_unicode = html.decode("utf-8")
 
 
 def bench(name, func):

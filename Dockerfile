@@ -46,7 +46,6 @@ RUN /opt/pypy/bin/pip install -r /requirements.txt
 RUN /opt/pypy/bin/pip install -r /requirements-benchmark.txt
 
 # Install RE2
-ENV RE2_VERSION=636bc71728b7488c43f9441ecfc80bdb1905b3f0
 RUN mkdir -p /tmp/re2 && \
 	curl -L 'https://github.com/google/re2/archive/636bc71728b7488c43f9441ecfc80bdb1905b3f0.tar.gz' -o /tmp/re2/re2.tar.gz && \
 	cd /tmp/re2 && tar zxvf re2.tar.gz --strip-components=1 && \

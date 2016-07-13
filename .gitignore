@@ -67,3 +67,4 @@ gumbocy.html
 venv/
 *.rst
 gumbo-parser
+/tests/_benchmark_fixture.html
