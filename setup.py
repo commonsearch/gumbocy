@@ -36,7 +36,7 @@ else:
 
 setup(
   name="gumbocy",
-  version="0.1",
+  version="0.2.0",
   description="Python binding for gumbo-parser (an HTML5-compliant parser) using Cython",
   author="Common Search contributors",
   license="Apache License, Version 2.0",
