@@ -4,6 +4,7 @@ cimport re2cy
 from libcpp.unordered_set cimport unordered_set
 from cython.operator cimport dereference as deref
 from libcpp.vector cimport vector
+from libcpp.map cimport map
 
 
 cdef extern from "stdio.h":
@@ -12,13 +13,33 @@ cdef extern from "stdio.h":
 cdef vector[re2cy.ArgPtr] *argp = new vector[re2cy.ArgPtr]()
 cdef re2cy.ArgPtr *empty_args = &(deref(argp)[0])
 
-cdef bint re2_search(char* s, re2cy.RE2 &pattern):
+cdef bint re2_search(const char* s, re2cy.RE2 &pattern):
     return re2cy.RE2.PartialMatchN(s, pattern, empty_args, 0)
 
 cdef re2cy.RE2 *_RE2_SEARCH_STYLE_HIDDEN = new re2cy.RE2(r"(display\s*\:\s*none)|(visibility\s*\:\s*hidden)")
-cdef re2cy.RE2 *_RE2_EXTERNAL_HREF = new re2cy.RE2(r"^([A-Za-z0-9\+\.\-]+\:)?\/\/")
+cdef re2cy.RE2 *_RE2_EXTERNAL_HREF = new re2cy.RE2(r"^(?:[A-Za-z0-9\+\.\-]+\:)?\/\/")
+cdef re2cy.RE2 *_RE2_IGNORED_HREF = new re2cy.RE2(r"^(?:javascript|mailto|ftp|about)\:")
 
 _RE_SPLIT_WHITESPACE = re.compile(r"\s+")
+
+ctypedef enum AttributeNames:
+    ATTR_ID,
+    ATTR_ROLE,
+    ATTR_HREF,
+    ATTR_STYLE,
+    ATTR_REL,
+    ATTR_SRC,
+    ATTR_ALT,
+    ATTR_NAME,
+    ATTR_PROPERTY,
+    ATTR_CONTENT
+
+cdef struct Attributes:
+    bint has_classes
+    vector[char*] classes
+    bint has_hidden
+    map[AttributeNames, const char*] values
+
 
 cdef class HTMLParser:
 
@@ -78,62 +99,64 @@ cdef class HTMLParser:
         self.analyze_internal_hyperlinks = bool(options.get("analyze_internal_hyperlinks", True))
         self.analyze_word_groups = bool(options.get("analyze_word_groups", True))
 
+        attributes_whitelist = set(options.get("attributes_whitelist") or [])
+
         classes_ignore = frozenset(options.get("classes_ignore") or [])
         if len(classes_ignore) > 0:
             self.has_classes_ignore = True
             self.classes_ignore = new re2cy.RE2("^(?:" + "|".join(classes_ignore) + ")$")
+            attributes_whitelist.add("class")
 
         ids_ignore = frozenset(options.get("ids_ignore") or [])
         if len(ids_ignore) > 0:
             self.has_ids_ignore = True
             self.ids_ignore = new re2cy.RE2("^(?:" + "|".join(ids_ignore) + ")$")
+            attributes_whitelist.add("id")
 
         classes_hidden = frozenset(options.get("classes_hidden") or [])
         if len(classes_hidden) > 0:
             self.has_classes_hidden = True
             self.classes_hidden = new re2cy.RE2("^(?:" + "|".join(classes_hidden) + ")$")
+            attributes_whitelist.add("class")
 
         ids_hidden = frozenset(options.get("ids_hidden") or [])
         if len(ids_hidden) > 0:
             self.has_ids_hidden = True
             self.ids_hidden = new re2cy.RE2("^(?:" + "|".join(ids_hidden) + ")$")
+            attributes_whitelist.add("id")
 
         classes_boilerplate = frozenset(options.get("classes_boilerplate") or [])
         if len(classes_boilerplate) > 0:
             self.has_classes_boilerplate = True
             self.classes_boilerplate = new re2cy.RE2("^(?:" + "|".join(classes_boilerplate) + ")$")
+            attributes_whitelist.add("class")
 
         ids_boilerplate = frozenset(options.get("ids_boilerplate") or [])
         if len(ids_boilerplate) > 0:
             self.has_ids_boilerplate = True
             self.ids_boilerplate = new re2cy.RE2("^(?:" + "|".join(ids_boilerplate) + ")$")
+            attributes_whitelist.add("id")
 
         roles_boilerplate = frozenset(options.get("roles_boilerplate") or [])
         if len(roles_boilerplate) > 0:
             self.has_roles_boilerplate = True
             self.roles_boilerplate = new re2cy.RE2("^(?:" + "|".join(roles_boilerplate) + ")$")
+            attributes_whitelist.add("role")
 
         metas_whitelist = frozenset(options.get("metas_whitelist") or [])
         if len(metas_whitelist) > 0:
             self.has_metas_whitelist = True
             self.metas_whitelist = new re2cy.RE2("^(?:" + "|".join(metas_whitelist) + ")$")
-
-        attributes_whitelist = set(options.get("attributes_whitelist") or [])
+            attributes_whitelist.add("name")
+            attributes_whitelist.add("property")
+            attributes_whitelist.add("content")
 
         # Some options add attributes to the whitelist
         if self.analyze_external_hyperlinks or self.analyze_internal_hyperlinks:
             attributes_whitelist.add("href")
             attributes_whitelist.add("rel")
 
-        if self.has_roles_boilerplate:
-            attributes_whitelist.add("roles")
-
-        if self.has_ids_boilerplate or self.has_ids_hidden or self.has_ids_ignore:
-            attributes_whitelist.add("id")
-
-        if self.has_classes_boilerplate or self.has_classes_hidden or self.has_classes_ignore:
-            attributes_whitelist.add("class")
-
+        # FInally, freeze the attributes whitelist
         self.has_attributes_whitelist = len(attributes_whitelist) > 0
         if self.has_attributes_whitelist:
             self.attributes_whitelist = new re2cy.RE2("^(?:" + "|".join(attributes_whitelist) + ")$")
@@ -165,7 +188,7 @@ cdef class HTMLParser:
 
         self.tags_separators.insert(gumbocy.GUMBO_TAG_BODY)
 
-    cdef bint guess_node_hidden(self, gumbocy.GumboNode* node, dict attrs):
+    cdef bint guess_node_hidden(self, gumbocy.GumboNode* node, Attributes* attrs):
         """ Rough guess to check if the element is explicitly hidden.
 
             Not intended to combat spam!
@@ -175,30 +198,26 @@ cdef class HTMLParser:
             return False
 
         # From the HTML5 spec
-        if "hidden" in attrs:
+        if attrs.has_hidden:
             return True
 
-        if attrs.get("aria-hidden") == "true":
-            return True
-
-        if self.has_ids_hidden:
-            if attrs.get("id") and re2_search(attrs["id"].lower(), deref(self.ids_hidden)):
+        if self.has_ids_hidden and attrs.values.count(ATTR_ID):
+            if re2_search(attrs.values[ATTR_ID], deref(self.ids_hidden)):
                 return True
 
-        if self.has_classes_hidden:
-            if attrs.get("class"):
-                for k in attrs.get("class"):
-                    if re2_search(k, deref(self.classes_hidden)):
-                        return True
+        if self.has_classes_hidden and attrs.has_classes:
+            for k in attrs.classes:
+                if re2_search(k, deref(self.classes_hidden)):
+                    return True
 
-        if attrs.get("style"):
-            if re2_search(attrs["style"], deref(_RE2_SEARCH_STYLE_HIDDEN)):
+        if attrs.values.count(ATTR_STYLE):
+            if re2_search(attrs.values[ATTR_STYLE], deref(_RE2_SEARCH_STYLE_HIDDEN)):
                 return True
 
         return False
 
 
-    cdef bint guess_node_boilerplate(self, gumbocy.GumboNode* node, dict attrs):
+    cdef bint guess_node_boilerplate(self, gumbocy.GumboNode* node, Attributes* attrs):
         """ Rough guess to check if the element is boilerplate """
 
         if self.tags_boilerplate.count(<int> node.v.element.tag):
@@ -209,60 +228,80 @@ cdef class HTMLParser:
             if "article" not in self.current_stack:
                 return True
 
-        if not self.has_attributes_whitelist:
-            return False
+        if self.has_classes_boilerplate and attrs.has_classes:
+            for k in attrs.classes:
+                if re2_search(k, deref(self.classes_boilerplate)):
+                    return True
 
-        if not attrs:
-            return False
-
-        if self.has_classes_boilerplate:
-            if attrs.get("class"):
-                for k in attrs.get("class"):
-                    if re2_search(k, deref(self.classes_boilerplate)):
-                        return True
-
-        if self.has_ids_boilerplate:
-            if attrs.get("id") and re2_search(attrs["id"].lower(), deref(self.ids_boilerplate)):
+        if self.has_ids_boilerplate and attrs.values.count(ATTR_ID):
+            if re2_search(attrs.values[ATTR_ID], deref(self.ids_boilerplate)):
                 return True
 
-        if self.has_roles_boilerplate:
-            if attrs.get("role") and re2_search(attrs["role"].lower(), deref(self.roles_boilerplate)):
+        if self.has_roles_boilerplate and attrs.values.count(ATTR_ROLE):
+            if re2_search(attrs.values[ATTR_ROLE], deref(self.roles_boilerplate)):
                 return True
 
         return False
 
-    cdef get_attributes(self, gumbocy.GumboNode* node):
+    cdef Attributes get_attributes(self, gumbocy.GumboNode* node):
         """ Build a dict with all the whitelisted attributes """
 
-        has_attrs = False
+        cdef Attributes attrs
+        attrs.has_classes = 0
+        attrs.classes = []
+        attrs.has_hidden = 0
+        # map[AttributeNames,char *]
+        # attrs.values = {}
 
         for i in range(node.v.element.attributes.length):
 
             attr = <gumbocy.GumboAttribute *> node.v.element.attributes.data[i]
-            attr_name = str(attr.name)
-            if re2_search(attr_name, deref(self.attributes_whitelist)):
-                if attr_name == b"class":
+
+            if re2_search(attr.name, deref(self.attributes_whitelist)):
+
+                if attr.name == b"class":
                     multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
                     if len(multiple_value):
-                        if self.has_classes_ignore:
-                            for v in multiple_value:
-                                if re2_search(v, deref(self.classes_ignore)):
-                                    return 0
+                        attrs.has_classes = 1
+                        attrs.classes = list(multiple_value)
 
-                        if not has_attrs:
-                            attrs = {}
-                            has_attrs = True
-                        attrs[attr_name] = multiple_value
+                elif attr.name == b"id":
+                    pystr = str(attr.value).lower()
+                    attrs.values[ATTR_ID] = pystr
 
-                else:
+                elif attr.name == b"style":
+                    attrs.values[ATTR_STYLE] = attr.value
 
-                    if not has_attrs:
-                        attrs = {}
-                        has_attrs = True
-                    attrs[attr_name] = attr.value
+                elif attr.name == b"href":
+                    attrs.values[ATTR_HREF] = attr.value
 
-        if not has_attrs:
-            return {}
+                elif attr.name == b"role":
+                    pystr = str(attr.value).lower()
+                    attrs.values[ATTR_ROLE] = pystr
+
+                elif attr.name == b"rel":
+                    pystr = str(attr.value).lower()
+                    attrs.values[ATTR_REL] =  pystr
+
+                elif attr.name == b"aria-hidden" and attr.value == b"true":
+                    attrs.has_hidden = 1
+
+                elif attr.name == b"hidden":
+                    attrs.has_hidden = 1
+
+                elif attr.name == b"alt":
+                    attrs.values[ATTR_ALT] = attr.value
+
+                elif attr.name == b"src":
+                    attrs.values[ATTR_SRC] = attr.value
+
+                elif attr.name == b"name":
+                    pystr = str(attr.value).lower()
+                    attrs.values[ATTR_NAME] = pystr
+
+                elif attr.name == b"property":
+                    pystr = str(attr.value).lower()
+                    attrs.values[ATTR_PROPERTY] = pystr
 
         return attrs
 
@@ -285,16 +324,19 @@ cdef class HTMLParser:
         if self.current_hyperlink:
             self.current_hyperlink[1] += text
 
-    cdef void open_hyperlink(self, attrs):
-        href = attrs.get("href")
-        if not href:
+    cdef void open_hyperlink(self, Attributes* attrs):
+
+        if not attrs.values.count(ATTR_HREF):
             return
 
-        if href.startswith("javascript:") or href.startswith("mailto:") or href.startswith("about:"):
+        if len(attrs.values[ATTR_HREF]) == 0:
+            return
+
+        if re2_search(attrs.values[ATTR_HREF], deref(_RE2_IGNORED_HREF)):
             return
 
         self.close_hyperlink()
-        self.current_hyperlink = [href, ""]
+        self.current_hyperlink = [attrs.values[ATTR_HREF], ""]
 
     cdef void close_hyperlink(self):
         if self.current_hyperlink:
@@ -315,6 +357,7 @@ cdef class HTMLParser:
         """ Traverses the node tree. Return 1 to stop at this level """
 
         cdef GumboStringPiece gsp
+        cdef Attributes attrs
 
         if level > self.nesting_limit:
             return 0
@@ -346,18 +389,18 @@ cdef class HTMLParser:
                 py_tag_name = str(gsp.data)[0:gsp.length].lower()  # TODO try to do that only in C!
                 tag_name = <const char *> py_tag_name
 
-            attrs = {}
             if self.has_attributes_whitelist:
 
                 attrs = self.get_attributes(node)
 
-                if attrs == 0:
-                    return 0
-
-                if attrs:
-                    if self.has_ids_ignore:
-                        if attrs.get("id") and re2_search(attrs["id"].lower(), deref(self.ids_ignore)):
+                if self.has_classes_ignore and attrs.has_classes:
+                    for v in attrs.classes:
+                        if re2_search(v, deref(self.classes_ignore)):
                             return 0
+
+                if self.has_ids_ignore and attrs.values.count(ATTR_ID):
+                    if re2_search(attrs.values[ATTR_ID], deref(self.ids_ignore)):
+                        return 0
 
             if node.v.element.tag == gumbocy.GUMBO_TAG_TITLE:
                 if not self.analysis.get("title"):
@@ -373,13 +416,13 @@ cdef class HTMLParser:
                 is_head = 1
 
             elif node.v.element.tag == gumbocy.GUMBO_TAG_A:
-                self.open_hyperlink(attrs)
+                self.open_hyperlink(&attrs)
                 is_hyperlink = 1
 
             elif node.v.element.tag == gumbocy.GUMBO_TAG_IMG:
                 self.close_word_group()
-                if attrs.get("alt"):
-                    self.add_text(attrs["alt"])
+                if attrs.values.count(ATTR_ALT):
+                    self.add_text(attrs.values[ATTR_ALT])
                     self.close_word_group()
 
                 # Text extraction from image filenames disabled for now
@@ -391,31 +434,40 @@ cdef class HTMLParser:
 
             if is_head:
                 if node.v.element.tag == gumbocy.GUMBO_TAG_LINK:
-                    self.analysis.setdefault("head_links", [])
-                    self.analysis["head_links"].append(attrs)
+
+                    # TODO: more properties
+                    if attrs.values.count(ATTR_REL) and attrs.values.count(ATTR_HREF):
+                        self.analysis.setdefault("head_links", [])
+                        self.analysis["head_links"].append({"rel": attrs.values[ATTR_REL], "href": attrs.values[ATTR_HREF]})
 
                 elif self.has_metas_whitelist and node.v.element.tag == gumbocy.GUMBO_TAG_META:
-                    meta_name = (attrs.get("name") or attrs.get("property") or "").lower()
-                    if re2_search(meta_name, deref(self.metas_whitelist)):
+                    if attrs.values.count(ATTR_CONTENT):
 
-                        self.analysis.setdefault("head_metas", {})
-                        self.analysis["head_metas"][meta_name] = (attrs.get("content") or "").strip()
+                        if attrs.values.count(ATTR_NAME):
+                            if re2_search(attrs.values[ATTR_NAME], deref(self.metas_whitelist)):
+                                self.analysis.setdefault("head_metas", {})
+                                self.analysis["head_metas"][attrs.values[ATTR_NAME]] = str(attrs.values[ATTR_CONTENT]).strip()
+
+                        elif attrs.values.count(ATTR_PROPERTY):
+                            if re2_search(attrs.values[ATTR_PROPERTY], deref(self.metas_whitelist)):
+                                self.analysis.setdefault("head_metas", {})
+                                self.analysis["head_metas"][attrs.values[ATTR_PROPERTY]] = str(attrs.values[ATTR_CONTENT]).strip()
 
                 elif node.v.element.tag == gumbocy.GUMBO_TAG_BASE:
-                    if attrs.get("href") and "base_url" not in self.analysis:
-                        self.analysis["base_url"] = attrs["href"]
+                    if attrs.values.count(ATTR_HREF) and "base_url" not in self.analysis:
+                        self.analysis["base_url"] = attrs.values[ATTR_HREF]
 
             # TODO is_article
 
             if not is_hidden:
-                is_hidden = self.guess_node_hidden(node, attrs)
+                is_hidden = self.guess_node_hidden(node, &attrs)
 
             if is_boilerplate and not is_boilerplate_bypassed:
                 if self.tags_boilerplate_bypass.count(tag_n):
                     is_boilerplate_bypassed = True
 
             if not is_boilerplate:
-                is_boilerplate = self.guess_node_boilerplate(node, attrs)
+                is_boilerplate = self.guess_node_boilerplate(node, &attrs)
 
             # Close the word group
             if self.tags_separators.count(tag_n):
