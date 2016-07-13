@@ -9,7 +9,7 @@ if os.path.isfile("gumbocy.cpp"):
   ext_modules = [
       Extension("gumbocy",
                 ["gumbocy.cpp"],
-                libraries=["gumbo"],
+                libraries=["gumbo", "re2"],
                 language="c++",
                 extra_compile_args=["-std=c++11", '-O3', '-static-libstdc++'],
                 extra_link_args=["-std=c++11"])  # , "-static"

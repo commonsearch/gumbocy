@@ -1,15 +1,24 @@
 import re
 cimport gumbocy
+cimport re2cy
 from libcpp.unordered_set cimport unordered_set
+from cython.operator cimport dereference as deref
+from libcpp.vector cimport vector
 
 
 cdef extern from "stdio.h":
     int printf(const char* format, ...);
 
+cdef vector[re2cy.ArgPtr] *argp = new vector[re2cy.ArgPtr]()
+cdef re2cy.ArgPtr *empty_args = &(deref(argp)[0])
+
+cdef bint re2_search(char* s, re2cy.RE2 &pattern):
+    return re2cy.RE2.PartialMatchN(s, pattern, empty_args, 0)
+
+cdef re2cy.RE2 *_RE2_SEARCH_STYLE_HIDDEN = new re2cy.RE2(r"(display\s*\:\s*none)|(visibility\s*\:\s*hidden)")
 
 _RE_EXTERNAL_HREF = re.compile(r"^([A-Za-z0-9\+\.\-]+\:)?\/\/")
 _RE_SPLIT_WHITESPACE = re.compile(r"\s+")
-_RE_SEARCH_STYLE_HIDDEN = re.compile(r"(display\s*\:\s*none)|(visibility\s*\:\s*hidden)")
 
 cdef class HTMLParser:
 
@@ -167,8 +176,9 @@ cdef class HTMLParser:
                     if k in self.classes_hidden:
                         return True
 
-        if attrs.get("style") and _RE_SEARCH_STYLE_HIDDEN.search(attrs["style"]):
-            return True
+        if attrs.get("style"):
+            if re2_search(attrs["style"], deref(_RE2_SEARCH_STYLE_HIDDEN)):
+                return True
 
         return False
 
