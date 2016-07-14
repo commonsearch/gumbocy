@@ -1,5 +1,6 @@
 # https://github.com/google/gumbo-parser/blob/master/src/gumbo.h
 
+
 cdef extern from "gumbo.h":
 
     ctypedef enum GumboNamespaceEnum:
@@ -187,7 +188,7 @@ cdef extern from "gumbo.h":
         GUMBO_INSERTION_FROM_ISINDEX = 1 << 5,
 
         GUMBO_INSERTION_FROM_IMAGE = 1 << 6,
-        
+
         GUMBO_INSERTION_RECONSTRUCTED_FORMATTING_ELEMENT = 1 << 7,
 
         GUMBO_INSERTION_ADOPTION_AGENCY_CLONED = 1 << 8,

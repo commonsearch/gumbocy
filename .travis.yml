@@ -11,7 +11,8 @@ before_install:
   - docker ps
   - docker info
   - docker version
-#  - docker pull commonsearch/gumbocy
+  - ./scripts/git-set-file-times
+  - docker pull commonsearch/gumbocy
   - make docker_build
 
 script:
