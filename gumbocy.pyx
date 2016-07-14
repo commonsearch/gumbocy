@@ -531,6 +531,7 @@ cdef class HTMLParser:
     def parse(self, char* html):
         """ Do the actual parsing of the HTML with gumbo """
 
+        self.free()
         self.output = gumbocy.gumbo_parse(html)
         self.has_output = 1
 
@@ -655,7 +656,9 @@ cdef class HTMLParser:
 
     def __dealloc__(self):
         """ Cleanup gumbo memory when the parser is deallocated by Python """
+        self.free()
 
+    cdef free(self):
         if self.has_output:
             gumbocy.gumbo_destroy_output(&gumbocy.kGumboDefaultOptions, self.output)
             self.has_output = 0
