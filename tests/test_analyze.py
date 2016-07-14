@@ -37,6 +37,7 @@ def test_hidden_text():
         <div>textp</div>
         <div style='display: none;'>hidden by display</div>
         <div class='_class_noindex'>ignored by class_noindex</div>
+        <div class='_class_noindex class2'>ignored by class_noindex 2</div>
         <div hidden>hidden by html5 attribute</div>
         <div aria-hidden="true">hidden by aria</div>
         <div aria-hidden="false">not_aria</div>
@@ -56,6 +57,22 @@ def test_hidden_text():
         ("textp", "div"),
         ("not_aria", "div")
     ]
+
+
+def test_hidden_siblings():
+
+    html = """
+<span class='login facebook'>
+Sign in with Facebook
+</span>
+<span class='login'>Or use your Businessweek account</span>
+"""
+
+    analyzed = analyze(html, options={
+        "classes_boilerplate": ["login"]
+    })
+
+    assert analyzed["word_groups"] == []
 
 
 def test_boilerplate_text():
@@ -99,3 +116,20 @@ def test_title():
 
     assert analyzed["title"] == "test 1"
     assert len(analyzed["word_groups"]) == 0
+
+
+def test_head_metas():
+
+    html = """<html>
+        <head>
+            <meta name="Description" content=" This   is a &lt;summary&gt;!" />
+            <meta name="Description2" content=" This2   is a &lt;summary&gt;!" />
+        </head>
+        <body>This is &lt;body&gt; text</body>
+    </html>"""
+
+    analyzed = analyze(html, options={
+        "metas_whitelist": ["description"]
+    })
+
+    assert analyzed["head_metas"] == {"description": "This   is a <summary>!"}

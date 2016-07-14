@@ -499,10 +499,10 @@ static const char *__pyx_filename;
 
 static const char *__pyx_f[] = {
   "gumbocy.pyx",
-  "stringsource",
 };
 
 /*--- Type declarations ---*/
+struct __pyx_obj_7gumbocy_Attributes;
 struct __pyx_obj_7gumbocy_HTMLParser;
 
 /* "re2cy.pxd":3
@@ -513,7 +513,6 @@ struct __pyx_obj_7gumbocy_HTMLParser;
  * 
  */
 typedef RE2::Arg *__pyx_t_5re2cy_ArgPtr;
-struct __pyx_t_7gumbocy_Attributes;
 
 /* "gumbocy.pyx":25
  * _RE_SPLIT_WHITESPACE = re.compile(r"\s+")
@@ -536,22 +535,24 @@ enum __pyx_t_7gumbocy_AttributeNames {
 };
 typedef enum __pyx_t_7gumbocy_AttributeNames __pyx_t_7gumbocy_AttributeNames;
 
-/* "gumbocy.pyx":37
- *     ATTR_CONTENT
+/* "gumbocy.pyx":54
+ * #     map[AttributeNames, const char*] values
  * 
- * cdef struct Attributes:             # <<<<<<<<<<<<<<
- *     bint has_classes
- *     vector[char*] classes
+ * cdef class Attributes:             # <<<<<<<<<<<<<<
+ *     cdef int size_classes
+ *     cdef dict values
  */
-struct __pyx_t_7gumbocy_Attributes {
-  int has_classes;
-  std::vector<char *>  classes;
+struct __pyx_obj_7gumbocy_Attributes {
+  PyObject_HEAD
+  int size_classes;
+  PyObject *values;
+  PyObject *classes;
   int has_hidden;
-  std::map<__pyx_t_7gumbocy_AttributeNames,char const *>  values;
 };
 
-/* "gumbocy.pyx":44
- * 
+
+/* "gumbocy.pyx":65
+ * # ctypedef sAttributes Attributes
  * 
  * cdef class HTMLParser:             # <<<<<<<<<<<<<<
  * 
@@ -600,13 +601,13 @@ struct __pyx_obj_7gumbocy_HTMLParser {
 
 
 struct __pyx_vtabstruct_7gumbocy_HTMLParser {
-  int (*guess_node_hidden)(struct __pyx_obj_7gumbocy_HTMLParser *, GumboNode *, struct __pyx_t_7gumbocy_Attributes *);
-  int (*guess_node_boilerplate)(struct __pyx_obj_7gumbocy_HTMLParser *, GumboNode *, struct __pyx_t_7gumbocy_Attributes *);
-  struct __pyx_t_7gumbocy_Attributes (*get_attributes)(struct __pyx_obj_7gumbocy_HTMLParser *, GumboNode *);
+  int (*guess_node_hidden)(struct __pyx_obj_7gumbocy_HTMLParser *, GumboNode *, struct __pyx_obj_7gumbocy_Attributes *);
+  int (*guess_node_boilerplate)(struct __pyx_obj_7gumbocy_HTMLParser *, GumboNode *, struct __pyx_obj_7gumbocy_Attributes *);
+  struct __pyx_obj_7gumbocy_Attributes *(*get_attributes)(struct __pyx_obj_7gumbocy_HTMLParser *, GumboNode *);
   void (*close_word_group)(struct __pyx_obj_7gumbocy_HTMLParser *);
   void (*add_text)(struct __pyx_obj_7gumbocy_HTMLParser *, PyObject *);
   void (*add_hyperlink_text)(struct __pyx_obj_7gumbocy_HTMLParser *, PyObject *);
-  void (*open_hyperlink)(struct __pyx_obj_7gumbocy_HTMLParser *, struct __pyx_t_7gumbocy_Attributes *);
+  void (*open_hyperlink)(struct __pyx_obj_7gumbocy_HTMLParser *, struct __pyx_obj_7gumbocy_Attributes *);
   void (*close_hyperlink)(struct __pyx_obj_7gumbocy_HTMLParser *);
   int (*_traverse_node)(struct __pyx_obj_7gumbocy_HTMLParser *, int, GumboNode *, int, int, int, int, int);
   int (*_traverse_node_simple)(struct __pyx_obj_7gumbocy_HTMLParser *, int, GumboNode *);
@@ -765,11 +766,26 @@ static CYTHON_INLINE PyObject* __Pyx_PyFrozenSet_New(PyObject* it) {
 static CYTHON_INLINE PyObject* __Pyx_PyBytes_Join(PyObject* sep, PyObject* values);
 #endif
 
-/* PySequenceContains.proto */
-static CYTHON_INLINE int __Pyx_PySequence_ContainsTF(PyObject* item, PyObject* seq, int eq) {
-    int result = PySequence_Contains(seq, item);
-    return unlikely(result < 0) ? result : (result == (eq == Py_EQ));
+/* DictGetItem.proto */
+#if PY_MAJOR_VERSION >= 3 && !CYTHON_COMPILING_IN_PYPY
+static PyObject *__Pyx_PyDict_GetItem(PyObject *d, PyObject* key) {
+    PyObject *value;
+    value = PyDict_GetItemWithError(d, key);
+    if (unlikely(!value)) {
+        if (!PyErr_Occurred()) {
+            PyObject* args = PyTuple_Pack(1, key);
+            if (likely(args))
+                PyErr_SetObject(PyExc_KeyError, args);
+            Py_XDECREF(args);
+        }
+        return NULL;
+    }
+    Py_INCREF(value);
+    return value;
 }
+#else
+    #define __Pyx_PyDict_GetItem(d, key) PyObject_GetItem(d, key)
+#endif
 
 /* PyThreadStateGet.proto */
 #if CYTHON_COMPILING_IN_CPYTHON
@@ -800,6 +816,19 @@ static void __Pyx_WriteUnraisable(const char *name, int clineno,
                                   int lineno, const char *filename,
                                   int full_traceback, int nogil);
 
+/* PySequenceContains.proto */
+static CYTHON_INLINE int __Pyx_PySequence_ContainsTF(PyObject* item, PyObject* seq, int eq) {
+    int result = PySequence_Contains(seq, item);
+    return unlikely(result < 0) ? result : (result == (eq == Py_EQ));
+}
+
+/* PyObjectCall.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw);
+#else
+#define __Pyx_PyObject_Call(func, arg, kw) PyObject_Call(func, arg, kw)
+#endif
+
 /* IncludeStringH.proto */
 #include <string.h>
 
@@ -808,13 +837,6 @@ static CYTHON_INLINE int __Pyx_PyBytes_Equals(PyObject* s1, PyObject* s2, int eq
 
 /* GetModuleGlobalName.proto */
 static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name);
-
-/* PyObjectCall.proto */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw);
-#else
-#define __Pyx_PyObject_Call(func, arg, kw) PyObject_Call(func, arg, kw)
-#endif
 
 /* PyObjectCallMethO.proto */
 #if CYTHON_COMPILING_IN_CPYTHON
@@ -853,27 +875,6 @@ static PyObject* __Pyx_PyObject_CallMethod1(PyObject* obj, PyObject* method_name
 
 /* append.proto */
 static CYTHON_INLINE int __Pyx_PyObject_Append(PyObject* L, PyObject* x);
-
-/* DictGetItem.proto */
-#if PY_MAJOR_VERSION >= 3 && !CYTHON_COMPILING_IN_PYPY
-static PyObject *__Pyx_PyDict_GetItem(PyObject *d, PyObject* key) {
-    PyObject *value;
-    value = PyDict_GetItemWithError(d, key);
-    if (unlikely(!value)) {
-        if (!PyErr_Occurred()) {
-            PyObject* args = PyTuple_Pack(1, key);
-            if (likely(args))
-                PyErr_SetObject(PyExc_KeyError, args);
-            Py_XDECREF(args);
-        }
-        return NULL;
-    }
-    Py_INCREF(value);
-    return value;
-}
-#else
-    #define __Pyx_PyDict_GetItem(d, key) PyObject_GetItem(d, key)
-#endif
 
 /* GetItemInt.proto */
 #define __Pyx_GetItemInt(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
@@ -1030,6 +1031,9 @@ static void __Pyx_CppExn2PyErr() {
 #endif
 
 /* CIntToPy.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_t_7gumbocy_AttributeNames value);
+
+/* CIntToPy.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_unsigned_int(unsigned int value);
 
 /* CIntToPy.proto */
@@ -1037,6 +1041,13 @@ static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value);
 
 /* CIntToPy.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value);
+
+/* Print.proto */
+static int __Pyx_Print(PyObject*, PyObject *, int);
+#if CYTHON_COMPILING_IN_PYPY || PY_MAJOR_VERSION >= 3
+static PyObject* __pyx_print = 0;
+static PyObject* __pyx_print_kwargs = 0;
+#endif
 
 /* CIntFromPy.proto */
 static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *);
@@ -1053,13 +1064,13 @@ static int __Pyx_check_binary_version(void);
 /* InitStrings.proto */
 static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
-static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, CYTHON_UNUSED GumboNode *__pyx_v_node, struct __pyx_t_7gumbocy_Attributes *__pyx_v_attrs); /* proto*/
-static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, GumboNode *__pyx_v_node, struct __pyx_t_7gumbocy_Attributes *__pyx_v_attrs); /* proto*/
-static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attributes(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, GumboNode *__pyx_v_node); /* proto*/
+static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, CYTHON_UNUSED GumboNode *__pyx_v_node, struct __pyx_obj_7gumbocy_Attributes *__pyx_v_attrs); /* proto*/
+static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, GumboNode *__pyx_v_node, struct __pyx_obj_7gumbocy_Attributes *__pyx_v_attrs); /* proto*/
+static struct __pyx_obj_7gumbocy_Attributes *__pyx_f_7gumbocy_10HTMLParser_get_attributes(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, GumboNode *__pyx_v_node); /* proto*/
 static void __pyx_f_7gumbocy_10HTMLParser_close_word_group(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self); /* proto*/
 static void __pyx_f_7gumbocy_10HTMLParser_add_text(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, PyObject *__pyx_v_text); /* proto*/
 static void __pyx_f_7gumbocy_10HTMLParser_add_hyperlink_text(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, PyObject *__pyx_v_text); /* proto*/
-static void __pyx_f_7gumbocy_10HTMLParser_open_hyperlink(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, struct __pyx_t_7gumbocy_Attributes *__pyx_v_attrs); /* proto*/
+static void __pyx_f_7gumbocy_10HTMLParser_open_hyperlink(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, struct __pyx_obj_7gumbocy_Attributes *__pyx_v_attrs); /* proto*/
 static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self); /* proto*/
 static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, int __pyx_v_level, GumboNode *__pyx_v_node, int __pyx_v_is_head, int __pyx_v_is_hidden, int __pyx_v_is_boilerplate, int __pyx_v_is_boilerplate_bypassed, int __pyx_v_is_hyperlink); /* proto*/
 static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, int __pyx_v_level, GumboNode *__pyx_v_node); /* proto*/
@@ -1079,6 +1090,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
 /* Module declarations from 'libcpp.map' */
 
 /* Module declarations from 'gumbocy' */
+static PyTypeObject *__pyx_ptype_7gumbocy_Attributes = 0;
 static PyTypeObject *__pyx_ptype_7gumbocy_HTMLParser = 0;
 static std::vector<__pyx_t_5re2cy_ArgPtr>  *__pyx_v_7gumbocy_argp;
 static __pyx_t_5re2cy_ArgPtr *__pyx_v_7gumbocy_empty_args;
@@ -1086,7 +1098,6 @@ static re2::RE2 *__pyx_v_7gumbocy__RE2_SEARCH_STYLE_HIDDEN;
 static re2::RE2 *__pyx_v_7gumbocy__RE2_EXTERNAL_HREF;
 static re2::RE2 *__pyx_v_7gumbocy__RE2_IGNORED_HREF;
 static int __pyx_f_7gumbocy_re2_search(char const *, re2::RE2 &); /*proto*/
-static std::vector<char *>  __pyx_convert_vector_from_py_char___2a_(PyObject *); /*proto*/
 #define __Pyx_MODULE_NAME "gumbocy"
 int __pyx_module_is_main_gumbocy = 0;
 
@@ -1102,10 +1113,12 @@ static const char __pyx_k__8[] = "//";
 static const char __pyx_k_id[] = "id";
 static const char __pyx_k_re[] = "re";
 static const char __pyx_k_alt[] = "alt";
+static const char __pyx_k_end[] = "end";
 static const char __pyx_k_get[] = "get";
 static const char __pyx_k_pop[] = "pop";
 static const char __pyx_k_rel[] = "rel";
 static const char __pyx_k_src[] = "src";
+static const char __pyx_k_file[] = "file";
 static const char __pyx_k_href[] = "href";
 static const char __pyx_k_http[] = "http://";
 static const char __pyx_k_join[] = "join";
@@ -1117,11 +1130,13 @@ static const char __pyx_k_true[] = "true";
 static const char __pyx_k_class[] = "class";
 static const char __pyx_k_https[] = "https://";
 static const char __pyx_k_lower[] = "lower";
+static const char __pyx_k_print[] = "print";
 static const char __pyx_k_range[] = "range";
 static const char __pyx_k_split[] = "split";
 static const char __pyx_k_strip[] = "strip";
 static const char __pyx_k_style[] = "style";
 static const char __pyx_k_title[] = "title";
+static const char __pyx_k_BOILER[] = "BOILER";
 static const char __pyx_k_append[] = "append";
 static const char __pyx_k_hidden[] = "hidden";
 static const char __pyx_k_import[] = "__import__";
@@ -1160,6 +1175,7 @@ static const char __pyx_k_tags_boilerplate_bypass[] = "tags_boilerplate_bypass";
 static const char __pyx_k_analyze_external_hyperlinks[] = "analyze_external_hyperlinks";
 static const char __pyx_k_analyze_internal_hyperlinks[] = "analyze_internal_hyperlinks";
 static PyObject *__pyx_kp_s_;
+static PyObject *__pyx_n_s_BOILER;
 static PyObject *__pyx_n_s_RE_SPLIT_WHITESPACE;
 static PyObject *__pyx_kp_s__2;
 static PyObject *__pyx_kp_s__3;
@@ -1182,8 +1198,11 @@ static PyObject *__pyx_n_s_classes_boilerplate;
 static PyObject *__pyx_n_s_classes_hidden;
 static PyObject *__pyx_n_s_classes_ignore;
 static PyObject *__pyx_n_s_compile;
+static PyObject *__pyx_n_b_content;
 static PyObject *__pyx_n_s_content;
+static PyObject *__pyx_n_s_end;
 static PyObject *__pyx_n_s_external_hyperlinks;
+static PyObject *__pyx_n_s_file;
 static PyObject *__pyx_n_s_get;
 static PyObject *__pyx_n_s_head_links;
 static PyObject *__pyx_n_s_head_metas;
@@ -1209,6 +1228,7 @@ static PyObject *__pyx_n_s_name;
 static PyObject *__pyx_n_s_nesting_limit;
 static PyObject *__pyx_n_s_options;
 static PyObject *__pyx_n_s_pop;
+static PyObject *__pyx_n_s_print;
 static PyObject *__pyx_n_b_property;
 static PyObject *__pyx_n_s_property;
 static PyObject *__pyx_n_s_pyx_vtable;
@@ -1239,6 +1259,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_2parse(struct __pyx_obj_7gumbocy
 static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_7gumbocy_10HTMLParser_6listnodes(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self); /* proto */
 static void __pyx_pf_7gumbocy_10HTMLParser_8__dealloc__(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self); /* proto */
+static PyObject *__pyx_tp_new_7gumbocy_Attributes(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_7gumbocy_HTMLParser(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static __Pyx_CachedCFunction __pyx_umethod_PyList_Type_pop = {0, &__pyx_n_s_pop, 0, 0, 0};
 static PyObject *__pyx_int_999;
@@ -1285,7 +1306,7 @@ static int __pyx_f_7gumbocy_re2_search(char const *__pyx_v_s, re2::RE2 &__pyx_v_
   return __pyx_r;
 }
 
-/* "gumbocy.pyx":91
+/* "gumbocy.pyx":112
  *     cdef list nodes
  * 
  *     def __cinit__(self, dict options=None):             # <<<<<<<<<<<<<<
@@ -1321,7 +1342,7 @@ static int __pyx_pw_7gumbocy_10HTMLParser_1__cinit__(PyObject *__pyx_v_self, PyO
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(0, 91, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(0, 112, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -1334,13 +1355,13 @@ static int __pyx_pw_7gumbocy_10HTMLParser_1__cinit__(PyObject *__pyx_v_self, PyO
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 0, 1, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 91, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 0, 1, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 112, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gumbocy.HTMLParser.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_options), (&PyDict_Type), 1, "options", 1))) __PYX_ERR(0, 91, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_options), (&PyDict_Type), 1, "options", 1))) __PYX_ERR(0, 112, __pyx_L1_error)
   __pyx_r = __pyx_pf_7gumbocy_10HTMLParser___cinit__(((struct __pyx_obj_7gumbocy_HTMLParser *)__pyx_v_self), __pyx_v_options);
 
   /* function exit code */
@@ -1380,21 +1401,21 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
   __Pyx_RefNannySetupContext("__cinit__", 0);
   __Pyx_INCREF(__pyx_v_options);
 
-  /* "gumbocy.pyx":93
+  /* "gumbocy.pyx":114
  *     def __cinit__(self, dict options=None):
  * 
  *         options = options or {}             # <<<<<<<<<<<<<<
  * 
  *         self.nesting_limit = options.get("nesting_limit", 999)
  */
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_v_options); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 93, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_v_options); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 114, __pyx_L1_error)
   if (!__pyx_t_2) {
   } else {
     __Pyx_INCREF(__pyx_v_options);
     __pyx_t_1 = __pyx_v_options;
     goto __pyx_L3_bool_binop_done;
   }
-  __pyx_t_3 = PyDict_New(); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 93, __pyx_L1_error)
+  __pyx_t_3 = PyDict_New(); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_t_3);
   __pyx_t_1 = __pyx_t_3;
@@ -1403,7 +1424,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
   __Pyx_DECREF_SET(__pyx_v_options, ((PyObject*)__pyx_t_1));
   __pyx_t_1 = 0;
 
-  /* "gumbocy.pyx":95
+  /* "gumbocy.pyx":116
  *         options = options or {}
  * 
  *         self.nesting_limit = options.get("nesting_limit", 999)             # <<<<<<<<<<<<<<
@@ -1412,15 +1433,15 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 95, __pyx_L1_error)
+    __PYX_ERR(0, 116, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_nesting_limit, __pyx_int_999); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 95, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_nesting_limit, __pyx_int_999); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 116, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 95, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 116, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_self->nesting_limit = __pyx_t_4;
 
-  /* "gumbocy.pyx":96
+  /* "gumbocy.pyx":117
  * 
  *         self.nesting_limit = options.get("nesting_limit", 999)
  *         self.head_only = options.get("head_only")             # <<<<<<<<<<<<<<
@@ -1429,15 +1450,15 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 96, __pyx_L1_error)
+    __PYX_ERR(0, 117, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_head_only, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 96, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_head_only, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 117, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 96, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 117, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_self->head_only = __pyx_t_2;
 
-  /* "gumbocy.pyx":98
+  /* "gumbocy.pyx":119
  *         self.head_only = options.get("head_only")
  * 
  *         self.analyze_external_hyperlinks = bool(options.get("analyze_external_hyperlinks", True))             # <<<<<<<<<<<<<<
@@ -1446,15 +1467,15 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 98, __pyx_L1_error)
+    __PYX_ERR(0, 119, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_analyze_external_hyperlinks, Py_True); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_analyze_external_hyperlinks, Py_True); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 119, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 119, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_self->analyze_external_hyperlinks = (!(!__pyx_t_2));
 
-  /* "gumbocy.pyx":99
+  /* "gumbocy.pyx":120
  * 
  *         self.analyze_external_hyperlinks = bool(options.get("analyze_external_hyperlinks", True))
  *         self.analyze_internal_hyperlinks = bool(options.get("analyze_internal_hyperlinks", True))             # <<<<<<<<<<<<<<
@@ -1463,15 +1484,15 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 99, __pyx_L1_error)
+    __PYX_ERR(0, 120, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_analyze_internal_hyperlinks, Py_True); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 99, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_analyze_internal_hyperlinks, Py_True); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 120, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 99, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 120, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_self->analyze_internal_hyperlinks = (!(!__pyx_t_2));
 
-  /* "gumbocy.pyx":100
+  /* "gumbocy.pyx":121
  *         self.analyze_external_hyperlinks = bool(options.get("analyze_external_hyperlinks", True))
  *         self.analyze_internal_hyperlinks = bool(options.get("analyze_internal_hyperlinks", True))
  *         self.analyze_word_groups = bool(options.get("analyze_word_groups", True))             # <<<<<<<<<<<<<<
@@ -1480,15 +1501,15 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 100, __pyx_L1_error)
+    __PYX_ERR(0, 121, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_analyze_word_groups, Py_True); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_analyze_word_groups, Py_True); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_self->analyze_word_groups = (!(!__pyx_t_2));
 
-  /* "gumbocy.pyx":102
+  /* "gumbocy.pyx":123
  *         self.analyze_word_groups = bool(options.get("analyze_word_groups", True))
  * 
  *         attributes_whitelist = set(options.get("attributes_whitelist") or [])             # <<<<<<<<<<<<<<
@@ -1497,11 +1518,11 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 102, __pyx_L1_error)
+    __PYX_ERR(0, 123, __pyx_L1_error)
   }
-  __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_attributes_whitelist, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 102, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_attributes_whitelist, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 102, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 123, __pyx_L1_error)
   if (!__pyx_t_2) {
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   } else {
@@ -1510,19 +1531,19 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     goto __pyx_L5_bool_binop_done;
   }
-  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 102, __pyx_L1_error)
+  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_t_3);
   __pyx_t_1 = __pyx_t_3;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_L5_bool_binop_done:;
-  __pyx_t_3 = PySet_New(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 102, __pyx_L1_error)
+  __pyx_t_3 = PySet_New(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_attributes_whitelist = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "gumbocy.pyx":104
+  /* "gumbocy.pyx":125
  *         attributes_whitelist = set(options.get("attributes_whitelist") or [])
  * 
  *         classes_ignore = frozenset(options.get("classes_ignore") or [])             # <<<<<<<<<<<<<<
@@ -1531,11 +1552,11 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 104, __pyx_L1_error)
+    __PYX_ERR(0, 125, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_classes_ignore, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 104, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_classes_ignore, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 125, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 104, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 125, __pyx_L1_error)
   if (!__pyx_t_2) {
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   } else {
@@ -1544,30 +1565,30 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     goto __pyx_L7_bool_binop_done;
   }
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 104, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 125, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_t_1);
   __pyx_t_3 = __pyx_t_1;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_L7_bool_binop_done:;
-  __pyx_t_1 = __Pyx_PyFrozenSet_New(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 104, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFrozenSet_New(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 125, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_classes_ignore = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "gumbocy.pyx":105
+  /* "gumbocy.pyx":126
  * 
  *         classes_ignore = frozenset(options.get("classes_ignore") or [])
  *         if len(classes_ignore) > 0:             # <<<<<<<<<<<<<<
  *             self.has_classes_ignore = True
  *             self.classes_ignore = new re2cy.RE2("^(?:" + "|".join(classes_ignore) + ")$")
  */
-  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_classes_ignore); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 105, __pyx_L1_error)
+  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_classes_ignore); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 126, __pyx_L1_error)
   __pyx_t_2 = ((__pyx_t_5 > 0) != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":106
+    /* "gumbocy.pyx":127
  *         classes_ignore = frozenset(options.get("classes_ignore") or [])
  *         if len(classes_ignore) > 0:
  *             self.has_classes_ignore = True             # <<<<<<<<<<<<<<
@@ -1576,41 +1597,41 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
     __pyx_v_self->has_classes_ignore = 1;
 
-    /* "gumbocy.pyx":107
+    /* "gumbocy.pyx":128
  *         if len(classes_ignore) > 0:
  *             self.has_classes_ignore = True
  *             self.classes_ignore = new re2cy.RE2("^(?:" + "|".join(classes_ignore) + ")$")             # <<<<<<<<<<<<<<
  *             attributes_whitelist.add("class")
  * 
  */
-    __pyx_t_1 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_classes_ignore); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_classes_ignore); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 128, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = PyNumber_Add(__pyx_kp_s_, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 107, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Add(__pyx_kp_s_, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 128, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_kp_s__3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
+    __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_kp_s__3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 128, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_1); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 107, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_1); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
     try {
       __pyx_t_7 = new re2::RE2(__pyx_t_6);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 107, __pyx_L1_error)
+      __PYX_ERR(0, 128, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_v_self->classes_ignore = __pyx_t_7;
 
-    /* "gumbocy.pyx":108
+    /* "gumbocy.pyx":129
  *             self.has_classes_ignore = True
  *             self.classes_ignore = new re2cy.RE2("^(?:" + "|".join(classes_ignore) + ")$")
  *             attributes_whitelist.add("class")             # <<<<<<<<<<<<<<
  * 
  *         ids_ignore = frozenset(options.get("ids_ignore") or [])
  */
-    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_class); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 108, __pyx_L1_error)
+    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_class); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 129, __pyx_L1_error)
 
-    /* "gumbocy.pyx":105
+    /* "gumbocy.pyx":126
  * 
  *         classes_ignore = frozenset(options.get("classes_ignore") or [])
  *         if len(classes_ignore) > 0:             # <<<<<<<<<<<<<<
@@ -1619,7 +1640,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   }
 
-  /* "gumbocy.pyx":110
+  /* "gumbocy.pyx":131
  *             attributes_whitelist.add("class")
  * 
  *         ids_ignore = frozenset(options.get("ids_ignore") or [])             # <<<<<<<<<<<<<<
@@ -1628,11 +1649,11 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 110, __pyx_L1_error)
+    __PYX_ERR(0, 131, __pyx_L1_error)
   }
-  __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_ids_ignore, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_ids_ignore, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 131, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 131, __pyx_L1_error)
   if (!__pyx_t_2) {
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   } else {
@@ -1641,30 +1662,30 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     goto __pyx_L10_bool_binop_done;
   }
-  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 131, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_t_3);
   __pyx_t_1 = __pyx_t_3;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_L10_bool_binop_done:;
-  __pyx_t_3 = __Pyx_PyFrozenSet_New(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyFrozenSet_New(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 131, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_ids_ignore = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "gumbocy.pyx":111
+  /* "gumbocy.pyx":132
  * 
  *         ids_ignore = frozenset(options.get("ids_ignore") or [])
  *         if len(ids_ignore) > 0:             # <<<<<<<<<<<<<<
  *             self.has_ids_ignore = True
  *             self.ids_ignore = new re2cy.RE2("^(?:" + "|".join(ids_ignore) + ")$")
  */
-  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_ids_ignore); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 111, __pyx_L1_error)
+  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_ids_ignore); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 132, __pyx_L1_error)
   __pyx_t_2 = ((__pyx_t_5 > 0) != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":112
+    /* "gumbocy.pyx":133
  *         ids_ignore = frozenset(options.get("ids_ignore") or [])
  *         if len(ids_ignore) > 0:
  *             self.has_ids_ignore = True             # <<<<<<<<<<<<<<
@@ -1673,41 +1694,41 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
     __pyx_v_self->has_ids_ignore = 1;
 
-    /* "gumbocy.pyx":113
+    /* "gumbocy.pyx":134
  *         if len(ids_ignore) > 0:
  *             self.has_ids_ignore = True
  *             self.ids_ignore = new re2cy.RE2("^(?:" + "|".join(ids_ignore) + ")$")             # <<<<<<<<<<<<<<
  *             attributes_whitelist.add("id")
  * 
  */
-    __pyx_t_3 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_ids_ignore); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 113, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_ids_ignore); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 134, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = PyNumber_Add(__pyx_kp_s_, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
+    __pyx_t_1 = PyNumber_Add(__pyx_kp_s_, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 134, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 113, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 134, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 113, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 134, __pyx_L1_error)
     try {
       __pyx_t_7 = new re2::RE2(__pyx_t_6);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 113, __pyx_L1_error)
+      __PYX_ERR(0, 134, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_v_self->ids_ignore = __pyx_t_7;
 
-    /* "gumbocy.pyx":114
+    /* "gumbocy.pyx":135
  *             self.has_ids_ignore = True
  *             self.ids_ignore = new re2cy.RE2("^(?:" + "|".join(ids_ignore) + ")$")
  *             attributes_whitelist.add("id")             # <<<<<<<<<<<<<<
  * 
  *         classes_hidden = frozenset(options.get("classes_hidden") or [])
  */
-    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_id); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 114, __pyx_L1_error)
+    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_id); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 135, __pyx_L1_error)
 
-    /* "gumbocy.pyx":111
+    /* "gumbocy.pyx":132
  * 
  *         ids_ignore = frozenset(options.get("ids_ignore") or [])
  *         if len(ids_ignore) > 0:             # <<<<<<<<<<<<<<
@@ -1716,7 +1737,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   }
 
-  /* "gumbocy.pyx":116
+  /* "gumbocy.pyx":137
  *             attributes_whitelist.add("id")
  * 
  *         classes_hidden = frozenset(options.get("classes_hidden") or [])             # <<<<<<<<<<<<<<
@@ -1725,11 +1746,11 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 116, __pyx_L1_error)
+    __PYX_ERR(0, 137, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_classes_hidden, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 116, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_classes_hidden, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 116, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 137, __pyx_L1_error)
   if (!__pyx_t_2) {
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   } else {
@@ -1738,30 +1759,30 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     goto __pyx_L13_bool_binop_done;
   }
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 116, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_t_1);
   __pyx_t_3 = __pyx_t_1;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_L13_bool_binop_done:;
-  __pyx_t_1 = __Pyx_PyFrozenSet_New(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 116, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFrozenSet_New(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_classes_hidden = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "gumbocy.pyx":117
+  /* "gumbocy.pyx":138
  * 
  *         classes_hidden = frozenset(options.get("classes_hidden") or [])
  *         if len(classes_hidden) > 0:             # <<<<<<<<<<<<<<
  *             self.has_classes_hidden = True
  *             self.classes_hidden = new re2cy.RE2("^(?:" + "|".join(classes_hidden) + ")$")
  */
-  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_classes_hidden); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 117, __pyx_L1_error)
+  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_classes_hidden); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 138, __pyx_L1_error)
   __pyx_t_2 = ((__pyx_t_5 > 0) != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":118
+    /* "gumbocy.pyx":139
  *         classes_hidden = frozenset(options.get("classes_hidden") or [])
  *         if len(classes_hidden) > 0:
  *             self.has_classes_hidden = True             # <<<<<<<<<<<<<<
@@ -1770,41 +1791,41 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
     __pyx_v_self->has_classes_hidden = 1;
 
-    /* "gumbocy.pyx":119
+    /* "gumbocy.pyx":140
  *         if len(classes_hidden) > 0:
  *             self.has_classes_hidden = True
  *             self.classes_hidden = new re2cy.RE2("^(?:" + "|".join(classes_hidden) + ")$")             # <<<<<<<<<<<<<<
  *             attributes_whitelist.add("class")
  * 
  */
-    __pyx_t_1 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_classes_hidden); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 119, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_classes_hidden); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = PyNumber_Add(__pyx_kp_s_, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 119, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Add(__pyx_kp_s_, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 140, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_kp_s__3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 119, __pyx_L1_error)
+    __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_kp_s__3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_1); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_1); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 140, __pyx_L1_error)
     try {
       __pyx_t_7 = new re2::RE2(__pyx_t_6);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 119, __pyx_L1_error)
+      __PYX_ERR(0, 140, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_v_self->classes_hidden = __pyx_t_7;
 
-    /* "gumbocy.pyx":120
+    /* "gumbocy.pyx":141
  *             self.has_classes_hidden = True
  *             self.classes_hidden = new re2cy.RE2("^(?:" + "|".join(classes_hidden) + ")$")
  *             attributes_whitelist.add("class")             # <<<<<<<<<<<<<<
  * 
  *         ids_hidden = frozenset(options.get("ids_hidden") or [])
  */
-    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_class); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 120, __pyx_L1_error)
+    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_class); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 141, __pyx_L1_error)
 
-    /* "gumbocy.pyx":117
+    /* "gumbocy.pyx":138
  * 
  *         classes_hidden = frozenset(options.get("classes_hidden") or [])
  *         if len(classes_hidden) > 0:             # <<<<<<<<<<<<<<
@@ -1813,7 +1834,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   }
 
-  /* "gumbocy.pyx":122
+  /* "gumbocy.pyx":143
  *             attributes_whitelist.add("class")
  * 
  *         ids_hidden = frozenset(options.get("ids_hidden") or [])             # <<<<<<<<<<<<<<
@@ -1822,11 +1843,11 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 122, __pyx_L1_error)
+    __PYX_ERR(0, 143, __pyx_L1_error)
   }
-  __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_ids_hidden, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 122, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_ids_hidden, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 143, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 122, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 143, __pyx_L1_error)
   if (!__pyx_t_2) {
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   } else {
@@ -1835,30 +1856,30 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     goto __pyx_L16_bool_binop_done;
   }
-  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 122, __pyx_L1_error)
+  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 143, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_t_3);
   __pyx_t_1 = __pyx_t_3;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_L16_bool_binop_done:;
-  __pyx_t_3 = __Pyx_PyFrozenSet_New(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 122, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyFrozenSet_New(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 143, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_ids_hidden = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "gumbocy.pyx":123
+  /* "gumbocy.pyx":144
  * 
  *         ids_hidden = frozenset(options.get("ids_hidden") or [])
  *         if len(ids_hidden) > 0:             # <<<<<<<<<<<<<<
  *             self.has_ids_hidden = True
  *             self.ids_hidden = new re2cy.RE2("^(?:" + "|".join(ids_hidden) + ")$")
  */
-  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_ids_hidden); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_ids_hidden); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 144, __pyx_L1_error)
   __pyx_t_2 = ((__pyx_t_5 > 0) != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":124
+    /* "gumbocy.pyx":145
  *         ids_hidden = frozenset(options.get("ids_hidden") or [])
  *         if len(ids_hidden) > 0:
  *             self.has_ids_hidden = True             # <<<<<<<<<<<<<<
@@ -1867,41 +1888,41 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
     __pyx_v_self->has_ids_hidden = 1;
 
-    /* "gumbocy.pyx":125
+    /* "gumbocy.pyx":146
  *         if len(ids_hidden) > 0:
  *             self.has_ids_hidden = True
  *             self.ids_hidden = new re2cy.RE2("^(?:" + "|".join(ids_hidden) + ")$")             # <<<<<<<<<<<<<<
  *             attributes_whitelist.add("id")
  * 
  */
-    __pyx_t_3 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_ids_hidden); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 125, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_ids_hidden); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 146, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = PyNumber_Add(__pyx_kp_s_, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 125, __pyx_L1_error)
+    __pyx_t_1 = PyNumber_Add(__pyx_kp_s_, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 146, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 125, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 146, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 146, __pyx_L1_error)
     try {
       __pyx_t_7 = new re2::RE2(__pyx_t_6);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 125, __pyx_L1_error)
+      __PYX_ERR(0, 146, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_v_self->ids_hidden = __pyx_t_7;
 
-    /* "gumbocy.pyx":126
+    /* "gumbocy.pyx":147
  *             self.has_ids_hidden = True
  *             self.ids_hidden = new re2cy.RE2("^(?:" + "|".join(ids_hidden) + ")$")
  *             attributes_whitelist.add("id")             # <<<<<<<<<<<<<<
  * 
  *         classes_boilerplate = frozenset(options.get("classes_boilerplate") or [])
  */
-    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_id); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_id); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 147, __pyx_L1_error)
 
-    /* "gumbocy.pyx":123
+    /* "gumbocy.pyx":144
  * 
  *         ids_hidden = frozenset(options.get("ids_hidden") or [])
  *         if len(ids_hidden) > 0:             # <<<<<<<<<<<<<<
@@ -1910,7 +1931,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   }
 
-  /* "gumbocy.pyx":128
+  /* "gumbocy.pyx":149
  *             attributes_whitelist.add("id")
  * 
  *         classes_boilerplate = frozenset(options.get("classes_boilerplate") or [])             # <<<<<<<<<<<<<<
@@ -1919,11 +1940,11 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 128, __pyx_L1_error)
+    __PYX_ERR(0, 149, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_classes_boilerplate, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 128, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_classes_boilerplate, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 128, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 149, __pyx_L1_error)
   if (!__pyx_t_2) {
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   } else {
@@ -1932,30 +1953,30 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     goto __pyx_L19_bool_binop_done;
   }
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 128, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_t_1);
   __pyx_t_3 = __pyx_t_1;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_L19_bool_binop_done:;
-  __pyx_t_1 = __Pyx_PyFrozenSet_New(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 128, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFrozenSet_New(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_classes_boilerplate = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "gumbocy.pyx":129
+  /* "gumbocy.pyx":150
  * 
  *         classes_boilerplate = frozenset(options.get("classes_boilerplate") or [])
  *         if len(classes_boilerplate) > 0:             # <<<<<<<<<<<<<<
  *             self.has_classes_boilerplate = True
  *             self.classes_boilerplate = new re2cy.RE2("^(?:" + "|".join(classes_boilerplate) + ")$")
  */
-  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_classes_boilerplate); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 129, __pyx_L1_error)
+  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_classes_boilerplate); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 150, __pyx_L1_error)
   __pyx_t_2 = ((__pyx_t_5 > 0) != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":130
+    /* "gumbocy.pyx":151
  *         classes_boilerplate = frozenset(options.get("classes_boilerplate") or [])
  *         if len(classes_boilerplate) > 0:
  *             self.has_classes_boilerplate = True             # <<<<<<<<<<<<<<
@@ -1964,41 +1985,41 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
     __pyx_v_self->has_classes_boilerplate = 1;
 
-    /* "gumbocy.pyx":131
+    /* "gumbocy.pyx":152
  *         if len(classes_boilerplate) > 0:
  *             self.has_classes_boilerplate = True
  *             self.classes_boilerplate = new re2cy.RE2("^(?:" + "|".join(classes_boilerplate) + ")$")             # <<<<<<<<<<<<<<
  *             attributes_whitelist.add("class")
  * 
  */
-    __pyx_t_1 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_classes_boilerplate); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 131, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_classes_boilerplate); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 152, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = PyNumber_Add(__pyx_kp_s_, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 131, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Add(__pyx_kp_s_, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 152, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_kp_s__3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 131, __pyx_L1_error)
+    __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_kp_s__3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 152, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_1); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 131, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_1); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 152, __pyx_L1_error)
     try {
       __pyx_t_7 = new re2::RE2(__pyx_t_6);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 131, __pyx_L1_error)
+      __PYX_ERR(0, 152, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_v_self->classes_boilerplate = __pyx_t_7;
 
-    /* "gumbocy.pyx":132
+    /* "gumbocy.pyx":153
  *             self.has_classes_boilerplate = True
  *             self.classes_boilerplate = new re2cy.RE2("^(?:" + "|".join(classes_boilerplate) + ")$")
  *             attributes_whitelist.add("class")             # <<<<<<<<<<<<<<
  * 
  *         ids_boilerplate = frozenset(options.get("ids_boilerplate") or [])
  */
-    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_class); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 132, __pyx_L1_error)
+    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_class); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 153, __pyx_L1_error)
 
-    /* "gumbocy.pyx":129
+    /* "gumbocy.pyx":150
  * 
  *         classes_boilerplate = frozenset(options.get("classes_boilerplate") or [])
  *         if len(classes_boilerplate) > 0:             # <<<<<<<<<<<<<<
@@ -2007,7 +2028,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   }
 
-  /* "gumbocy.pyx":134
+  /* "gumbocy.pyx":155
  *             attributes_whitelist.add("class")
  * 
  *         ids_boilerplate = frozenset(options.get("ids_boilerplate") or [])             # <<<<<<<<<<<<<<
@@ -2016,11 +2037,11 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 134, __pyx_L1_error)
+    __PYX_ERR(0, 155, __pyx_L1_error)
   }
-  __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_ids_boilerplate, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_ids_boilerplate, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 155, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 155, __pyx_L1_error)
   if (!__pyx_t_2) {
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   } else {
@@ -2029,30 +2050,30 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     goto __pyx_L22_bool_binop_done;
   }
-  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 155, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_t_3);
   __pyx_t_1 = __pyx_t_3;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_L22_bool_binop_done:;
-  __pyx_t_3 = __Pyx_PyFrozenSet_New(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyFrozenSet_New(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 155, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_ids_boilerplate = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "gumbocy.pyx":135
+  /* "gumbocy.pyx":156
  * 
  *         ids_boilerplate = frozenset(options.get("ids_boilerplate") or [])
  *         if len(ids_boilerplate) > 0:             # <<<<<<<<<<<<<<
  *             self.has_ids_boilerplate = True
  *             self.ids_boilerplate = new re2cy.RE2("^(?:" + "|".join(ids_boilerplate) + ")$")
  */
-  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_ids_boilerplate); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 135, __pyx_L1_error)
+  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_ids_boilerplate); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 156, __pyx_L1_error)
   __pyx_t_2 = ((__pyx_t_5 > 0) != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":136
+    /* "gumbocy.pyx":157
  *         ids_boilerplate = frozenset(options.get("ids_boilerplate") or [])
  *         if len(ids_boilerplate) > 0:
  *             self.has_ids_boilerplate = True             # <<<<<<<<<<<<<<
@@ -2061,41 +2082,41 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
     __pyx_v_self->has_ids_boilerplate = 1;
 
-    /* "gumbocy.pyx":137
+    /* "gumbocy.pyx":158
  *         if len(ids_boilerplate) > 0:
  *             self.has_ids_boilerplate = True
  *             self.ids_boilerplate = new re2cy.RE2("^(?:" + "|".join(ids_boilerplate) + ")$")             # <<<<<<<<<<<<<<
  *             attributes_whitelist.add("id")
  * 
  */
-    __pyx_t_3 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_ids_boilerplate); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 137, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_ids_boilerplate); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 158, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = PyNumber_Add(__pyx_kp_s_, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 137, __pyx_L1_error)
+    __pyx_t_1 = PyNumber_Add(__pyx_kp_s_, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 158, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 137, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 158, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 137, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 158, __pyx_L1_error)
     try {
       __pyx_t_7 = new re2::RE2(__pyx_t_6);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 137, __pyx_L1_error)
+      __PYX_ERR(0, 158, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_v_self->ids_boilerplate = __pyx_t_7;
 
-    /* "gumbocy.pyx":138
+    /* "gumbocy.pyx":159
  *             self.has_ids_boilerplate = True
  *             self.ids_boilerplate = new re2cy.RE2("^(?:" + "|".join(ids_boilerplate) + ")$")
  *             attributes_whitelist.add("id")             # <<<<<<<<<<<<<<
  * 
  *         roles_boilerplate = frozenset(options.get("roles_boilerplate") or [])
  */
-    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_id); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 138, __pyx_L1_error)
+    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_id); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 159, __pyx_L1_error)
 
-    /* "gumbocy.pyx":135
+    /* "gumbocy.pyx":156
  * 
  *         ids_boilerplate = frozenset(options.get("ids_boilerplate") or [])
  *         if len(ids_boilerplate) > 0:             # <<<<<<<<<<<<<<
@@ -2104,7 +2125,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   }
 
-  /* "gumbocy.pyx":140
+  /* "gumbocy.pyx":161
  *             attributes_whitelist.add("id")
  * 
  *         roles_boilerplate = frozenset(options.get("roles_boilerplate") or [])             # <<<<<<<<<<<<<<
@@ -2113,11 +2134,11 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 140, __pyx_L1_error)
+    __PYX_ERR(0, 161, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_roles_boilerplate, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_roles_boilerplate, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 140, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 161, __pyx_L1_error)
   if (!__pyx_t_2) {
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   } else {
@@ -2126,30 +2147,30 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     goto __pyx_L25_bool_binop_done;
   }
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_t_1);
   __pyx_t_3 = __pyx_t_1;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_L25_bool_binop_done:;
-  __pyx_t_1 = __Pyx_PyFrozenSet_New(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFrozenSet_New(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_roles_boilerplate = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "gumbocy.pyx":141
+  /* "gumbocy.pyx":162
  * 
  *         roles_boilerplate = frozenset(options.get("roles_boilerplate") or [])
  *         if len(roles_boilerplate) > 0:             # <<<<<<<<<<<<<<
  *             self.has_roles_boilerplate = True
  *             self.roles_boilerplate = new re2cy.RE2("^(?:" + "|".join(roles_boilerplate) + ")$")
  */
-  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_roles_boilerplate); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 141, __pyx_L1_error)
+  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_roles_boilerplate); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 162, __pyx_L1_error)
   __pyx_t_2 = ((__pyx_t_5 > 0) != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":142
+    /* "gumbocy.pyx":163
  *         roles_boilerplate = frozenset(options.get("roles_boilerplate") or [])
  *         if len(roles_boilerplate) > 0:
  *             self.has_roles_boilerplate = True             # <<<<<<<<<<<<<<
@@ -2158,41 +2179,41 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
     __pyx_v_self->has_roles_boilerplate = 1;
 
-    /* "gumbocy.pyx":143
+    /* "gumbocy.pyx":164
  *         if len(roles_boilerplate) > 0:
  *             self.has_roles_boilerplate = True
  *             self.roles_boilerplate = new re2cy.RE2("^(?:" + "|".join(roles_boilerplate) + ")$")             # <<<<<<<<<<<<<<
  *             attributes_whitelist.add("role")
  * 
  */
-    __pyx_t_1 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_roles_boilerplate); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 143, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_roles_boilerplate); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 164, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = PyNumber_Add(__pyx_kp_s_, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 143, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Add(__pyx_kp_s_, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 164, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_kp_s__3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 143, __pyx_L1_error)
+    __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_kp_s__3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 164, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_1); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 143, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_1); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 164, __pyx_L1_error)
     try {
       __pyx_t_7 = new re2::RE2(__pyx_t_6);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 143, __pyx_L1_error)
+      __PYX_ERR(0, 164, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_v_self->roles_boilerplate = __pyx_t_7;
 
-    /* "gumbocy.pyx":144
+    /* "gumbocy.pyx":165
  *             self.has_roles_boilerplate = True
  *             self.roles_boilerplate = new re2cy.RE2("^(?:" + "|".join(roles_boilerplate) + ")$")
  *             attributes_whitelist.add("role")             # <<<<<<<<<<<<<<
  * 
  *         metas_whitelist = frozenset(options.get("metas_whitelist") or [])
  */
-    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_role); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 144, __pyx_L1_error)
+    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_role); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 165, __pyx_L1_error)
 
-    /* "gumbocy.pyx":141
+    /* "gumbocy.pyx":162
  * 
  *         roles_boilerplate = frozenset(options.get("roles_boilerplate") or [])
  *         if len(roles_boilerplate) > 0:             # <<<<<<<<<<<<<<
@@ -2201,7 +2222,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   }
 
-  /* "gumbocy.pyx":146
+  /* "gumbocy.pyx":167
  *             attributes_whitelist.add("role")
  * 
  *         metas_whitelist = frozenset(options.get("metas_whitelist") or [])             # <<<<<<<<<<<<<<
@@ -2210,11 +2231,11 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 146, __pyx_L1_error)
+    __PYX_ERR(0, 167, __pyx_L1_error)
   }
-  __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_metas_whitelist, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 146, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_metas_whitelist, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 167, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 146, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 167, __pyx_L1_error)
   if (!__pyx_t_2) {
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   } else {
@@ -2223,30 +2244,30 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     goto __pyx_L28_bool_binop_done;
   }
-  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 146, __pyx_L1_error)
+  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 167, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_t_3);
   __pyx_t_1 = __pyx_t_3;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_L28_bool_binop_done:;
-  __pyx_t_3 = __Pyx_PyFrozenSet_New(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 146, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyFrozenSet_New(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 167, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_metas_whitelist = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "gumbocy.pyx":147
+  /* "gumbocy.pyx":168
  * 
  *         metas_whitelist = frozenset(options.get("metas_whitelist") or [])
  *         if len(metas_whitelist) > 0:             # <<<<<<<<<<<<<<
  *             self.has_metas_whitelist = True
  *             self.metas_whitelist = new re2cy.RE2("^(?:" + "|".join(metas_whitelist) + ")$")
  */
-  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_metas_whitelist); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 147, __pyx_L1_error)
+  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_metas_whitelist); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 168, __pyx_L1_error)
   __pyx_t_2 = ((__pyx_t_5 > 0) != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":148
+    /* "gumbocy.pyx":169
  *         metas_whitelist = frozenset(options.get("metas_whitelist") or [])
  *         if len(metas_whitelist) > 0:
  *             self.has_metas_whitelist = True             # <<<<<<<<<<<<<<
@@ -2255,59 +2276,59 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
     __pyx_v_self->has_metas_whitelist = 1;
 
-    /* "gumbocy.pyx":149
+    /* "gumbocy.pyx":170
  *         if len(metas_whitelist) > 0:
  *             self.has_metas_whitelist = True
  *             self.metas_whitelist = new re2cy.RE2("^(?:" + "|".join(metas_whitelist) + ")$")             # <<<<<<<<<<<<<<
  *             attributes_whitelist.add("name")
  *             attributes_whitelist.add("property")
  */
-    __pyx_t_3 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_metas_whitelist); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_metas_whitelist); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 170, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = PyNumber_Add(__pyx_kp_s_, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __pyx_t_1 = PyNumber_Add(__pyx_kp_s_, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 170, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 170, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 149, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 170, __pyx_L1_error)
     try {
       __pyx_t_7 = new re2::RE2(__pyx_t_6);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 149, __pyx_L1_error)
+      __PYX_ERR(0, 170, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_v_self->metas_whitelist = __pyx_t_7;
 
-    /* "gumbocy.pyx":150
+    /* "gumbocy.pyx":171
  *             self.has_metas_whitelist = True
  *             self.metas_whitelist = new re2cy.RE2("^(?:" + "|".join(metas_whitelist) + ")$")
  *             attributes_whitelist.add("name")             # <<<<<<<<<<<<<<
  *             attributes_whitelist.add("property")
  *             attributes_whitelist.add("content")
  */
-    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_name); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 150, __pyx_L1_error)
+    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_name); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 171, __pyx_L1_error)
 
-    /* "gumbocy.pyx":151
+    /* "gumbocy.pyx":172
  *             self.metas_whitelist = new re2cy.RE2("^(?:" + "|".join(metas_whitelist) + ")$")
  *             attributes_whitelist.add("name")
  *             attributes_whitelist.add("property")             # <<<<<<<<<<<<<<
  *             attributes_whitelist.add("content")
  * 
  */
-    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_property); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 151, __pyx_L1_error)
+    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_property); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 172, __pyx_L1_error)
 
-    /* "gumbocy.pyx":152
+    /* "gumbocy.pyx":173
  *             attributes_whitelist.add("name")
  *             attributes_whitelist.add("property")
  *             attributes_whitelist.add("content")             # <<<<<<<<<<<<<<
  * 
  *         # Some options add attributes to the whitelist
  */
-    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_content); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 152, __pyx_L1_error)
+    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_content); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 173, __pyx_L1_error)
 
-    /* "gumbocy.pyx":147
+    /* "gumbocy.pyx":168
  * 
  *         metas_whitelist = frozenset(options.get("metas_whitelist") or [])
  *         if len(metas_whitelist) > 0:             # <<<<<<<<<<<<<<
@@ -2316,7 +2337,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   }
 
-  /* "gumbocy.pyx":155
+  /* "gumbocy.pyx":176
  * 
  *         # Some options add attributes to the whitelist
  *         if self.analyze_external_hyperlinks or self.analyze_internal_hyperlinks:             # <<<<<<<<<<<<<<
@@ -2334,25 +2355,25 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
   __pyx_L32_bool_binop_done:;
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":156
+    /* "gumbocy.pyx":177
  *         # Some options add attributes to the whitelist
  *         if self.analyze_external_hyperlinks or self.analyze_internal_hyperlinks:
  *             attributes_whitelist.add("href")             # <<<<<<<<<<<<<<
  *             attributes_whitelist.add("rel")
  * 
  */
-    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_href); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 156, __pyx_L1_error)
+    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_href); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 177, __pyx_L1_error)
 
-    /* "gumbocy.pyx":157
+    /* "gumbocy.pyx":178
  *         if self.analyze_external_hyperlinks or self.analyze_internal_hyperlinks:
  *             attributes_whitelist.add("href")
  *             attributes_whitelist.add("rel")             # <<<<<<<<<<<<<<
  * 
  *         # FInally, freeze the attributes whitelist
  */
-    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_rel); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 157, __pyx_L1_error)
+    __pyx_t_8 = PySet_Add(__pyx_v_attributes_whitelist, __pyx_n_s_rel); if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 178, __pyx_L1_error)
 
-    /* "gumbocy.pyx":155
+    /* "gumbocy.pyx":176
  * 
  *         # Some options add attributes to the whitelist
  *         if self.analyze_external_hyperlinks or self.analyze_internal_hyperlinks:             # <<<<<<<<<<<<<<
@@ -2361,17 +2382,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   }
 
-  /* "gumbocy.pyx":160
+  /* "gumbocy.pyx":181
  * 
  *         # FInally, freeze the attributes whitelist
  *         self.has_attributes_whitelist = len(attributes_whitelist) > 0             # <<<<<<<<<<<<<<
  *         if self.has_attributes_whitelist:
  *             self.attributes_whitelist = new re2cy.RE2("^(?:" + "|".join(attributes_whitelist) + ")$")
  */
-  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_attributes_whitelist); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_5 = PySet_GET_SIZE(__pyx_v_attributes_whitelist); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 181, __pyx_L1_error)
   __pyx_v_self->has_attributes_whitelist = (__pyx_t_5 > 0);
 
-  /* "gumbocy.pyx":161
+  /* "gumbocy.pyx":182
  *         # FInally, freeze the attributes whitelist
  *         self.has_attributes_whitelist = len(attributes_whitelist) > 0
  *         if self.has_attributes_whitelist:             # <<<<<<<<<<<<<<
@@ -2381,32 +2402,32 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
   __pyx_t_2 = (__pyx_v_self->has_attributes_whitelist != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":162
+    /* "gumbocy.pyx":183
  *         self.has_attributes_whitelist = len(attributes_whitelist) > 0
  *         if self.has_attributes_whitelist:
  *             self.attributes_whitelist = new re2cy.RE2("^(?:" + "|".join(attributes_whitelist) + ")$")             # <<<<<<<<<<<<<<
  * 
  *         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_BODY)
  */
-    __pyx_t_3 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_attributes_whitelist); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyString_Join(__pyx_kp_s__2, __pyx_v_attributes_whitelist); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 183, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = PyNumber_Add(__pyx_kp_s_, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __pyx_t_1 = PyNumber_Add(__pyx_kp_s_, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 183, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 183, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 162, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 183, __pyx_L1_error)
     try {
       __pyx_t_7 = new re2::RE2(__pyx_t_6);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 162, __pyx_L1_error)
+      __PYX_ERR(0, 183, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_v_self->attributes_whitelist = __pyx_t_7;
 
-    /* "gumbocy.pyx":161
+    /* "gumbocy.pyx":182
  *         # FInally, freeze the attributes whitelist
  *         self.has_attributes_whitelist = len(attributes_whitelist) > 0
  *         if self.has_attributes_whitelist:             # <<<<<<<<<<<<<<
@@ -2415,7 +2436,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   }
 
-  /* "gumbocy.pyx":164
+  /* "gumbocy.pyx":185
  *             self.attributes_whitelist = new re2cy.RE2("^(?:" + "|".join(attributes_whitelist) + ")$")
  * 
  *         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_BODY)             # <<<<<<<<<<<<<<
@@ -2424,7 +2445,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   __pyx_v_self->tags_ignore_head_only.insert(GUMBO_TAG_BODY);
 
-  /* "gumbocy.pyx":165
+  /* "gumbocy.pyx":186
  * 
  *         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_BODY)
  *         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_P)             # <<<<<<<<<<<<<<
@@ -2433,7 +2454,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   __pyx_v_self->tags_ignore_head_only.insert(GUMBO_TAG_P);
 
-  /* "gumbocy.pyx":166
+  /* "gumbocy.pyx":187
  *         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_BODY)
  *         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_P)
  *         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_DIV)             # <<<<<<<<<<<<<<
@@ -2442,7 +2463,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   __pyx_v_self->tags_ignore_head_only.insert(GUMBO_TAG_DIV);
 
-  /* "gumbocy.pyx":167
+  /* "gumbocy.pyx":188
  *         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_P)
  *         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_DIV)
  *         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_SPAN)             # <<<<<<<<<<<<<<
@@ -2451,7 +2472,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   __pyx_v_self->tags_ignore_head_only.insert(GUMBO_TAG_SPAN);
 
-  /* "gumbocy.pyx":169
+  /* "gumbocy.pyx":190
  *         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_SPAN)
  * 
  *         for tag_name in options.get("tags_ignore", []):             # <<<<<<<<<<<<<<
@@ -2460,20 +2481,20 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 169, __pyx_L1_error)
+    __PYX_ERR(0, 190, __pyx_L1_error)
   }
-  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 169, __pyx_L1_error)
+  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 190, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_tags_ignore, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 169, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_tags_ignore, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 190, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
     __pyx_t_3 = __pyx_t_1; __Pyx_INCREF(__pyx_t_3); __pyx_t_5 = 0;
     __pyx_t_10 = NULL;
   } else {
-    __pyx_t_5 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 169, __pyx_L1_error)
+    __pyx_t_5 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 190, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_10 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 169, __pyx_L1_error)
+    __pyx_t_10 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 190, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   for (;;) {
@@ -2481,17 +2502,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
       if (likely(PyList_CheckExact(__pyx_t_3))) {
         if (__pyx_t_5 >= PyList_GET_SIZE(__pyx_t_3)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 169, __pyx_L1_error)
+        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 190, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 169, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 190, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       } else {
         if (__pyx_t_5 >= PyTuple_GET_SIZE(__pyx_t_3)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 169, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 190, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 169, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 190, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       }
@@ -2501,7 +2522,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 169, __pyx_L1_error)
+          else __PYX_ERR(0, 190, __pyx_L1_error)
         }
         break;
       }
@@ -2510,17 +2531,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_XDECREF_SET(__pyx_v_tag_name, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "gumbocy.pyx":170
+    /* "gumbocy.pyx":191
  * 
  *         for tag_name in options.get("tags_ignore", []):
  *             tag = gumbocy.gumbo_tag_enum(tag_name)             # <<<<<<<<<<<<<<
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:
  *                 self.tags_ignore.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
  */
-    __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 170, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 191, __pyx_L1_error)
     __pyx_v_tag = gumbo_tag_enum(__pyx_t_11);
 
-    /* "gumbocy.pyx":171
+    /* "gumbocy.pyx":192
  *         for tag_name in options.get("tags_ignore", []):
  *             tag = gumbocy.gumbo_tag_enum(tag_name)
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:             # <<<<<<<<<<<<<<
@@ -2530,17 +2551,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __pyx_t_2 = ((__pyx_v_tag != GUMBO_TAG_UNKNOWN) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":172
+      /* "gumbocy.pyx":193
  *             tag = gumbocy.gumbo_tag_enum(tag_name)
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:
  *                 self.tags_ignore.insert(<int> gumbocy.gumbo_tag_enum(tag_name))             # <<<<<<<<<<<<<<
  * 
  *         for tag_name in options.get("tags_boilerplate", []):
  */
-      __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 172, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 193, __pyx_L1_error)
       __pyx_v_self->tags_ignore.insert(((int)gumbo_tag_enum(__pyx_t_11)));
 
-      /* "gumbocy.pyx":171
+      /* "gumbocy.pyx":192
  *         for tag_name in options.get("tags_ignore", []):
  *             tag = gumbocy.gumbo_tag_enum(tag_name)
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:             # <<<<<<<<<<<<<<
@@ -2549,7 +2570,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
     }
 
-    /* "gumbocy.pyx":169
+    /* "gumbocy.pyx":190
  *         self.tags_ignore_head_only.insert(gumbocy.GUMBO_TAG_SPAN)
  * 
  *         for tag_name in options.get("tags_ignore", []):             # <<<<<<<<<<<<<<
@@ -2559,7 +2580,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "gumbocy.pyx":174
+  /* "gumbocy.pyx":195
  *                 self.tags_ignore.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
  * 
  *         for tag_name in options.get("tags_boilerplate", []):             # <<<<<<<<<<<<<<
@@ -2568,20 +2589,20 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 174, __pyx_L1_error)
+    __PYX_ERR(0, 195, __pyx_L1_error)
   }
-  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 174, __pyx_L1_error)
+  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 195, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_tags_boilerplate, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 174, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_tags_boilerplate, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 195, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
     __pyx_t_3 = __pyx_t_1; __Pyx_INCREF(__pyx_t_3); __pyx_t_5 = 0;
     __pyx_t_10 = NULL;
   } else {
-    __pyx_t_5 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 174, __pyx_L1_error)
+    __pyx_t_5 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 195, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_10 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 174, __pyx_L1_error)
+    __pyx_t_10 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 195, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   for (;;) {
@@ -2589,17 +2610,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
       if (likely(PyList_CheckExact(__pyx_t_3))) {
         if (__pyx_t_5 >= PyList_GET_SIZE(__pyx_t_3)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 174, __pyx_L1_error)
+        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 195, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 174, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 195, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       } else {
         if (__pyx_t_5 >= PyTuple_GET_SIZE(__pyx_t_3)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 174, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 195, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 174, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 195, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       }
@@ -2609,7 +2630,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 174, __pyx_L1_error)
+          else __PYX_ERR(0, 195, __pyx_L1_error)
         }
         break;
       }
@@ -2618,17 +2639,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_XDECREF_SET(__pyx_v_tag_name, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "gumbocy.pyx":175
+    /* "gumbocy.pyx":196
  * 
  *         for tag_name in options.get("tags_boilerplate", []):
  *             tag = gumbocy.gumbo_tag_enum(tag_name)             # <<<<<<<<<<<<<<
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:
  *                 self.tags_boilerplate.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
  */
-    __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 175, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 196, __pyx_L1_error)
     __pyx_v_tag = gumbo_tag_enum(__pyx_t_11);
 
-    /* "gumbocy.pyx":176
+    /* "gumbocy.pyx":197
  *         for tag_name in options.get("tags_boilerplate", []):
  *             tag = gumbocy.gumbo_tag_enum(tag_name)
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:             # <<<<<<<<<<<<<<
@@ -2638,17 +2659,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __pyx_t_2 = ((__pyx_v_tag != GUMBO_TAG_UNKNOWN) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":177
+      /* "gumbocy.pyx":198
  *             tag = gumbocy.gumbo_tag_enum(tag_name)
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:
  *                 self.tags_boilerplate.insert(<int> gumbocy.gumbo_tag_enum(tag_name))             # <<<<<<<<<<<<<<
  * 
  *         for tag_name in options.get("tags_boilerplate_bypass", []):
  */
-      __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 177, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 198, __pyx_L1_error)
       __pyx_v_self->tags_boilerplate.insert(((int)gumbo_tag_enum(__pyx_t_11)));
 
-      /* "gumbocy.pyx":176
+      /* "gumbocy.pyx":197
  *         for tag_name in options.get("tags_boilerplate", []):
  *             tag = gumbocy.gumbo_tag_enum(tag_name)
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:             # <<<<<<<<<<<<<<
@@ -2657,7 +2678,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
     }
 
-    /* "gumbocy.pyx":174
+    /* "gumbocy.pyx":195
  *                 self.tags_ignore.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
  * 
  *         for tag_name in options.get("tags_boilerplate", []):             # <<<<<<<<<<<<<<
@@ -2667,7 +2688,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "gumbocy.pyx":179
+  /* "gumbocy.pyx":200
  *                 self.tags_boilerplate.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
  * 
  *         for tag_name in options.get("tags_boilerplate_bypass", []):             # <<<<<<<<<<<<<<
@@ -2676,20 +2697,20 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 179, __pyx_L1_error)
+    __PYX_ERR(0, 200, __pyx_L1_error)
   }
-  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_tags_boilerplate_bypass, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_tags_boilerplate_bypass, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
     __pyx_t_3 = __pyx_t_1; __Pyx_INCREF(__pyx_t_3); __pyx_t_5 = 0;
     __pyx_t_10 = NULL;
   } else {
-    __pyx_t_5 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 179, __pyx_L1_error)
+    __pyx_t_5 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 200, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_10 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 179, __pyx_L1_error)
+    __pyx_t_10 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 200, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   for (;;) {
@@ -2697,17 +2718,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
       if (likely(PyList_CheckExact(__pyx_t_3))) {
         if (__pyx_t_5 >= PyList_GET_SIZE(__pyx_t_3)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 179, __pyx_L1_error)
+        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 200, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 179, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 200, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       } else {
         if (__pyx_t_5 >= PyTuple_GET_SIZE(__pyx_t_3)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 179, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 200, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 179, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 200, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       }
@@ -2717,7 +2738,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 179, __pyx_L1_error)
+          else __PYX_ERR(0, 200, __pyx_L1_error)
         }
         break;
       }
@@ -2726,17 +2747,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_XDECREF_SET(__pyx_v_tag_name, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "gumbocy.pyx":180
+    /* "gumbocy.pyx":201
  * 
  *         for tag_name in options.get("tags_boilerplate_bypass", []):
  *             tag = gumbocy.gumbo_tag_enum(tag_name)             # <<<<<<<<<<<<<<
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:
  *                 self.tags_boilerplate_bypass.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
  */
-    __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 180, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 201, __pyx_L1_error)
     __pyx_v_tag = gumbo_tag_enum(__pyx_t_11);
 
-    /* "gumbocy.pyx":181
+    /* "gumbocy.pyx":202
  *         for tag_name in options.get("tags_boilerplate_bypass", []):
  *             tag = gumbocy.gumbo_tag_enum(tag_name)
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:             # <<<<<<<<<<<<<<
@@ -2746,17 +2767,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __pyx_t_2 = ((__pyx_v_tag != GUMBO_TAG_UNKNOWN) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":182
+      /* "gumbocy.pyx":203
  *             tag = gumbocy.gumbo_tag_enum(tag_name)
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:
  *                 self.tags_boilerplate_bypass.insert(<int> gumbocy.gumbo_tag_enum(tag_name))             # <<<<<<<<<<<<<<
  * 
  *         for tag_name in options.get("tags_separators", []):
  */
-      __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 182, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 203, __pyx_L1_error)
       __pyx_v_self->tags_boilerplate_bypass.insert(((int)gumbo_tag_enum(__pyx_t_11)));
 
-      /* "gumbocy.pyx":181
+      /* "gumbocy.pyx":202
  *         for tag_name in options.get("tags_boilerplate_bypass", []):
  *             tag = gumbocy.gumbo_tag_enum(tag_name)
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:             # <<<<<<<<<<<<<<
@@ -2765,7 +2786,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
     }
 
-    /* "gumbocy.pyx":179
+    /* "gumbocy.pyx":200
  *                 self.tags_boilerplate.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
  * 
  *         for tag_name in options.get("tags_boilerplate_bypass", []):             # <<<<<<<<<<<<<<
@@ -2775,7 +2796,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "gumbocy.pyx":184
+  /* "gumbocy.pyx":205
  *                 self.tags_boilerplate_bypass.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
  * 
  *         for tag_name in options.get("tags_separators", []):             # <<<<<<<<<<<<<<
@@ -2784,20 +2805,20 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
   if (unlikely(__pyx_v_options == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-    __PYX_ERR(0, 184, __pyx_L1_error)
+    __PYX_ERR(0, 205, __pyx_L1_error)
   }
-  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 184, __pyx_L1_error)
+  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 205, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_tags_separators, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 184, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItemDefault(__pyx_v_options, __pyx_n_s_tags_separators, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 205, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
     __pyx_t_3 = __pyx_t_1; __Pyx_INCREF(__pyx_t_3); __pyx_t_5 = 0;
     __pyx_t_10 = NULL;
   } else {
-    __pyx_t_5 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 184, __pyx_L1_error)
+    __pyx_t_5 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 205, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_10 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 184, __pyx_L1_error)
+    __pyx_t_10 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 205, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   for (;;) {
@@ -2805,17 +2826,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
       if (likely(PyList_CheckExact(__pyx_t_3))) {
         if (__pyx_t_5 >= PyList_GET_SIZE(__pyx_t_3)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 184, __pyx_L1_error)
+        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 205, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 184, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 205, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       } else {
         if (__pyx_t_5 >= PyTuple_GET_SIZE(__pyx_t_3)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 184, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 205, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 184, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 205, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       }
@@ -2825,7 +2846,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 184, __pyx_L1_error)
+          else __PYX_ERR(0, 205, __pyx_L1_error)
         }
         break;
       }
@@ -2834,17 +2855,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __Pyx_XDECREF_SET(__pyx_v_tag_name, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "gumbocy.pyx":185
+    /* "gumbocy.pyx":206
  * 
  *         for tag_name in options.get("tags_separators", []):
  *             tag = gumbocy.gumbo_tag_enum(tag_name)             # <<<<<<<<<<<<<<
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:
  *                 self.tags_separators.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
  */
-    __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 185, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 206, __pyx_L1_error)
     __pyx_v_tag = gumbo_tag_enum(__pyx_t_11);
 
-    /* "gumbocy.pyx":186
+    /* "gumbocy.pyx":207
  *         for tag_name in options.get("tags_separators", []):
  *             tag = gumbocy.gumbo_tag_enum(tag_name)
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:             # <<<<<<<<<<<<<<
@@ -2854,17 +2875,17 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
     __pyx_t_2 = ((__pyx_v_tag != GUMBO_TAG_UNKNOWN) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":187
+      /* "gumbocy.pyx":208
  *             tag = gumbocy.gumbo_tag_enum(tag_name)
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:
  *                 self.tags_separators.insert(<int> gumbocy.gumbo_tag_enum(tag_name))             # <<<<<<<<<<<<<<
  * 
  *         self.tags_separators.insert(gumbocy.GUMBO_TAG_BODY)
  */
-      __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 187, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_tag_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 208, __pyx_L1_error)
       __pyx_v_self->tags_separators.insert(((int)gumbo_tag_enum(__pyx_t_11)));
 
-      /* "gumbocy.pyx":186
+      /* "gumbocy.pyx":207
  *         for tag_name in options.get("tags_separators", []):
  *             tag = gumbocy.gumbo_tag_enum(tag_name)
  *             if tag != gumbocy.GUMBO_TAG_UNKNOWN:             # <<<<<<<<<<<<<<
@@ -2873,7 +2894,7 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
  */
     }
 
-    /* "gumbocy.pyx":184
+    /* "gumbocy.pyx":205
  *                 self.tags_boilerplate_bypass.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
  * 
  *         for tag_name in options.get("tags_separators", []):             # <<<<<<<<<<<<<<
@@ -2883,16 +2904,16 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "gumbocy.pyx":189
+  /* "gumbocy.pyx":210
  *                 self.tags_separators.insert(<int> gumbocy.gumbo_tag_enum(tag_name))
  * 
  *         self.tags_separators.insert(gumbocy.GUMBO_TAG_BODY)             # <<<<<<<<<<<<<<
  * 
- *     cdef bint guess_node_hidden(self, gumbocy.GumboNode* node, Attributes* attrs):
+ *     cdef bint guess_node_hidden(self, gumbocy.GumboNode* node, Attributes attrs):
  */
   __pyx_v_self->tags_separators.insert(GUMBO_TAG_BODY);
 
-  /* "gumbocy.pyx":91
+  /* "gumbocy.pyx":112
  *     cdef list nodes
  * 
  *     def __cinit__(self, dict options=None):             # <<<<<<<<<<<<<<
@@ -2924,26 +2945,27 @@ static int __pyx_pf_7gumbocy_10HTMLParser___cinit__(struct __pyx_obj_7gumbocy_HT
   return __pyx_r;
 }
 
-/* "gumbocy.pyx":191
+/* "gumbocy.pyx":212
  *         self.tags_separators.insert(gumbocy.GUMBO_TAG_BODY)
  * 
- *     cdef bint guess_node_hidden(self, gumbocy.GumboNode* node, Attributes* attrs):             # <<<<<<<<<<<<<<
+ *     cdef bint guess_node_hidden(self, gumbocy.GumboNode* node, Attributes attrs):             # <<<<<<<<<<<<<<
  *         """ Rough guess to check if the element is explicitly hidden.
  * 
  */
 
-static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, CYTHON_UNUSED GumboNode *__pyx_v_node, struct __pyx_t_7gumbocy_Attributes *__pyx_v_attrs) {
-  char *__pyx_v_k;
+static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, CYTHON_UNUSED GumboNode *__pyx_v_node, struct __pyx_obj_7gumbocy_Attributes *__pyx_v_attrs) {
+  PyObject *__pyx_v_k = NULL;
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
-  std::vector<char *> ::iterator __pyx_t_3;
-  std::vector<char *>  *__pyx_t_4;
-  char *__pyx_t_5;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  char const *__pyx_t_5;
+  Py_ssize_t __pyx_t_6;
   __Pyx_RefNannySetupContext("guess_node_hidden", 0);
 
-  /* "gumbocy.pyx":197
+  /* "gumbocy.pyx":218
  *         """
  * 
  *         if not self.has_attributes_whitelist:             # <<<<<<<<<<<<<<
@@ -2953,7 +2975,7 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gum
   __pyx_t_1 = ((!(__pyx_v_self->has_attributes_whitelist != 0)) != 0);
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":198
+    /* "gumbocy.pyx":219
  * 
  *         if not self.has_attributes_whitelist:
  *             return False             # <<<<<<<<<<<<<<
@@ -2963,7 +2985,7 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gum
     __pyx_r = 0;
     goto __pyx_L0;
 
-    /* "gumbocy.pyx":197
+    /* "gumbocy.pyx":218
  *         """
  * 
  *         if not self.has_attributes_whitelist:             # <<<<<<<<<<<<<<
@@ -2972,7 +2994,7 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gum
  */
   }
 
-  /* "gumbocy.pyx":201
+  /* "gumbocy.pyx":222
  * 
  *         # From the HTML5 spec
  *         if attrs.has_hidden:             # <<<<<<<<<<<<<<
@@ -2982,17 +3004,17 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gum
   __pyx_t_1 = (__pyx_v_attrs->has_hidden != 0);
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":202
+    /* "gumbocy.pyx":223
  *         # From the HTML5 spec
  *         if attrs.has_hidden:
  *             return True             # <<<<<<<<<<<<<<
  * 
- *         if self.has_ids_hidden and attrs.values.count(ATTR_ID):
+ *         if self.has_ids_hidden and attrs.values.get(ATTR_ID):
  */
     __pyx_r = 1;
     goto __pyx_L0;
 
-    /* "gumbocy.pyx":201
+    /* "gumbocy.pyx":222
  * 
  *         # From the HTML5 spec
  *         if attrs.has_hidden:             # <<<<<<<<<<<<<<
@@ -3001,10 +3023,10 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gum
  */
   }
 
-  /* "gumbocy.pyx":204
+  /* "gumbocy.pyx":225
  *             return True
  * 
- *         if self.has_ids_hidden and attrs.values.count(ATTR_ID):             # <<<<<<<<<<<<<<
+ *         if self.has_ids_hidden and attrs.values.get(ATTR_ID):             # <<<<<<<<<<<<<<
  *             if re2_search(attrs.values[ATTR_ID], deref(self.ids_hidden)):
  *                 return True
  */
@@ -3014,53 +3036,74 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gum
     __pyx_t_1 = __pyx_t_2;
     goto __pyx_L6_bool_binop_done;
   }
-  __pyx_t_2 = (__pyx_v_attrs->values.count(__pyx_e_7gumbocy_ATTR_ID) != 0);
+  if (unlikely(__pyx_v_attrs->values == Py_None)) {
+    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+    __PYX_ERR(0, 225, __pyx_L1_error)
+  }
+  __pyx_t_3 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ID); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_1 = __pyx_t_2;
   __pyx_L6_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":205
+    /* "gumbocy.pyx":226
  * 
- *         if self.has_ids_hidden and attrs.values.count(ATTR_ID):
+ *         if self.has_ids_hidden and attrs.values.get(ATTR_ID):
  *             if re2_search(attrs.values[ATTR_ID], deref(self.ids_hidden)):             # <<<<<<<<<<<<<<
  *                 return True
  * 
  */
-    __pyx_t_1 = (__pyx_f_7gumbocy_re2_search((__pyx_v_attrs->values[__pyx_e_7gumbocy_ATTR_ID]), (*__pyx_v_self->ids_hidden)) != 0);
+    if (unlikely(__pyx_v_attrs->values == Py_None)) {
+      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+      __PYX_ERR(0, 226, __pyx_L1_error)
+    }
+    __pyx_t_4 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ID); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 226, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_3 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 226, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_5 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_5) && PyErr_Occurred())) __PYX_ERR(0, 226, __pyx_L1_error)
+    __pyx_t_1 = (__pyx_f_7gumbocy_re2_search(__pyx_t_5, (*__pyx_v_self->ids_hidden)) != 0);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":206
- *         if self.has_ids_hidden and attrs.values.count(ATTR_ID):
+      /* "gumbocy.pyx":227
+ *         if self.has_ids_hidden and attrs.values.get(ATTR_ID):
  *             if re2_search(attrs.values[ATTR_ID], deref(self.ids_hidden)):
  *                 return True             # <<<<<<<<<<<<<<
  * 
- *         if self.has_classes_hidden and attrs.has_classes:
+ *         if self.has_classes_hidden and attrs.size_classes > 0:
  */
       __pyx_r = 1;
       goto __pyx_L0;
 
-      /* "gumbocy.pyx":205
+      /* "gumbocy.pyx":226
  * 
- *         if self.has_ids_hidden and attrs.values.count(ATTR_ID):
+ *         if self.has_ids_hidden and attrs.values.get(ATTR_ID):
  *             if re2_search(attrs.values[ATTR_ID], deref(self.ids_hidden)):             # <<<<<<<<<<<<<<
  *                 return True
  * 
  */
     }
 
-    /* "gumbocy.pyx":204
+    /* "gumbocy.pyx":225
  *             return True
  * 
- *         if self.has_ids_hidden and attrs.values.count(ATTR_ID):             # <<<<<<<<<<<<<<
+ *         if self.has_ids_hidden and attrs.values.get(ATTR_ID):             # <<<<<<<<<<<<<<
  *             if re2_search(attrs.values[ATTR_ID], deref(self.ids_hidden)):
  *                 return True
  */
   }
 
-  /* "gumbocy.pyx":208
+  /* "gumbocy.pyx":229
  *                 return True
  * 
- *         if self.has_classes_hidden and attrs.has_classes:             # <<<<<<<<<<<<<<
+ *         if self.has_classes_hidden and attrs.size_classes > 0:             # <<<<<<<<<<<<<<
  *             for k in attrs.classes:
  *                 if re2_search(k, deref(self.classes_hidden)):
  */
@@ -3070,48 +3113,58 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gum
     __pyx_t_1 = __pyx_t_2;
     goto __pyx_L10_bool_binop_done;
   }
-  __pyx_t_2 = (__pyx_v_attrs->has_classes != 0);
+  __pyx_t_2 = ((__pyx_v_attrs->size_classes > 0) != 0);
   __pyx_t_1 = __pyx_t_2;
   __pyx_L10_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":209
+    /* "gumbocy.pyx":230
  * 
- *         if self.has_classes_hidden and attrs.has_classes:
+ *         if self.has_classes_hidden and attrs.size_classes > 0:
  *             for k in attrs.classes:             # <<<<<<<<<<<<<<
  *                 if re2_search(k, deref(self.classes_hidden)):
  *                     return True
  */
-    __pyx_t_4 = &__pyx_v_attrs->classes;
-    __pyx_t_3 = __pyx_t_4->begin();
+    if (unlikely(__pyx_v_attrs->classes == Py_None)) {
+      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
+      __PYX_ERR(0, 230, __pyx_L1_error)
+    }
+    __pyx_t_3 = __pyx_v_attrs->classes; __Pyx_INCREF(__pyx_t_3); __pyx_t_6 = 0;
     for (;;) {
-      if (!(__pyx_t_3 != __pyx_t_4->end())) break;
-      __pyx_t_5 = *__pyx_t_3;
-      ++__pyx_t_3;
-      __pyx_v_k = __pyx_t_5;
+      if (__pyx_t_6 >= PyList_GET_SIZE(__pyx_t_3)) break;
+      #if CYTHON_COMPILING_IN_CPYTHON
+      __pyx_t_4 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_6); __Pyx_INCREF(__pyx_t_4); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 230, __pyx_L1_error)
+      #else
+      __pyx_t_4 = PySequence_ITEM(__pyx_t_3, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 230, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_4);
+      #endif
+      __Pyx_XDECREF_SET(__pyx_v_k, __pyx_t_4);
+      __pyx_t_4 = 0;
 
-      /* "gumbocy.pyx":210
- *         if self.has_classes_hidden and attrs.has_classes:
+      /* "gumbocy.pyx":231
+ *         if self.has_classes_hidden and attrs.size_classes > 0:
  *             for k in attrs.classes:
  *                 if re2_search(k, deref(self.classes_hidden)):             # <<<<<<<<<<<<<<
  *                     return True
  * 
  */
-      __pyx_t_1 = (__pyx_f_7gumbocy_re2_search(__pyx_v_k, (*__pyx_v_self->classes_hidden)) != 0);
+      __pyx_t_5 = __Pyx_PyObject_AsString(__pyx_v_k); if (unlikely((!__pyx_t_5) && PyErr_Occurred())) __PYX_ERR(0, 231, __pyx_L1_error)
+      __pyx_t_1 = (__pyx_f_7gumbocy_re2_search(__pyx_t_5, (*__pyx_v_self->classes_hidden)) != 0);
       if (__pyx_t_1) {
 
-        /* "gumbocy.pyx":211
+        /* "gumbocy.pyx":232
  *             for k in attrs.classes:
  *                 if re2_search(k, deref(self.classes_hidden)):
  *                     return True             # <<<<<<<<<<<<<<
  * 
- *         if attrs.values.count(ATTR_STYLE):
+ *         if attrs.values.get(ATTR_STYLE):
  */
         __pyx_r = 1;
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
         goto __pyx_L0;
 
-        /* "gumbocy.pyx":210
- *         if self.has_classes_hidden and attrs.has_classes:
+        /* "gumbocy.pyx":231
+ *         if self.has_classes_hidden and attrs.size_classes > 0:
  *             for k in attrs.classes:
  *                 if re2_search(k, deref(self.classes_hidden)):             # <<<<<<<<<<<<<<
  *                     return True
@@ -3119,46 +3172,68 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gum
  */
       }
 
-      /* "gumbocy.pyx":209
+      /* "gumbocy.pyx":230
  * 
- *         if self.has_classes_hidden and attrs.has_classes:
+ *         if self.has_classes_hidden and attrs.size_classes > 0:
  *             for k in attrs.classes:             # <<<<<<<<<<<<<<
  *                 if re2_search(k, deref(self.classes_hidden)):
  *                     return True
  */
     }
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "gumbocy.pyx":208
+    /* "gumbocy.pyx":229
  *                 return True
  * 
- *         if self.has_classes_hidden and attrs.has_classes:             # <<<<<<<<<<<<<<
+ *         if self.has_classes_hidden and attrs.size_classes > 0:             # <<<<<<<<<<<<<<
  *             for k in attrs.classes:
  *                 if re2_search(k, deref(self.classes_hidden)):
  */
   }
 
-  /* "gumbocy.pyx":213
+  /* "gumbocy.pyx":234
  *                     return True
  * 
- *         if attrs.values.count(ATTR_STYLE):             # <<<<<<<<<<<<<<
+ *         if attrs.values.get(ATTR_STYLE):             # <<<<<<<<<<<<<<
  *             if re2_search(attrs.values[ATTR_STYLE], deref(_RE2_SEARCH_STYLE_HIDDEN)):
  *                 return True
  */
-  __pyx_t_1 = (__pyx_v_attrs->values.count(__pyx_e_7gumbocy_ATTR_STYLE) != 0);
+  if (unlikely(__pyx_v_attrs->values == Py_None)) {
+    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+    __PYX_ERR(0, 234, __pyx_L1_error)
+  }
+  __pyx_t_3 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_STYLE); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 234, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 234, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 234, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":214
+    /* "gumbocy.pyx":235
  * 
- *         if attrs.values.count(ATTR_STYLE):
+ *         if attrs.values.get(ATTR_STYLE):
  *             if re2_search(attrs.values[ATTR_STYLE], deref(_RE2_SEARCH_STYLE_HIDDEN)):             # <<<<<<<<<<<<<<
  *                 return True
  * 
  */
-    __pyx_t_1 = (__pyx_f_7gumbocy_re2_search((__pyx_v_attrs->values[__pyx_e_7gumbocy_ATTR_STYLE]), (*__pyx_v_7gumbocy__RE2_SEARCH_STYLE_HIDDEN)) != 0);
+    if (unlikely(__pyx_v_attrs->values == Py_None)) {
+      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+      __PYX_ERR(0, 235, __pyx_L1_error)
+    }
+    __pyx_t_4 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_STYLE); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_3 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_5 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_5) && PyErr_Occurred())) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_1 = (__pyx_f_7gumbocy_re2_search(__pyx_t_5, (*__pyx_v_7gumbocy__RE2_SEARCH_STYLE_HIDDEN)) != 0);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":215
- *         if attrs.values.count(ATTR_STYLE):
+      /* "gumbocy.pyx":236
+ *         if attrs.values.get(ATTR_STYLE):
  *             if re2_search(attrs.values[ATTR_STYLE], deref(_RE2_SEARCH_STYLE_HIDDEN)):
  *                 return True             # <<<<<<<<<<<<<<
  * 
@@ -3167,25 +3242,25 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gum
       __pyx_r = 1;
       goto __pyx_L0;
 
-      /* "gumbocy.pyx":214
+      /* "gumbocy.pyx":235
  * 
- *         if attrs.values.count(ATTR_STYLE):
+ *         if attrs.values.get(ATTR_STYLE):
  *             if re2_search(attrs.values[ATTR_STYLE], deref(_RE2_SEARCH_STYLE_HIDDEN)):             # <<<<<<<<<<<<<<
  *                 return True
  * 
  */
     }
 
-    /* "gumbocy.pyx":213
+    /* "gumbocy.pyx":234
  *                     return True
  * 
- *         if attrs.values.count(ATTR_STYLE):             # <<<<<<<<<<<<<<
+ *         if attrs.values.get(ATTR_STYLE):             # <<<<<<<<<<<<<<
  *             if re2_search(attrs.values[ATTR_STYLE], deref(_RE2_SEARCH_STYLE_HIDDEN)):
  *                 return True
  */
   }
 
-  /* "gumbocy.pyx":217
+  /* "gumbocy.pyx":238
  *                 return True
  * 
  *         return False             # <<<<<<<<<<<<<<
@@ -3195,40 +3270,47 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_hidden(struct __pyx_obj_7gum
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "gumbocy.pyx":191
+  /* "gumbocy.pyx":212
  *         self.tags_separators.insert(gumbocy.GUMBO_TAG_BODY)
  * 
- *     cdef bint guess_node_hidden(self, gumbocy.GumboNode* node, Attributes* attrs):             # <<<<<<<<<<<<<<
+ *     cdef bint guess_node_hidden(self, gumbocy.GumboNode* node, Attributes attrs):             # <<<<<<<<<<<<<<
  *         """ Rough guess to check if the element is explicitly hidden.
  * 
  */
 
   /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_WriteUnraisable("gumbocy.HTMLParser.guess_node_hidden", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
+  __pyx_r = 0;
   __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_k);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "gumbocy.pyx":220
+/* "gumbocy.pyx":241
  * 
  * 
- *     cdef bint guess_node_boilerplate(self, gumbocy.GumboNode* node, Attributes* attrs):             # <<<<<<<<<<<<<<
+ *     cdef bint guess_node_boilerplate(self, gumbocy.GumboNode* node, Attributes attrs):             # <<<<<<<<<<<<<<
  *         """ Rough guess to check if the element is boilerplate """
  * 
  */
 
-static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, GumboNode *__pyx_v_node, struct __pyx_t_7gumbocy_Attributes *__pyx_v_attrs) {
-  char *__pyx_v_k;
+static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, GumboNode *__pyx_v_node, struct __pyx_obj_7gumbocy_Attributes *__pyx_v_attrs) {
+  PyObject *__pyx_v_k = NULL;
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
-  std::vector<char *> ::iterator __pyx_t_3;
-  std::vector<char *>  *__pyx_t_4;
-  char *__pyx_t_5;
+  PyObject *__pyx_t_3 = NULL;
+  Py_ssize_t __pyx_t_4;
+  PyObject *__pyx_t_5 = NULL;
+  char const *__pyx_t_6;
   __Pyx_RefNannySetupContext("guess_node_boilerplate", 0);
 
-  /* "gumbocy.pyx":223
+  /* "gumbocy.pyx":244
  *         """ Rough guess to check if the element is boilerplate """
  * 
  *         if self.tags_boilerplate.count(<int> node.v.element.tag):             # <<<<<<<<<<<<<<
@@ -3238,7 +3320,7 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
   __pyx_t_1 = (__pyx_v_self->tags_boilerplate.count(((int)__pyx_v_node->v.element.tag)) != 0);
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":224
+    /* "gumbocy.pyx":245
  * 
  *         if self.tags_boilerplate.count(<int> node.v.element.tag):
  *             return True             # <<<<<<<<<<<<<<
@@ -3248,7 +3330,7 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
     __pyx_r = 1;
     goto __pyx_L0;
 
-    /* "gumbocy.pyx":223
+    /* "gumbocy.pyx":244
  *         """ Rough guess to check if the element is boilerplate """
  * 
  *         if self.tags_boilerplate.count(<int> node.v.element.tag):             # <<<<<<<<<<<<<<
@@ -3257,7 +3339,7 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
  */
   }
 
-  /* "gumbocy.pyx":227
+  /* "gumbocy.pyx":248
  * 
  *         # http://html5doctor.com/understanding-aside/
  *         if node.v.element.tag == gumbocy.GUMBO_TAG_ASIDE:             # <<<<<<<<<<<<<<
@@ -3267,28 +3349,28 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
   __pyx_t_1 = ((__pyx_v_node->v.element.tag == GUMBO_TAG_ASIDE) != 0);
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":228
+    /* "gumbocy.pyx":249
  *         # http://html5doctor.com/understanding-aside/
  *         if node.v.element.tag == gumbocy.GUMBO_TAG_ASIDE:
  *             if "article" not in self.current_stack:             # <<<<<<<<<<<<<<
  *                 return True
  * 
  */
-    __pyx_t_1 = (__Pyx_PySequence_ContainsTF(__pyx_n_s_article, __pyx_v_self->current_stack, Py_NE)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 228, __pyx_L1_error)
+    __pyx_t_1 = (__Pyx_PySequence_ContainsTF(__pyx_n_s_article, __pyx_v_self->current_stack, Py_NE)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 249, __pyx_L1_error)
     __pyx_t_2 = (__pyx_t_1 != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":229
+      /* "gumbocy.pyx":250
  *         if node.v.element.tag == gumbocy.GUMBO_TAG_ASIDE:
  *             if "article" not in self.current_stack:
  *                 return True             # <<<<<<<<<<<<<<
  * 
- *         if self.has_classes_boilerplate and attrs.has_classes:
+ *         if self.has_classes_boilerplate and attrs.size_classes > 0:
  */
       __pyx_r = 1;
       goto __pyx_L0;
 
-      /* "gumbocy.pyx":228
+      /* "gumbocy.pyx":249
  *         # http://html5doctor.com/understanding-aside/
  *         if node.v.element.tag == gumbocy.GUMBO_TAG_ASIDE:
  *             if "article" not in self.current_stack:             # <<<<<<<<<<<<<<
@@ -3297,7 +3379,7 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
  */
     }
 
-    /* "gumbocy.pyx":227
+    /* "gumbocy.pyx":248
  * 
  *         # http://html5doctor.com/understanding-aside/
  *         if node.v.element.tag == gumbocy.GUMBO_TAG_ASIDE:             # <<<<<<<<<<<<<<
@@ -3306,10 +3388,10 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
  */
   }
 
-  /* "gumbocy.pyx":231
+  /* "gumbocy.pyx":252
  *                 return True
  * 
- *         if self.has_classes_boilerplate and attrs.has_classes:             # <<<<<<<<<<<<<<
+ *         if self.has_classes_boilerplate and attrs.size_classes > 0:             # <<<<<<<<<<<<<<
  *             for k in attrs.classes:
  *                 if re2_search(k, deref(self.classes_boilerplate)):
  */
@@ -3319,48 +3401,58 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
     __pyx_t_2 = __pyx_t_1;
     goto __pyx_L7_bool_binop_done;
   }
-  __pyx_t_1 = (__pyx_v_attrs->has_classes != 0);
+  __pyx_t_1 = ((__pyx_v_attrs->size_classes > 0) != 0);
   __pyx_t_2 = __pyx_t_1;
   __pyx_L7_bool_binop_done:;
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":232
+    /* "gumbocy.pyx":253
  * 
- *         if self.has_classes_boilerplate and attrs.has_classes:
+ *         if self.has_classes_boilerplate and attrs.size_classes > 0:
  *             for k in attrs.classes:             # <<<<<<<<<<<<<<
  *                 if re2_search(k, deref(self.classes_boilerplate)):
  *                     return True
  */
-    __pyx_t_4 = &__pyx_v_attrs->classes;
-    __pyx_t_3 = __pyx_t_4->begin();
+    if (unlikely(__pyx_v_attrs->classes == Py_None)) {
+      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
+      __PYX_ERR(0, 253, __pyx_L1_error)
+    }
+    __pyx_t_3 = __pyx_v_attrs->classes; __Pyx_INCREF(__pyx_t_3); __pyx_t_4 = 0;
     for (;;) {
-      if (!(__pyx_t_3 != __pyx_t_4->end())) break;
-      __pyx_t_5 = *__pyx_t_3;
-      ++__pyx_t_3;
-      __pyx_v_k = __pyx_t_5;
+      if (__pyx_t_4 >= PyList_GET_SIZE(__pyx_t_3)) break;
+      #if CYTHON_COMPILING_IN_CPYTHON
+      __pyx_t_5 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_4); __Pyx_INCREF(__pyx_t_5); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 253, __pyx_L1_error)
+      #else
+      __pyx_t_5 = PySequence_ITEM(__pyx_t_3, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 253, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      #endif
+      __Pyx_XDECREF_SET(__pyx_v_k, __pyx_t_5);
+      __pyx_t_5 = 0;
 
-      /* "gumbocy.pyx":233
- *         if self.has_classes_boilerplate and attrs.has_classes:
+      /* "gumbocy.pyx":254
+ *         if self.has_classes_boilerplate and attrs.size_classes > 0:
  *             for k in attrs.classes:
  *                 if re2_search(k, deref(self.classes_boilerplate)):             # <<<<<<<<<<<<<<
  *                     return True
  * 
  */
-      __pyx_t_2 = (__pyx_f_7gumbocy_re2_search(__pyx_v_k, (*__pyx_v_self->classes_boilerplate)) != 0);
+      __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_v_k); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 254, __pyx_L1_error)
+      __pyx_t_2 = (__pyx_f_7gumbocy_re2_search(__pyx_t_6, (*__pyx_v_self->classes_boilerplate)) != 0);
       if (__pyx_t_2) {
 
-        /* "gumbocy.pyx":234
+        /* "gumbocy.pyx":255
  *             for k in attrs.classes:
  *                 if re2_search(k, deref(self.classes_boilerplate)):
  *                     return True             # <<<<<<<<<<<<<<
  * 
- *         if self.has_ids_boilerplate and attrs.values.count(ATTR_ID):
+ *         if self.has_ids_boilerplate and attrs.values.get(ATTR_ID):
  */
         __pyx_r = 1;
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
         goto __pyx_L0;
 
-        /* "gumbocy.pyx":233
- *         if self.has_classes_boilerplate and attrs.has_classes:
+        /* "gumbocy.pyx":254
+ *         if self.has_classes_boilerplate and attrs.size_classes > 0:
  *             for k in attrs.classes:
  *                 if re2_search(k, deref(self.classes_boilerplate)):             # <<<<<<<<<<<<<<
  *                     return True
@@ -3368,28 +3460,29 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
  */
       }
 
-      /* "gumbocy.pyx":232
+      /* "gumbocy.pyx":253
  * 
- *         if self.has_classes_boilerplate and attrs.has_classes:
+ *         if self.has_classes_boilerplate and attrs.size_classes > 0:
  *             for k in attrs.classes:             # <<<<<<<<<<<<<<
  *                 if re2_search(k, deref(self.classes_boilerplate)):
  *                     return True
  */
     }
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "gumbocy.pyx":231
+    /* "gumbocy.pyx":252
  *                 return True
  * 
- *         if self.has_classes_boilerplate and attrs.has_classes:             # <<<<<<<<<<<<<<
+ *         if self.has_classes_boilerplate and attrs.size_classes > 0:             # <<<<<<<<<<<<<<
  *             for k in attrs.classes:
  *                 if re2_search(k, deref(self.classes_boilerplate)):
  */
   }
 
-  /* "gumbocy.pyx":236
+  /* "gumbocy.pyx":257
  *                     return True
  * 
- *         if self.has_ids_boilerplate and attrs.values.count(ATTR_ID):             # <<<<<<<<<<<<<<
+ *         if self.has_ids_boilerplate and attrs.values.get(ATTR_ID):             # <<<<<<<<<<<<<<
  *             if re2_search(attrs.values[ATTR_ID], deref(self.ids_boilerplate)):
  *                 return True
  */
@@ -3399,53 +3492,74 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
     __pyx_t_2 = __pyx_t_1;
     goto __pyx_L13_bool_binop_done;
   }
-  __pyx_t_1 = (__pyx_v_attrs->values.count(__pyx_e_7gumbocy_ATTR_ID) != 0);
+  if (unlikely(__pyx_v_attrs->values == Py_None)) {
+    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+    __PYX_ERR(0, 257, __pyx_L1_error)
+  }
+  __pyx_t_3 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ID); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 257, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_5 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 257, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 257, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_t_2 = __pyx_t_1;
   __pyx_L13_bool_binop_done:;
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":237
+    /* "gumbocy.pyx":258
  * 
- *         if self.has_ids_boilerplate and attrs.values.count(ATTR_ID):
+ *         if self.has_ids_boilerplate and attrs.values.get(ATTR_ID):
  *             if re2_search(attrs.values[ATTR_ID], deref(self.ids_boilerplate)):             # <<<<<<<<<<<<<<
  *                 return True
  * 
  */
-    __pyx_t_2 = (__pyx_f_7gumbocy_re2_search((__pyx_v_attrs->values[__pyx_e_7gumbocy_ATTR_ID]), (*__pyx_v_self->ids_boilerplate)) != 0);
+    if (unlikely(__pyx_v_attrs->values == Py_None)) {
+      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+      __PYX_ERR(0, 258, __pyx_L1_error)
+    }
+    __pyx_t_5 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ID); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 258, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_3 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 258, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 258, __pyx_L1_error)
+    __pyx_t_2 = (__pyx_f_7gumbocy_re2_search(__pyx_t_6, (*__pyx_v_self->ids_boilerplate)) != 0);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":238
- *         if self.has_ids_boilerplate and attrs.values.count(ATTR_ID):
+      /* "gumbocy.pyx":259
+ *         if self.has_ids_boilerplate and attrs.values.get(ATTR_ID):
  *             if re2_search(attrs.values[ATTR_ID], deref(self.ids_boilerplate)):
  *                 return True             # <<<<<<<<<<<<<<
  * 
- *         if self.has_roles_boilerplate and attrs.values.count(ATTR_ROLE):
+ *         if self.has_roles_boilerplate and attrs.values.get(ATTR_ROLE):
  */
       __pyx_r = 1;
       goto __pyx_L0;
 
-      /* "gumbocy.pyx":237
+      /* "gumbocy.pyx":258
  * 
- *         if self.has_ids_boilerplate and attrs.values.count(ATTR_ID):
+ *         if self.has_ids_boilerplate and attrs.values.get(ATTR_ID):
  *             if re2_search(attrs.values[ATTR_ID], deref(self.ids_boilerplate)):             # <<<<<<<<<<<<<<
  *                 return True
  * 
  */
     }
 
-    /* "gumbocy.pyx":236
+    /* "gumbocy.pyx":257
  *                     return True
  * 
- *         if self.has_ids_boilerplate and attrs.values.count(ATTR_ID):             # <<<<<<<<<<<<<<
+ *         if self.has_ids_boilerplate and attrs.values.get(ATTR_ID):             # <<<<<<<<<<<<<<
  *             if re2_search(attrs.values[ATTR_ID], deref(self.ids_boilerplate)):
  *                 return True
  */
   }
 
-  /* "gumbocy.pyx":240
+  /* "gumbocy.pyx":261
  *                 return True
  * 
- *         if self.has_roles_boilerplate and attrs.values.count(ATTR_ROLE):             # <<<<<<<<<<<<<<
+ *         if self.has_roles_boilerplate and attrs.values.get(ATTR_ROLE):             # <<<<<<<<<<<<<<
  *             if re2_search(attrs.values[ATTR_ROLE], deref(self.roles_boilerplate)):
  *                 return True
  */
@@ -3455,23 +3569,44 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
     __pyx_t_2 = __pyx_t_1;
     goto __pyx_L17_bool_binop_done;
   }
-  __pyx_t_1 = (__pyx_v_attrs->values.count(__pyx_e_7gumbocy_ATTR_ROLE) != 0);
+  if (unlikely(__pyx_v_attrs->values == Py_None)) {
+    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+    __PYX_ERR(0, 261, __pyx_L1_error)
+  }
+  __pyx_t_3 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ROLE); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 261, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_5 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 261, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 261, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_t_2 = __pyx_t_1;
   __pyx_L17_bool_binop_done:;
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":241
+    /* "gumbocy.pyx":262
  * 
- *         if self.has_roles_boilerplate and attrs.values.count(ATTR_ROLE):
+ *         if self.has_roles_boilerplate and attrs.values.get(ATTR_ROLE):
  *             if re2_search(attrs.values[ATTR_ROLE], deref(self.roles_boilerplate)):             # <<<<<<<<<<<<<<
  *                 return True
  * 
  */
-    __pyx_t_2 = (__pyx_f_7gumbocy_re2_search((__pyx_v_attrs->values[__pyx_e_7gumbocy_ATTR_ROLE]), (*__pyx_v_self->roles_boilerplate)) != 0);
+    if (unlikely(__pyx_v_attrs->values == Py_None)) {
+      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+      __PYX_ERR(0, 262, __pyx_L1_error)
+    }
+    __pyx_t_5 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ROLE); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 262, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_3 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 262, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 262, __pyx_L1_error)
+    __pyx_t_2 = (__pyx_f_7gumbocy_re2_search(__pyx_t_6, (*__pyx_v_self->roles_boilerplate)) != 0);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":242
- *         if self.has_roles_boilerplate and attrs.values.count(ATTR_ROLE):
+      /* "gumbocy.pyx":263
+ *         if self.has_roles_boilerplate and attrs.values.get(ATTR_ROLE):
  *             if re2_search(attrs.values[ATTR_ROLE], deref(self.roles_boilerplate)):
  *                 return True             # <<<<<<<<<<<<<<
  * 
@@ -3480,25 +3615,25 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
       __pyx_r = 1;
       goto __pyx_L0;
 
-      /* "gumbocy.pyx":241
+      /* "gumbocy.pyx":262
  * 
- *         if self.has_roles_boilerplate and attrs.values.count(ATTR_ROLE):
+ *         if self.has_roles_boilerplate and attrs.values.get(ATTR_ROLE):
  *             if re2_search(attrs.values[ATTR_ROLE], deref(self.roles_boilerplate)):             # <<<<<<<<<<<<<<
  *                 return True
  * 
  */
     }
 
-    /* "gumbocy.pyx":240
+    /* "gumbocy.pyx":261
  *                 return True
  * 
- *         if self.has_roles_boilerplate and attrs.values.count(ATTR_ROLE):             # <<<<<<<<<<<<<<
+ *         if self.has_roles_boilerplate and attrs.values.get(ATTR_ROLE):             # <<<<<<<<<<<<<<
  *             if re2_search(attrs.values[ATTR_ROLE], deref(self.roles_boilerplate)):
  *                 return True
  */
   }
 
-  /* "gumbocy.pyx":244
+  /* "gumbocy.pyx":265
  *                 return True
  * 
  *         return False             # <<<<<<<<<<<<<<
@@ -3508,24 +3643,27 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "gumbocy.pyx":220
+  /* "gumbocy.pyx":241
  * 
  * 
- *     cdef bint guess_node_boilerplate(self, gumbocy.GumboNode* node, Attributes* attrs):             # <<<<<<<<<<<<<<
+ *     cdef bint guess_node_boilerplate(self, gumbocy.GumboNode* node, Attributes attrs):             # <<<<<<<<<<<<<<
  *         """ Rough guess to check if the element is boilerplate """
  * 
  */
 
   /* function exit code */
   __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_5);
   __Pyx_WriteUnraisable("gumbocy.HTMLParser.guess_node_boilerplate", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
   __pyx_r = 0;
   __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_k);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "gumbocy.pyx":246
+/* "gumbocy.pyx":267
  *         return False
  * 
  *     cdef Attributes get_attributes(self, gumbocy.GumboNode* node):             # <<<<<<<<<<<<<<
@@ -3533,73 +3671,84 @@ static int __pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate(struct __pyx_obj
  * 
  */
 
-static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attributes(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, GumboNode *__pyx_v_node) {
-  struct __pyx_t_7gumbocy_Attributes __pyx_v_attrs;
+static struct __pyx_obj_7gumbocy_Attributes *__pyx_f_7gumbocy_10HTMLParser_get_attributes(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, GumboNode *__pyx_v_node) {
+  struct __pyx_obj_7gumbocy_Attributes *__pyx_v_attrs = NULL;
   unsigned int __pyx_v_i;
   GumboAttribute *__pyx_v_attr;
   PyObject *__pyx_v_multiple_value = NULL;
   PyObject *__pyx_v_pystr = NULL;
-  struct __pyx_t_7gumbocy_Attributes __pyx_r;
+  struct __pyx_obj_7gumbocy_Attributes *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
-  std::vector<char *>  __pyx_t_2;
+  unsigned int __pyx_t_2;
   unsigned int __pyx_t_3;
-  unsigned int __pyx_t_4;
-  int __pyx_t_5;
+  int __pyx_t_4;
+  PyObject *__pyx_t_5 = NULL;
   PyObject *__pyx_t_6 = NULL;
   PyObject *__pyx_t_7 = NULL;
   PyObject *__pyx_t_8 = NULL;
   PyObject *__pyx_t_9 = NULL;
-  PyObject *__pyx_t_10 = NULL;
-  Py_ssize_t __pyx_t_11;
-  char const *__pyx_t_12;
-  char const *__pyx_t_13;
-  int __pyx_t_14;
+  Py_ssize_t __pyx_t_10;
+  int __pyx_t_11;
   __Pyx_RefNannySetupContext("get_attributes", 0);
 
-  /* "gumbocy.pyx":250
+  /* "gumbocy.pyx":270
+ *         """ Build a dict with all the whitelisted attributes """
  * 
- *         cdef Attributes attrs
- *         attrs.has_classes = 0             # <<<<<<<<<<<<<<
- *         attrs.classes = []
- *         attrs.has_hidden = 0
+ *         attrs = Attributes()             # <<<<<<<<<<<<<<
+ *         # cdef Attributes attrs
+ *         attrs.size_classes = 0
  */
-  __pyx_v_attrs.has_classes = 0;
-
-  /* "gumbocy.pyx":251
- *         cdef Attributes attrs
- *         attrs.has_classes = 0
- *         attrs.classes = []             # <<<<<<<<<<<<<<
- *         attrs.has_hidden = 0
- *         # map[AttributeNames,char *]
- */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 251, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_7gumbocy_Attributes), __pyx_empty_tuple, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 270, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_convert_vector_from_py_char___2a_(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 251, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_v_attrs.classes = __pyx_t_2;
+  __pyx_v_attrs = ((struct __pyx_obj_7gumbocy_Attributes *)__pyx_t_1);
+  __pyx_t_1 = 0;
 
-  /* "gumbocy.pyx":252
- *         attrs.has_classes = 0
- *         attrs.classes = []
- *         attrs.has_hidden = 0             # <<<<<<<<<<<<<<
- *         # map[AttributeNames,char *]
- *         # attrs.values = {}
+  /* "gumbocy.pyx":272
+ *         attrs = Attributes()
+ *         # cdef Attributes attrs
+ *         attrs.size_classes = 0             # <<<<<<<<<<<<<<
+ *         attrs.has_hidden = 0
+ *         # attrs.values = [""] * 10
  */
-  __pyx_v_attrs.has_hidden = 0;
+  __pyx_v_attrs->size_classes = 0;
 
-  /* "gumbocy.pyx":256
- *         # attrs.values = {}
+  /* "gumbocy.pyx":273
+ *         # cdef Attributes attrs
+ *         attrs.size_classes = 0
+ *         attrs.has_hidden = 0             # <<<<<<<<<<<<<<
+ *         # attrs.values = [""] * 10
+ *         # attrs.classes = []
+ */
+  __pyx_v_attrs->has_hidden = 0;
+
+  /* "gumbocy.pyx":276
+ *         # attrs.values = [""] * 10
+ *         # attrs.classes = []
+ *         attrs.values = {}  # deref(new map[AttributeNames, const char*]())             # <<<<<<<<<<<<<<
+ *         # attrs.values[ATTR_ID] = "x"
+ *         # print dict(attrs.values)
+ */
+  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 276, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_GIVEREF(__pyx_t_1);
+  __Pyx_GOTREF(__pyx_v_attrs->values);
+  __Pyx_DECREF(__pyx_v_attrs->values);
+  __pyx_v_attrs->values = ((PyObject*)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "gumbocy.pyx":280
+ *         # print dict(attrs.values)
  * 
  *         for i in range(node.v.element.attributes.length):             # <<<<<<<<<<<<<<
  * 
  *             attr = <gumbocy.GumboAttribute *> node.v.element.attributes.data[i]
  */
-  __pyx_t_3 = __pyx_v_node->v.element.attributes.length;
-  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
-    __pyx_v_i = __pyx_t_4;
+  __pyx_t_2 = __pyx_v_node->v.element.attributes.length;
+  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
+    __pyx_v_i = __pyx_t_3;
 
-    /* "gumbocy.pyx":258
+    /* "gumbocy.pyx":282
  *         for i in range(node.v.element.attributes.length):
  * 
  *             attr = <gumbocy.GumboAttribute *> node.v.element.attributes.data[i]             # <<<<<<<<<<<<<<
@@ -3608,235 +3757,243 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
  */
     __pyx_v_attr = ((GumboAttribute *)(__pyx_v_node->v.element.attributes.data[__pyx_v_i]));
 
-    /* "gumbocy.pyx":260
+    /* "gumbocy.pyx":284
  *             attr = <gumbocy.GumboAttribute *> node.v.element.attributes.data[i]
  * 
  *             if re2_search(attr.name, deref(self.attributes_whitelist)):             # <<<<<<<<<<<<<<
  * 
  *                 if attr.name == b"class":
  */
-    __pyx_t_5 = (__pyx_f_7gumbocy_re2_search(__pyx_v_attr->name, (*__pyx_v_self->attributes_whitelist)) != 0);
-    if (__pyx_t_5) {
+    __pyx_t_4 = (__pyx_f_7gumbocy_re2_search(__pyx_v_attr->name, (*__pyx_v_self->attributes_whitelist)) != 0);
+    if (__pyx_t_4) {
 
-      /* "gumbocy.pyx":262
+      /* "gumbocy.pyx":286
  *             if re2_search(attr.name, deref(self.attributes_whitelist)):
  * 
  *                 if attr.name == b"class":             # <<<<<<<<<<<<<<
  *                     multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
- *                     if len(multiple_value):
+ *                     attrs.size_classes = len(multiple_value)
  */
-      __pyx_t_1 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 262, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 286, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_5 = (__Pyx_PyBytes_Equals(__pyx_t_1, __pyx_n_b_class, Py_EQ)); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 262, __pyx_L1_error)
+      __pyx_t_4 = (__Pyx_PyBytes_Equals(__pyx_t_1, __pyx_n_b_class, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 286, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      if (__pyx_t_5) {
+      if (__pyx_t_4) {
 
-        /* "gumbocy.pyx":263
+        /* "gumbocy.pyx":287
  * 
  *                 if attr.name == b"class":
  *                     multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))             # <<<<<<<<<<<<<<
- *                     if len(multiple_value):
- *                         attrs.has_classes = 1
+ *                     attrs.size_classes = len(multiple_value)
+ *                     if attrs.size_classes > 0:
  */
-        __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_RE_SPLIT_WHITESPACE); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 263, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_RE_SPLIT_WHITESPACE); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 287, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_5);
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_split); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 287, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_split); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 263, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_7);
-        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        __pyx_t_9 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 263, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_9);
-        __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_strip); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 263, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_10);
-        __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-        __pyx_t_9 = NULL;
-        if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_10))) {
-          __pyx_t_9 = PyMethod_GET_SELF(__pyx_t_10);
-          if (likely(__pyx_t_9)) {
-            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_10);
-            __Pyx_INCREF(__pyx_t_9);
-            __Pyx_INCREF(function);
-            __Pyx_DECREF_SET(__pyx_t_10, function);
-          }
-        }
-        if (__pyx_t_9) {
-          __pyx_t_8 = __Pyx_PyObject_CallOneArg(__pyx_t_10, __pyx_t_9); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 263, __pyx_L1_error)
-          __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-        } else {
-          __pyx_t_8 = __Pyx_PyObject_CallNoArg(__pyx_t_10); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 263, __pyx_L1_error)
-        }
+        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+        __pyx_t_8 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 287, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
-        __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-        __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_lower); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 263, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_10);
+        __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_strip); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 287, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_9);
         __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
         __pyx_t_8 = NULL;
-        if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_10))) {
-          __pyx_t_8 = PyMethod_GET_SELF(__pyx_t_10);
+        if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_9))) {
+          __pyx_t_8 = PyMethod_GET_SELF(__pyx_t_9);
           if (likely(__pyx_t_8)) {
-            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_10);
+            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_9);
             __Pyx_INCREF(__pyx_t_8);
             __Pyx_INCREF(function);
-            __Pyx_DECREF_SET(__pyx_t_10, function);
+            __Pyx_DECREF_SET(__pyx_t_9, function);
           }
         }
         if (__pyx_t_8) {
-          __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_t_10, __pyx_t_8); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 263, __pyx_L1_error)
+          __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_t_9, __pyx_t_8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 287, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
         } else {
-          __pyx_t_6 = __Pyx_PyObject_CallNoArg(__pyx_t_10); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 263, __pyx_L1_error)
+          __pyx_t_7 = __Pyx_PyObject_CallNoArg(__pyx_t_9); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 287, __pyx_L1_error)
         }
-        __Pyx_GOTREF(__pyx_t_6);
-        __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-        __pyx_t_10 = NULL;
-        if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_7))) {
-          __pyx_t_10 = PyMethod_GET_SELF(__pyx_t_7);
-          if (likely(__pyx_t_10)) {
-            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_7);
-            __Pyx_INCREF(__pyx_t_10);
+        __Pyx_GOTREF(__pyx_t_7);
+        __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+        __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_lower); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 287, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_9);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __pyx_t_7 = NULL;
+        if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_9))) {
+          __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_9);
+          if (likely(__pyx_t_7)) {
+            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_9);
+            __Pyx_INCREF(__pyx_t_7);
             __Pyx_INCREF(function);
-            __Pyx_DECREF_SET(__pyx_t_7, function);
+            __Pyx_DECREF_SET(__pyx_t_9, function);
           }
         }
-        if (!__pyx_t_10) {
-          __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 263, __pyx_L1_error)
-          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+        if (__pyx_t_7) {
+          __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_t_9, __pyx_t_7); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 287, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        } else {
+          __pyx_t_5 = __Pyx_PyObject_CallNoArg(__pyx_t_9); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 287, __pyx_L1_error)
+        }
+        __Pyx_GOTREF(__pyx_t_5);
+        __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+        __pyx_t_9 = NULL;
+        if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_6))) {
+          __pyx_t_9 = PyMethod_GET_SELF(__pyx_t_6);
+          if (likely(__pyx_t_9)) {
+            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
+            __Pyx_INCREF(__pyx_t_9);
+            __Pyx_INCREF(function);
+            __Pyx_DECREF_SET(__pyx_t_6, function);
+          }
+        }
+        if (!__pyx_t_9) {
+          __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 287, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
           __Pyx_GOTREF(__pyx_t_1);
         } else {
-          __pyx_t_8 = PyTuple_New(1+1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 263, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_8);
-          __Pyx_GIVEREF(__pyx_t_10); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_10); __pyx_t_10 = NULL;
-          __Pyx_GIVEREF(__pyx_t_6);
-          PyTuple_SET_ITEM(__pyx_t_8, 0+1, __pyx_t_6);
-          __pyx_t_6 = 0;
-          __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 263, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_1);
-          __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-        }
-        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-        __pyx_t_7 = __Pyx_PyFrozenSet_New(__pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 263, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_7);
-        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __Pyx_XDECREF_SET(__pyx_v_multiple_value, ((PyObject*)__pyx_t_7));
-        __pyx_t_7 = 0;
-
-        /* "gumbocy.pyx":264
- *                 if attr.name == b"class":
- *                     multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
- *                     if len(multiple_value):             # <<<<<<<<<<<<<<
- *                         attrs.has_classes = 1
- *                         attrs.classes = list(multiple_value)
- */
-        __pyx_t_11 = PySet_GET_SIZE(__pyx_v_multiple_value); if (unlikely(__pyx_t_11 == -1)) __PYX_ERR(0, 264, __pyx_L1_error)
-        __pyx_t_5 = (__pyx_t_11 != 0);
-        if (__pyx_t_5) {
-
-          /* "gumbocy.pyx":265
- *                     multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
- *                     if len(multiple_value):
- *                         attrs.has_classes = 1             # <<<<<<<<<<<<<<
- *                         attrs.classes = list(multiple_value)
- * 
- */
-          __pyx_v_attrs.has_classes = 1;
-
-          /* "gumbocy.pyx":266
- *                     if len(multiple_value):
- *                         attrs.has_classes = 1
- *                         attrs.classes = list(multiple_value)             # <<<<<<<<<<<<<<
- * 
- *                 elif attr.name == b"id":
- */
-          __pyx_t_7 = PySequence_List(__pyx_v_multiple_value); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 266, __pyx_L1_error)
+          __pyx_t_7 = PyTuple_New(1+1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 287, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_7);
-          __pyx_t_2 = __pyx_convert_vector_from_py_char___2a_(__pyx_t_7); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 266, __pyx_L1_error)
+          __Pyx_GIVEREF(__pyx_t_9); PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_9); __pyx_t_9 = NULL;
+          __Pyx_GIVEREF(__pyx_t_5);
+          PyTuple_SET_ITEM(__pyx_t_7, 0+1, __pyx_t_5);
+          __pyx_t_5 = 0;
+          __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 287, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_1);
           __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-          __pyx_v_attrs.classes = __pyx_t_2;
+        }
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+        __pyx_t_6 = __Pyx_PyFrozenSet_New(__pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 287, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+        __Pyx_XDECREF_SET(__pyx_v_multiple_value, ((PyObject*)__pyx_t_6));
+        __pyx_t_6 = 0;
 
-          /* "gumbocy.pyx":264
+        /* "gumbocy.pyx":288
  *                 if attr.name == b"class":
  *                     multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
- *                     if len(multiple_value):             # <<<<<<<<<<<<<<
- *                         attrs.has_classes = 1
+ *                     attrs.size_classes = len(multiple_value)             # <<<<<<<<<<<<<<
+ *                     if attrs.size_classes > 0:
  *                         attrs.classes = list(multiple_value)
+ */
+        __pyx_t_10 = PySet_GET_SIZE(__pyx_v_multiple_value); if (unlikely(__pyx_t_10 == -1)) __PYX_ERR(0, 288, __pyx_L1_error)
+        __pyx_v_attrs->size_classes = __pyx_t_10;
+
+        /* "gumbocy.pyx":289
+ *                     multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
+ *                     attrs.size_classes = len(multiple_value)
+ *                     if attrs.size_classes > 0:             # <<<<<<<<<<<<<<
+ *                         attrs.classes = list(multiple_value)
+ *                         # for k in multiple_value:
+ */
+        __pyx_t_4 = ((__pyx_v_attrs->size_classes > 0) != 0);
+        if (__pyx_t_4) {
+
+          /* "gumbocy.pyx":290
+ *                     attrs.size_classes = len(multiple_value)
+ *                     if attrs.size_classes > 0:
+ *                         attrs.classes = list(multiple_value)             # <<<<<<<<<<<<<<
+ *                         # for k in multiple_value:
+ *                         #     ck = <char *> k
+ */
+          __pyx_t_6 = PySequence_List(__pyx_v_multiple_value); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 290, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __Pyx_GIVEREF(__pyx_t_6);
+          __Pyx_GOTREF(__pyx_v_attrs->classes);
+          __Pyx_DECREF(__pyx_v_attrs->classes);
+          __pyx_v_attrs->classes = ((PyObject*)__pyx_t_6);
+          __pyx_t_6 = 0;
+
+          /* "gumbocy.pyx":289
+ *                     multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
+ *                     attrs.size_classes = len(multiple_value)
+ *                     if attrs.size_classes > 0:             # <<<<<<<<<<<<<<
+ *                         attrs.classes = list(multiple_value)
+ *                         # for k in multiple_value:
  */
         }
 
-        /* "gumbocy.pyx":262
+        /* "gumbocy.pyx":286
  *             if re2_search(attr.name, deref(self.attributes_whitelist)):
  * 
  *                 if attr.name == b"class":             # <<<<<<<<<<<<<<
  *                     multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
- *                     if len(multiple_value):
+ *                     attrs.size_classes = len(multiple_value)
  */
         goto __pyx_L6;
       }
 
-      /* "gumbocy.pyx":268
- *                         attrs.classes = list(multiple_value)
+      /* "gumbocy.pyx":295
+ *                         #     attrs.classes.push_back(ck)  #  = list(multiple_value)
  * 
  *                 elif attr.name == b"id":             # <<<<<<<<<<<<<<
  *                     pystr = str(attr.value).lower()
  *                     attrs.values[ATTR_ID] = pystr
  */
-      __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 268, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_5 = (__Pyx_PyBytes_Equals(__pyx_t_7, __pyx_n_b_id, Py_EQ)); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 268, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (__pyx_t_5) {
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 295, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_4 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_n_b_id, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 295, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (__pyx_t_4) {
 
-        /* "gumbocy.pyx":269
+        /* "gumbocy.pyx":296
  * 
  *                 elif attr.name == b"id":
  *                     pystr = str(attr.value).lower()             # <<<<<<<<<<<<<<
  *                     attrs.values[ATTR_ID] = pystr
  * 
  */
-        __pyx_t_1 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 269, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 296, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_8 = PyTuple_New(1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 269, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_8);
+        __pyx_t_7 = PyTuple_New(1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 296, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
         __Pyx_GIVEREF(__pyx_t_1);
-        PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_1);
+        PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_1);
         __pyx_t_1 = 0;
-        __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 269, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 296, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-        __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_lower); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 269, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_8);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_lower); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 296, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __pyx_t_1 = NULL;
-        if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_8))) {
-          __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_8);
+        if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_7))) {
+          __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_7);
           if (likely(__pyx_t_1)) {
-            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_8);
+            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_7);
             __Pyx_INCREF(__pyx_t_1);
             __Pyx_INCREF(function);
-            __Pyx_DECREF_SET(__pyx_t_8, function);
+            __Pyx_DECREF_SET(__pyx_t_7, function);
           }
         }
         if (__pyx_t_1) {
-          __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 269, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 296, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         } else {
-          __pyx_t_7 = __Pyx_PyObject_CallNoArg(__pyx_t_8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 269, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_CallNoArg(__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 296, __pyx_L1_error)
         }
-        __Pyx_GOTREF(__pyx_t_7);
-        __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-        __Pyx_XDECREF_SET(__pyx_v_pystr, __pyx_t_7);
-        __pyx_t_7 = 0;
+        __Pyx_GOTREF(__pyx_t_6);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __Pyx_XDECREF_SET(__pyx_v_pystr, __pyx_t_6);
+        __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":270
+        /* "gumbocy.pyx":297
  *                 elif attr.name == b"id":
  *                     pystr = str(attr.value).lower()
  *                     attrs.values[ATTR_ID] = pystr             # <<<<<<<<<<<<<<
  * 
  *                 elif attr.name == b"style":
  */
-        __pyx_t_12 = __Pyx_PyObject_AsString(__pyx_v_pystr); if (unlikely((!__pyx_t_12) && PyErr_Occurred())) __PYX_ERR(0, 270, __pyx_L1_error)
-        (__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_ID]) = __pyx_t_12;
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 297, __pyx_L1_error)
+        }
+        __pyx_t_6 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ID); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 297, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        if (unlikely(PyDict_SetItem(__pyx_v_attrs->values, __pyx_t_6, __pyx_v_pystr) < 0)) __PYX_ERR(0, 297, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":268
- *                         attrs.classes = list(multiple_value)
+        /* "gumbocy.pyx":295
+ *                         #     attrs.classes.push_back(ck)  #  = list(multiple_value)
  * 
  *                 elif attr.name == b"id":             # <<<<<<<<<<<<<<
  *                     pystr = str(attr.value).lower()
@@ -3845,30 +4002,39 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
         goto __pyx_L6;
       }
 
-      /* "gumbocy.pyx":272
+      /* "gumbocy.pyx":299
  *                     attrs.values[ATTR_ID] = pystr
  * 
  *                 elif attr.name == b"style":             # <<<<<<<<<<<<<<
  *                     attrs.values[ATTR_STYLE] = attr.value
  * 
  */
-      __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 272, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_5 = (__Pyx_PyBytes_Equals(__pyx_t_7, __pyx_n_b_style, Py_EQ)); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 272, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (__pyx_t_5) {
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 299, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_4 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_n_b_style, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 299, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (__pyx_t_4) {
 
-        /* "gumbocy.pyx":273
+        /* "gumbocy.pyx":300
  * 
  *                 elif attr.name == b"style":
  *                     attrs.values[ATTR_STYLE] = attr.value             # <<<<<<<<<<<<<<
  * 
  *                 elif attr.name == b"href":
  */
-        __pyx_t_13 = __pyx_v_attr->value;
-        (__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_STYLE]) = __pyx_t_13;
+        __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 300, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 300, __pyx_L1_error)
+        }
+        __pyx_t_7 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_STYLE); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 300, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        if (unlikely(PyDict_SetItem(__pyx_v_attrs->values, __pyx_t_7, __pyx_t_6) < 0)) __PYX_ERR(0, 300, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":272
+        /* "gumbocy.pyx":299
  *                     attrs.values[ATTR_ID] = pystr
  * 
  *                 elif attr.name == b"style":             # <<<<<<<<<<<<<<
@@ -3878,30 +4044,39 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
         goto __pyx_L6;
       }
 
-      /* "gumbocy.pyx":275
+      /* "gumbocy.pyx":302
  *                     attrs.values[ATTR_STYLE] = attr.value
  * 
  *                 elif attr.name == b"href":             # <<<<<<<<<<<<<<
  *                     attrs.values[ATTR_HREF] = attr.value
  * 
  */
-      __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 275, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_5 = (__Pyx_PyBytes_Equals(__pyx_t_7, __pyx_n_b_href, Py_EQ)); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 275, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (__pyx_t_5) {
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 302, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_4 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_n_b_href, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 302, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (__pyx_t_4) {
 
-        /* "gumbocy.pyx":276
+        /* "gumbocy.pyx":303
  * 
  *                 elif attr.name == b"href":
  *                     attrs.values[ATTR_HREF] = attr.value             # <<<<<<<<<<<<<<
  * 
  *                 elif attr.name == b"role":
  */
-        __pyx_t_13 = __pyx_v_attr->value;
-        (__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_HREF]) = __pyx_t_13;
+        __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 303, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 303, __pyx_L1_error)
+        }
+        __pyx_t_7 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_HREF); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 303, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        if (unlikely(PyDict_SetItem(__pyx_v_attrs->values, __pyx_t_7, __pyx_t_6) < 0)) __PYX_ERR(0, 303, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":275
+        /* "gumbocy.pyx":302
  *                     attrs.values[ATTR_STYLE] = attr.value
  * 
  *                 elif attr.name == b"href":             # <<<<<<<<<<<<<<
@@ -3911,71 +4086,77 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
         goto __pyx_L6;
       }
 
-      /* "gumbocy.pyx":278
+      /* "gumbocy.pyx":305
  *                     attrs.values[ATTR_HREF] = attr.value
  * 
  *                 elif attr.name == b"role":             # <<<<<<<<<<<<<<
  *                     pystr = str(attr.value).lower()
  *                     attrs.values[ATTR_ROLE] = pystr
  */
-      __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 278, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_5 = (__Pyx_PyBytes_Equals(__pyx_t_7, __pyx_n_b_role, Py_EQ)); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 278, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (__pyx_t_5) {
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 305, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_4 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_n_b_role, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 305, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (__pyx_t_4) {
 
-        /* "gumbocy.pyx":279
+        /* "gumbocy.pyx":306
  * 
  *                 elif attr.name == b"role":
  *                     pystr = str(attr.value).lower()             # <<<<<<<<<<<<<<
  *                     attrs.values[ATTR_ROLE] = pystr
  * 
  */
-        __pyx_t_8 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 279, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_8);
-        __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 279, __pyx_L1_error)
+        __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 306, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 306, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __Pyx_GIVEREF(__pyx_t_8);
-        PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_8);
-        __pyx_t_8 = 0;
-        __pyx_t_8 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_1, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 279, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_8);
+        __Pyx_GIVEREF(__pyx_t_7);
+        PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_7);
+        __pyx_t_7 = 0;
+        __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_1, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 306, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_lower); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 279, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_lower); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 306, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-        __pyx_t_8 = NULL;
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __pyx_t_7 = NULL;
         if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
-          __pyx_t_8 = PyMethod_GET_SELF(__pyx_t_1);
-          if (likely(__pyx_t_8)) {
+          __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_1);
+          if (likely(__pyx_t_7)) {
             PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-            __Pyx_INCREF(__pyx_t_8);
+            __Pyx_INCREF(__pyx_t_7);
             __Pyx_INCREF(function);
             __Pyx_DECREF_SET(__pyx_t_1, function);
           }
         }
-        if (__pyx_t_8) {
-          __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 279, __pyx_L1_error)
-          __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+        if (__pyx_t_7) {
+          __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 306, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
         } else {
-          __pyx_t_7 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 279, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 306, __pyx_L1_error)
         }
-        __Pyx_GOTREF(__pyx_t_7);
+        __Pyx_GOTREF(__pyx_t_6);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __Pyx_XDECREF_SET(__pyx_v_pystr, __pyx_t_7);
-        __pyx_t_7 = 0;
+        __Pyx_XDECREF_SET(__pyx_v_pystr, __pyx_t_6);
+        __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":280
+        /* "gumbocy.pyx":307
  *                 elif attr.name == b"role":
  *                     pystr = str(attr.value).lower()
  *                     attrs.values[ATTR_ROLE] = pystr             # <<<<<<<<<<<<<<
  * 
  *                 elif attr.name == b"rel":
  */
-        __pyx_t_12 = __Pyx_PyObject_AsString(__pyx_v_pystr); if (unlikely((!__pyx_t_12) && PyErr_Occurred())) __PYX_ERR(0, 280, __pyx_L1_error)
-        (__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_ROLE]) = __pyx_t_12;
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 307, __pyx_L1_error)
+        }
+        __pyx_t_6 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ROLE); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 307, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        if (unlikely(PyDict_SetItem(__pyx_v_attrs->values, __pyx_t_6, __pyx_v_pystr) < 0)) __PYX_ERR(0, 307, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":278
+        /* "gumbocy.pyx":305
  *                     attrs.values[ATTR_HREF] = attr.value
  * 
  *                 elif attr.name == b"role":             # <<<<<<<<<<<<<<
@@ -3985,71 +4166,77 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
         goto __pyx_L6;
       }
 
-      /* "gumbocy.pyx":282
+      /* "gumbocy.pyx":309
  *                     attrs.values[ATTR_ROLE] = pystr
  * 
  *                 elif attr.name == b"rel":             # <<<<<<<<<<<<<<
  *                     pystr = str(attr.value).lower()
  *                     attrs.values[ATTR_REL] =  pystr
  */
-      __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 282, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_5 = (__Pyx_PyBytes_Equals(__pyx_t_7, __pyx_n_b_rel, Py_EQ)); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 282, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (__pyx_t_5) {
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 309, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_4 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_n_b_rel, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 309, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (__pyx_t_4) {
 
-        /* "gumbocy.pyx":283
+        /* "gumbocy.pyx":310
  * 
  *                 elif attr.name == b"rel":
  *                     pystr = str(attr.value).lower()             # <<<<<<<<<<<<<<
  *                     attrs.values[ATTR_REL] =  pystr
  * 
  */
-        __pyx_t_1 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 283, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 310, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_8 = PyTuple_New(1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 283, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_8);
+        __pyx_t_7 = PyTuple_New(1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 310, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
         __Pyx_GIVEREF(__pyx_t_1);
-        PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_1);
+        PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_1);
         __pyx_t_1 = 0;
-        __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 283, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 310, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-        __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_lower); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 283, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_8);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_lower); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 310, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __pyx_t_1 = NULL;
-        if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_8))) {
-          __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_8);
+        if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_7))) {
+          __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_7);
           if (likely(__pyx_t_1)) {
-            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_8);
+            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_7);
             __Pyx_INCREF(__pyx_t_1);
             __Pyx_INCREF(function);
-            __Pyx_DECREF_SET(__pyx_t_8, function);
+            __Pyx_DECREF_SET(__pyx_t_7, function);
           }
         }
         if (__pyx_t_1) {
-          __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 283, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 310, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         } else {
-          __pyx_t_7 = __Pyx_PyObject_CallNoArg(__pyx_t_8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 283, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_CallNoArg(__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 310, __pyx_L1_error)
         }
-        __Pyx_GOTREF(__pyx_t_7);
-        __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-        __Pyx_XDECREF_SET(__pyx_v_pystr, __pyx_t_7);
-        __pyx_t_7 = 0;
+        __Pyx_GOTREF(__pyx_t_6);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __Pyx_XDECREF_SET(__pyx_v_pystr, __pyx_t_6);
+        __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":284
+        /* "gumbocy.pyx":311
  *                 elif attr.name == b"rel":
  *                     pystr = str(attr.value).lower()
  *                     attrs.values[ATTR_REL] =  pystr             # <<<<<<<<<<<<<<
  * 
  *                 elif attr.name == b"aria-hidden" and attr.value == b"true":
  */
-        __pyx_t_12 = __Pyx_PyObject_AsString(__pyx_v_pystr); if (unlikely((!__pyx_t_12) && PyErr_Occurred())) __PYX_ERR(0, 284, __pyx_L1_error)
-        (__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_REL]) = __pyx_t_12;
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 311, __pyx_L1_error)
+        }
+        __pyx_t_6 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_REL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 311, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        if (unlikely(PyDict_SetItem(__pyx_v_attrs->values, __pyx_t_6, __pyx_v_pystr) < 0)) __PYX_ERR(0, 311, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":282
+        /* "gumbocy.pyx":309
  *                     attrs.values[ATTR_ROLE] = pystr
  * 
  *                 elif attr.name == b"rel":             # <<<<<<<<<<<<<<
@@ -4059,40 +4246,40 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
         goto __pyx_L6;
       }
 
-      /* "gumbocy.pyx":286
+      /* "gumbocy.pyx":313
  *                     attrs.values[ATTR_REL] =  pystr
  * 
  *                 elif attr.name == b"aria-hidden" and attr.value == b"true":             # <<<<<<<<<<<<<<
  *                     attrs.has_hidden = 1
  * 
  */
-      __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 286, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_14 = (__Pyx_PyBytes_Equals(__pyx_t_7, __pyx_kp_b_aria_hidden, Py_EQ)); if (unlikely(__pyx_t_14 < 0)) __PYX_ERR(0, 286, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (__pyx_t_14) {
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 313, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_11 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_kp_b_aria_hidden, Py_EQ)); if (unlikely(__pyx_t_11 < 0)) __PYX_ERR(0, 313, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (__pyx_t_11) {
       } else {
-        __pyx_t_5 = __pyx_t_14;
+        __pyx_t_4 = __pyx_t_11;
         goto __pyx_L8_bool_binop_done;
       }
-      __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 286, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_14 = (__Pyx_PyBytes_Equals(__pyx_t_7, __pyx_n_b_true, Py_EQ)); if (unlikely(__pyx_t_14 < 0)) __PYX_ERR(0, 286, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      __pyx_t_5 = __pyx_t_14;
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 313, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_11 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_n_b_true, Py_EQ)); if (unlikely(__pyx_t_11 < 0)) __PYX_ERR(0, 313, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      __pyx_t_4 = __pyx_t_11;
       __pyx_L8_bool_binop_done:;
-      if (__pyx_t_5) {
+      if (__pyx_t_4) {
 
-        /* "gumbocy.pyx":287
+        /* "gumbocy.pyx":314
  * 
  *                 elif attr.name == b"aria-hidden" and attr.value == b"true":
  *                     attrs.has_hidden = 1             # <<<<<<<<<<<<<<
  * 
  *                 elif attr.name == b"hidden":
  */
-        __pyx_v_attrs.has_hidden = 1;
+        __pyx_v_attrs->has_hidden = 1;
 
-        /* "gumbocy.pyx":286
+        /* "gumbocy.pyx":313
  *                     attrs.values[ATTR_REL] =  pystr
  * 
  *                 elif attr.name == b"aria-hidden" and attr.value == b"true":             # <<<<<<<<<<<<<<
@@ -4102,29 +4289,29 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
         goto __pyx_L6;
       }
 
-      /* "gumbocy.pyx":289
+      /* "gumbocy.pyx":316
  *                     attrs.has_hidden = 1
  * 
  *                 elif attr.name == b"hidden":             # <<<<<<<<<<<<<<
  *                     attrs.has_hidden = 1
  * 
  */
-      __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 289, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_5 = (__Pyx_PyBytes_Equals(__pyx_t_7, __pyx_n_b_hidden, Py_EQ)); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 289, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (__pyx_t_5) {
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 316, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_4 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_n_b_hidden, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 316, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (__pyx_t_4) {
 
-        /* "gumbocy.pyx":290
+        /* "gumbocy.pyx":317
  * 
  *                 elif attr.name == b"hidden":
  *                     attrs.has_hidden = 1             # <<<<<<<<<<<<<<
  * 
  *                 elif attr.name == b"alt":
  */
-        __pyx_v_attrs.has_hidden = 1;
+        __pyx_v_attrs->has_hidden = 1;
 
-        /* "gumbocy.pyx":289
+        /* "gumbocy.pyx":316
  *                     attrs.has_hidden = 1
  * 
  *                 elif attr.name == b"hidden":             # <<<<<<<<<<<<<<
@@ -4134,30 +4321,39 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
         goto __pyx_L6;
       }
 
-      /* "gumbocy.pyx":292
+      /* "gumbocy.pyx":319
  *                     attrs.has_hidden = 1
  * 
  *                 elif attr.name == b"alt":             # <<<<<<<<<<<<<<
  *                     attrs.values[ATTR_ALT] = attr.value
  * 
  */
-      __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 292, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_5 = (__Pyx_PyBytes_Equals(__pyx_t_7, __pyx_n_b_alt, Py_EQ)); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 292, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (__pyx_t_5) {
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 319, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_4 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_n_b_alt, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 319, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (__pyx_t_4) {
 
-        /* "gumbocy.pyx":293
+        /* "gumbocy.pyx":320
  * 
  *                 elif attr.name == b"alt":
  *                     attrs.values[ATTR_ALT] = attr.value             # <<<<<<<<<<<<<<
  * 
  *                 elif attr.name == b"src":
  */
-        __pyx_t_13 = __pyx_v_attr->value;
-        (__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_ALT]) = __pyx_t_13;
+        __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 320, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 320, __pyx_L1_error)
+        }
+        __pyx_t_7 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ALT); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 320, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        if (unlikely(PyDict_SetItem(__pyx_v_attrs->values, __pyx_t_7, __pyx_t_6) < 0)) __PYX_ERR(0, 320, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":292
+        /* "gumbocy.pyx":319
  *                     attrs.has_hidden = 1
  * 
  *                 elif attr.name == b"alt":             # <<<<<<<<<<<<<<
@@ -4167,30 +4363,39 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
         goto __pyx_L6;
       }
 
-      /* "gumbocy.pyx":295
+      /* "gumbocy.pyx":322
  *                     attrs.values[ATTR_ALT] = attr.value
  * 
  *                 elif attr.name == b"src":             # <<<<<<<<<<<<<<
  *                     attrs.values[ATTR_SRC] = attr.value
  * 
  */
-      __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 295, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_5 = (__Pyx_PyBytes_Equals(__pyx_t_7, __pyx_n_b_src, Py_EQ)); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 295, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (__pyx_t_5) {
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 322, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_4 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_n_b_src, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 322, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (__pyx_t_4) {
 
-        /* "gumbocy.pyx":296
+        /* "gumbocy.pyx":323
  * 
  *                 elif attr.name == b"src":
  *                     attrs.values[ATTR_SRC] = attr.value             # <<<<<<<<<<<<<<
  * 
  *                 elif attr.name == b"name":
  */
-        __pyx_t_13 = __pyx_v_attr->value;
-        (__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_SRC]) = __pyx_t_13;
+        __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 323, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 323, __pyx_L1_error)
+        }
+        __pyx_t_7 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_SRC); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 323, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        if (unlikely(PyDict_SetItem(__pyx_v_attrs->values, __pyx_t_7, __pyx_t_6) < 0)) __PYX_ERR(0, 323, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":295
+        /* "gumbocy.pyx":322
  *                     attrs.values[ATTR_ALT] = attr.value
  * 
  *                 elif attr.name == b"src":             # <<<<<<<<<<<<<<
@@ -4200,71 +4405,77 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
         goto __pyx_L6;
       }
 
-      /* "gumbocy.pyx":298
+      /* "gumbocy.pyx":325
  *                     attrs.values[ATTR_SRC] = attr.value
  * 
  *                 elif attr.name == b"name":             # <<<<<<<<<<<<<<
  *                     pystr = str(attr.value).lower()
  *                     attrs.values[ATTR_NAME] = pystr
  */
-      __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 298, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_5 = (__Pyx_PyBytes_Equals(__pyx_t_7, __pyx_n_b_name, Py_EQ)); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 298, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (__pyx_t_5) {
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 325, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_4 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_n_b_name, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 325, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (__pyx_t_4) {
 
-        /* "gumbocy.pyx":299
+        /* "gumbocy.pyx":326
  * 
  *                 elif attr.name == b"name":
  *                     pystr = str(attr.value).lower()             # <<<<<<<<<<<<<<
  *                     attrs.values[ATTR_NAME] = pystr
  * 
  */
-        __pyx_t_8 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 299, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_8);
-        __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 299, __pyx_L1_error)
+        __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 326, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 326, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __Pyx_GIVEREF(__pyx_t_8);
-        PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_8);
-        __pyx_t_8 = 0;
-        __pyx_t_8 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_1, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 299, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_8);
+        __Pyx_GIVEREF(__pyx_t_7);
+        PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_7);
+        __pyx_t_7 = 0;
+        __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_1, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 326, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_lower); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 299, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_lower); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 326, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-        __pyx_t_8 = NULL;
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __pyx_t_7 = NULL;
         if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
-          __pyx_t_8 = PyMethod_GET_SELF(__pyx_t_1);
-          if (likely(__pyx_t_8)) {
+          __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_1);
+          if (likely(__pyx_t_7)) {
             PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-            __Pyx_INCREF(__pyx_t_8);
+            __Pyx_INCREF(__pyx_t_7);
             __Pyx_INCREF(function);
             __Pyx_DECREF_SET(__pyx_t_1, function);
           }
         }
-        if (__pyx_t_8) {
-          __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 299, __pyx_L1_error)
-          __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+        if (__pyx_t_7) {
+          __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 326, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
         } else {
-          __pyx_t_7 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 299, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 326, __pyx_L1_error)
         }
-        __Pyx_GOTREF(__pyx_t_7);
+        __Pyx_GOTREF(__pyx_t_6);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __Pyx_XDECREF_SET(__pyx_v_pystr, __pyx_t_7);
-        __pyx_t_7 = 0;
+        __Pyx_XDECREF_SET(__pyx_v_pystr, __pyx_t_6);
+        __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":300
+        /* "gumbocy.pyx":327
  *                 elif attr.name == b"name":
  *                     pystr = str(attr.value).lower()
  *                     attrs.values[ATTR_NAME] = pystr             # <<<<<<<<<<<<<<
  * 
  *                 elif attr.name == b"property":
  */
-        __pyx_t_12 = __Pyx_PyObject_AsString(__pyx_v_pystr); if (unlikely((!__pyx_t_12) && PyErr_Occurred())) __PYX_ERR(0, 300, __pyx_L1_error)
-        (__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_NAME]) = __pyx_t_12;
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 327, __pyx_L1_error)
+        }
+        __pyx_t_6 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_NAME); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 327, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        if (unlikely(PyDict_SetItem(__pyx_v_attrs->values, __pyx_t_6, __pyx_v_pystr) < 0)) __PYX_ERR(0, 327, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":298
+        /* "gumbocy.pyx":325
  *                     attrs.values[ATTR_SRC] = attr.value
  * 
  *                 elif attr.name == b"name":             # <<<<<<<<<<<<<<
@@ -4274,81 +4485,129 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
         goto __pyx_L6;
       }
 
-      /* "gumbocy.pyx":302
+      /* "gumbocy.pyx":329
  *                     attrs.values[ATTR_NAME] = pystr
  * 
  *                 elif attr.name == b"property":             # <<<<<<<<<<<<<<
  *                     pystr = str(attr.value).lower()
  *                     attrs.values[ATTR_PROPERTY] = pystr
  */
-      __pyx_t_7 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 302, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_5 = (__Pyx_PyBytes_Equals(__pyx_t_7, __pyx_n_b_property, Py_EQ)); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 302, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (__pyx_t_5) {
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 329, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_4 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_n_b_property, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 329, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (__pyx_t_4) {
 
-        /* "gumbocy.pyx":303
+        /* "gumbocy.pyx":330
  * 
  *                 elif attr.name == b"property":
  *                     pystr = str(attr.value).lower()             # <<<<<<<<<<<<<<
  *                     attrs.values[ATTR_PROPERTY] = pystr
  * 
  */
-        __pyx_t_1 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 303, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 330, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_8 = PyTuple_New(1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 303, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_8);
+        __pyx_t_7 = PyTuple_New(1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 330, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
         __Pyx_GIVEREF(__pyx_t_1);
-        PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_1);
+        PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_1);
         __pyx_t_1 = 0;
-        __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 303, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 330, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-        __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_lower); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 303, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_8);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_lower); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 330, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __pyx_t_1 = NULL;
-        if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_8))) {
-          __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_8);
+        if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_7))) {
+          __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_7);
           if (likely(__pyx_t_1)) {
-            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_8);
+            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_7);
             __Pyx_INCREF(__pyx_t_1);
             __Pyx_INCREF(function);
-            __Pyx_DECREF_SET(__pyx_t_8, function);
+            __Pyx_DECREF_SET(__pyx_t_7, function);
           }
         }
         if (__pyx_t_1) {
-          __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 303, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 330, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         } else {
-          __pyx_t_7 = __Pyx_PyObject_CallNoArg(__pyx_t_8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 303, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_CallNoArg(__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 330, __pyx_L1_error)
         }
-        __Pyx_GOTREF(__pyx_t_7);
-        __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-        __Pyx_XDECREF_SET(__pyx_v_pystr, __pyx_t_7);
-        __pyx_t_7 = 0;
+        __Pyx_GOTREF(__pyx_t_6);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __Pyx_XDECREF_SET(__pyx_v_pystr, __pyx_t_6);
+        __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":304
+        /* "gumbocy.pyx":331
  *                 elif attr.name == b"property":
  *                     pystr = str(attr.value).lower()
  *                     attrs.values[ATTR_PROPERTY] = pystr             # <<<<<<<<<<<<<<
  * 
- *         return attrs
+ *                 elif attr.name == b"content":
  */
-        __pyx_t_12 = __Pyx_PyObject_AsString(__pyx_v_pystr); if (unlikely((!__pyx_t_12) && PyErr_Occurred())) __PYX_ERR(0, 304, __pyx_L1_error)
-        (__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_PROPERTY]) = __pyx_t_12;
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 331, __pyx_L1_error)
+        }
+        __pyx_t_6 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_PROPERTY); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 331, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        if (unlikely(PyDict_SetItem(__pyx_v_attrs->values, __pyx_t_6, __pyx_v_pystr) < 0)) __PYX_ERR(0, 331, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "gumbocy.pyx":302
+        /* "gumbocy.pyx":329
  *                     attrs.values[ATTR_NAME] = pystr
  * 
  *                 elif attr.name == b"property":             # <<<<<<<<<<<<<<
  *                     pystr = str(attr.value).lower()
  *                     attrs.values[ATTR_PROPERTY] = pystr
  */
+        goto __pyx_L6;
+      }
+
+      /* "gumbocy.pyx":333
+ *                     attrs.values[ATTR_PROPERTY] = pystr
+ * 
+ *                 elif attr.name == b"content":             # <<<<<<<<<<<<<<
+ *                     attrs.values[ATTR_CONTENT] = attr.value
+ * 
+ */
+      __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 333, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_4 = (__Pyx_PyBytes_Equals(__pyx_t_6, __pyx_n_b_content, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 333, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (__pyx_t_4) {
+
+        /* "gumbocy.pyx":334
+ * 
+ *                 elif attr.name == b"content":
+ *                     attrs.values[ATTR_CONTENT] = attr.value             # <<<<<<<<<<<<<<
+ * 
+ *         return attrs
+ */
+        __pyx_t_6 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 334, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 334, __pyx_L1_error)
+        }
+        __pyx_t_7 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_CONTENT); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 334, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        if (unlikely(PyDict_SetItem(__pyx_v_attrs->values, __pyx_t_7, __pyx_t_6) < 0)) __PYX_ERR(0, 334, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+
+        /* "gumbocy.pyx":333
+ *                     attrs.values[ATTR_PROPERTY] = pystr
+ * 
+ *                 elif attr.name == b"content":             # <<<<<<<<<<<<<<
+ *                     attrs.values[ATTR_CONTENT] = attr.value
+ * 
+ */
       }
       __pyx_L6:;
 
-      /* "gumbocy.pyx":260
+      /* "gumbocy.pyx":284
  *             attr = <gumbocy.GumboAttribute *> node.v.element.attributes.data[i]
  * 
  *             if re2_search(attr.name, deref(self.attributes_whitelist)):             # <<<<<<<<<<<<<<
@@ -4358,17 +4617,19 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
     }
   }
 
-  /* "gumbocy.pyx":306
- *                     attrs.values[ATTR_PROPERTY] = pystr
+  /* "gumbocy.pyx":336
+ *                     attrs.values[ATTR_CONTENT] = attr.value
  * 
  *         return attrs             # <<<<<<<<<<<<<<
  * 
  *     cdef void close_word_group(self):
  */
+  __Pyx_XDECREF(((PyObject *)__pyx_r));
+  __Pyx_INCREF(((PyObject *)__pyx_v_attrs));
   __pyx_r = __pyx_v_attrs;
   goto __pyx_L0;
 
-  /* "gumbocy.pyx":246
+  /* "gumbocy.pyx":267
  *         return False
  * 
  *     cdef Attributes get_attributes(self, gumbocy.GumboNode* node):             # <<<<<<<<<<<<<<
@@ -4379,20 +4640,23 @@ static struct __pyx_t_7gumbocy_Attributes __pyx_f_7gumbocy_10HTMLParser_get_attr
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9);
-  __Pyx_XDECREF(__pyx_t_10);
-  __Pyx_WriteUnraisable("gumbocy.HTMLParser.get_attributes", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
+  __Pyx_AddTraceback("gumbocy.HTMLParser.get_attributes", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = 0;
   __pyx_L0:;
+  __Pyx_XDECREF((PyObject *)__pyx_v_attrs);
   __Pyx_XDECREF(__pyx_v_multiple_value);
   __Pyx_XDECREF(__pyx_v_pystr);
+  __Pyx_XGIVEREF((PyObject *)__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "gumbocy.pyx":308
+/* "gumbocy.pyx":338
  *         return attrs
  * 
  *     cdef void close_word_group(self):             # <<<<<<<<<<<<<<
@@ -4408,17 +4672,17 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_word_group(struct __pyx_obj_7gum
   int __pyx_t_4;
   __Pyx_RefNannySetupContext("close_word_group", 0);
 
-  /* "gumbocy.pyx":311
+  /* "gumbocy.pyx":341
  *         """ Close the current word group """
  * 
  *         if self.current_word_group:             # <<<<<<<<<<<<<<
  *             self.analysis["word_groups"].append(tuple(self.current_word_group))
  *             self.current_word_group = None
  */
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->current_word_group); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 311, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->current_word_group); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 341, __pyx_L1_error)
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":312
+    /* "gumbocy.pyx":342
  * 
  *         if self.current_word_group:
  *             self.analysis["word_groups"].append(tuple(self.current_word_group))             # <<<<<<<<<<<<<<
@@ -4427,17 +4691,17 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_word_group(struct __pyx_obj_7gum
  */
     if (unlikely(__pyx_v_self->analysis == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 312, __pyx_L1_error)
+      __PYX_ERR(0, 342, __pyx_L1_error)
     }
-    __pyx_t_2 = __Pyx_PyDict_GetItem(__pyx_v_self->analysis, __pyx_n_s_word_groups); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 312, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyDict_GetItem(__pyx_v_self->analysis, __pyx_n_s_word_groups); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 342, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = PySequence_Tuple(__pyx_v_self->current_word_group); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 312, __pyx_L1_error)
+    __pyx_t_3 = PySequence_Tuple(__pyx_v_self->current_word_group); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 342, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_Append(__pyx_t_2, __pyx_t_3); if (unlikely(__pyx_t_4 == -1)) __PYX_ERR(0, 312, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_Append(__pyx_t_2, __pyx_t_3); if (unlikely(__pyx_t_4 == -1)) __PYX_ERR(0, 342, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "gumbocy.pyx":313
+    /* "gumbocy.pyx":343
  *         if self.current_word_group:
  *             self.analysis["word_groups"].append(tuple(self.current_word_group))
  *             self.current_word_group = None             # <<<<<<<<<<<<<<
@@ -4450,7 +4714,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_word_group(struct __pyx_obj_7gum
     __Pyx_DECREF(__pyx_v_self->current_word_group);
     __pyx_v_self->current_word_group = Py_None;
 
-    /* "gumbocy.pyx":311
+    /* "gumbocy.pyx":341
  *         """ Close the current word group """
  * 
  *         if self.current_word_group:             # <<<<<<<<<<<<<<
@@ -4459,7 +4723,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_word_group(struct __pyx_obj_7gum
  */
   }
 
-  /* "gumbocy.pyx":308
+  /* "gumbocy.pyx":338
  *         return attrs
  * 
  *     cdef void close_word_group(self):             # <<<<<<<<<<<<<<
@@ -4477,7 +4741,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_word_group(struct __pyx_obj_7gum
   __Pyx_RefNannyFinishContext();
 }
 
-/* "gumbocy.pyx":316
+/* "gumbocy.pyx":346
  * 
  * 
  *     cdef void add_text(self, text):             # <<<<<<<<<<<<<<
@@ -4497,25 +4761,25 @@ static void __pyx_f_7gumbocy_10HTMLParser_add_text(struct __pyx_obj_7gumbocy_HTM
   PyObject *__pyx_t_8 = NULL;
   __Pyx_RefNannySetupContext("add_text", 0);
 
-  /* "gumbocy.pyx":318
+  /* "gumbocy.pyx":348
  *     cdef void add_text(self, text):
  * 
  *         if not self.current_word_group:             # <<<<<<<<<<<<<<
  *             self.current_word_group = [text.strip(), self.current_stack[-1]]
  *         else:
  */
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->current_word_group); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 318, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->current_word_group); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 348, __pyx_L1_error)
   __pyx_t_2 = ((!__pyx_t_1) != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":319
+    /* "gumbocy.pyx":349
  * 
  *         if not self.current_word_group:
  *             self.current_word_group = [text.strip(), self.current_stack[-1]]             # <<<<<<<<<<<<<<
  *         else:
  *             self.current_word_group[0] += " " + text.strip()
  */
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_text, __pyx_n_s_strip); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 319, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_text, __pyx_n_s_strip); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 349, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __pyx_t_5 = NULL;
     if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_4))) {
@@ -4528,20 +4792,20 @@ static void __pyx_f_7gumbocy_10HTMLParser_add_text(struct __pyx_obj_7gumbocy_HTM
       }
     }
     if (__pyx_t_5) {
-      __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 319, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 349, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     } else {
-      __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 319, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 349, __pyx_L1_error)
     }
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     if (unlikely(__pyx_v_self->current_stack == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 319, __pyx_L1_error)
+      __PYX_ERR(0, 349, __pyx_L1_error)
     }
-    __pyx_t_4 = __Pyx_GetItemInt_List(__pyx_v_self->current_stack, -1L, long, 1, __Pyx_PyInt_From_long, 1, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 319, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt_List(__pyx_v_self->current_stack, -1L, long, 1, __Pyx_PyInt_From_long, 1, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 349, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyList_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 319, __pyx_L1_error)
+    __pyx_t_5 = PyList_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 349, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_GIVEREF(__pyx_t_3);
     PyList_SET_ITEM(__pyx_t_5, 0, __pyx_t_3);
@@ -4555,7 +4819,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_add_text(struct __pyx_obj_7gumbocy_HTM
     __pyx_v_self->current_word_group = __pyx_t_5;
     __pyx_t_5 = 0;
 
-    /* "gumbocy.pyx":318
+    /* "gumbocy.pyx":348
  *     cdef void add_text(self, text):
  * 
  *         if not self.current_word_group:             # <<<<<<<<<<<<<<
@@ -4565,7 +4829,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_add_text(struct __pyx_obj_7gumbocy_HTM
     goto __pyx_L3;
   }
 
-  /* "gumbocy.pyx":321
+  /* "gumbocy.pyx":351
  *             self.current_word_group = [text.strip(), self.current_stack[-1]]
  *         else:
  *             self.current_word_group[0] += " " + text.strip()             # <<<<<<<<<<<<<<
@@ -4576,9 +4840,9 @@ static void __pyx_f_7gumbocy_10HTMLParser_add_text(struct __pyx_obj_7gumbocy_HTM
     __Pyx_INCREF(__pyx_v_self->current_word_group);
     __pyx_t_5 = __pyx_v_self->current_word_group;
     __pyx_t_6 = 0;
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_5, __pyx_t_6, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 321, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_5, __pyx_t_6, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 351, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_v_text, __pyx_n_s_strip); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 321, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_v_text, __pyx_n_s_strip); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 351, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __pyx_t_8 = NULL;
     if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_7))) {
@@ -4591,27 +4855,27 @@ static void __pyx_f_7gumbocy_10HTMLParser_add_text(struct __pyx_obj_7gumbocy_HTM
       }
     }
     if (__pyx_t_8) {
-      __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_8); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 321, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_8); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 351, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     } else {
-      __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 321, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 351, __pyx_L1_error)
     }
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    __pyx_t_7 = PyNumber_Add(__pyx_kp_s__4, __pyx_t_3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 321, __pyx_L1_error)
+    __pyx_t_7 = PyNumber_Add(__pyx_kp_s__4, __pyx_t_3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 351, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_t_4, __pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 321, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_t_4, __pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 351, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    if (unlikely(__Pyx_SetItemInt(__pyx_t_5, __pyx_t_6, __pyx_t_3, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 1, 1) < 0)) __PYX_ERR(0, 321, __pyx_L1_error)
+    if (unlikely(__Pyx_SetItemInt(__pyx_t_5, __pyx_t_6, __pyx_t_3, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 1, 1) < 0)) __PYX_ERR(0, 351, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   }
   __pyx_L3:;
 
-  /* "gumbocy.pyx":316
+  /* "gumbocy.pyx":346
  * 
  * 
  *     cdef void add_text(self, text):             # <<<<<<<<<<<<<<
@@ -4632,7 +4896,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_add_text(struct __pyx_obj_7gumbocy_HTM
   __Pyx_RefNannyFinishContext();
 }
 
-/* "gumbocy.pyx":323
+/* "gumbocy.pyx":353
  *             self.current_word_group[0] += " " + text.strip()
  * 
  *     cdef void add_hyperlink_text(self, text):             # <<<<<<<<<<<<<<
@@ -4649,36 +4913,36 @@ static void __pyx_f_7gumbocy_10HTMLParser_add_hyperlink_text(struct __pyx_obj_7g
   PyObject *__pyx_t_5 = NULL;
   __Pyx_RefNannySetupContext("add_hyperlink_text", 0);
 
-  /* "gumbocy.pyx":324
+  /* "gumbocy.pyx":354
  * 
  *     cdef void add_hyperlink_text(self, text):
  *         if self.current_hyperlink:             # <<<<<<<<<<<<<<
  *             self.current_hyperlink[1] += text
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->current_hyperlink); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 324, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->current_hyperlink); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 354, __pyx_L1_error)
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":325
+    /* "gumbocy.pyx":355
  *     cdef void add_hyperlink_text(self, text):
  *         if self.current_hyperlink:
  *             self.current_hyperlink[1] += text             # <<<<<<<<<<<<<<
  * 
- *     cdef void open_hyperlink(self, Attributes* attrs):
+ *     cdef void open_hyperlink(self, Attributes attrs):
  */
     __Pyx_INCREF(__pyx_v_self->current_hyperlink);
     __pyx_t_2 = __pyx_v_self->current_hyperlink;
     __pyx_t_3 = 1;
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_2, __pyx_t_3, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 325, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_2, __pyx_t_3, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 355, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyNumber_InPlaceAdd(__pyx_t_4, __pyx_v_text); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 325, __pyx_L1_error)
+    __pyx_t_5 = PyNumber_InPlaceAdd(__pyx_t_4, __pyx_v_text); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 355, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    if (unlikely(__Pyx_SetItemInt(__pyx_t_2, __pyx_t_3, __pyx_t_5, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 1, 1) < 0)) __PYX_ERR(0, 325, __pyx_L1_error)
+    if (unlikely(__Pyx_SetItemInt(__pyx_t_2, __pyx_t_3, __pyx_t_5, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 1, 1) < 0)) __PYX_ERR(0, 355, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "gumbocy.pyx":324
+    /* "gumbocy.pyx":354
  * 
  *     cdef void add_hyperlink_text(self, text):
  *         if self.current_hyperlink:             # <<<<<<<<<<<<<<
@@ -4687,7 +4951,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_add_hyperlink_text(struct __pyx_obj_7g
  */
   }
 
-  /* "gumbocy.pyx":323
+  /* "gumbocy.pyx":353
  *             self.current_word_group[0] += " " + text.strip()
  * 
  *     cdef void add_hyperlink_text(self, text):             # <<<<<<<<<<<<<<
@@ -4706,62 +4970,85 @@ static void __pyx_f_7gumbocy_10HTMLParser_add_hyperlink_text(struct __pyx_obj_7g
   __Pyx_RefNannyFinishContext();
 }
 
-/* "gumbocy.pyx":327
+/* "gumbocy.pyx":357
  *             self.current_hyperlink[1] += text
  * 
- *     cdef void open_hyperlink(self, Attributes* attrs):             # <<<<<<<<<<<<<<
+ *     cdef void open_hyperlink(self, Attributes attrs):             # <<<<<<<<<<<<<<
  * 
- *         if not attrs.values.count(ATTR_HREF):
+ *         if not attrs.values.get(ATTR_HREF):
  */
 
-static void __pyx_f_7gumbocy_10HTMLParser_open_hyperlink(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, struct __pyx_t_7gumbocy_Attributes *__pyx_v_attrs) {
+static void __pyx_f_7gumbocy_10HTMLParser_open_hyperlink(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, struct __pyx_obj_7gumbocy_Attributes *__pyx_v_attrs) {
   __Pyx_RefNannyDeclarations
-  int __pyx_t_1;
-  size_t __pyx_t_2;
-  PyObject *__pyx_t_3 = NULL;
-  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  int __pyx_t_3;
+  int __pyx_t_4;
+  Py_ssize_t __pyx_t_5;
+  char const *__pyx_t_6;
   __Pyx_RefNannySetupContext("open_hyperlink", 0);
 
-  /* "gumbocy.pyx":329
- *     cdef void open_hyperlink(self, Attributes* attrs):
+  /* "gumbocy.pyx":359
+ *     cdef void open_hyperlink(self, Attributes attrs):
  * 
- *         if not attrs.values.count(ATTR_HREF):             # <<<<<<<<<<<<<<
+ *         if not attrs.values.get(ATTR_HREF):             # <<<<<<<<<<<<<<
  *             return
  * 
  */
-  __pyx_t_1 = ((!(__pyx_v_attrs->values.count(__pyx_e_7gumbocy_ATTR_HREF) != 0)) != 0);
-  if (__pyx_t_1) {
+  if (unlikely(__pyx_v_attrs->values == Py_None)) {
+    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+    __PYX_ERR(0, 359, __pyx_L1_error)
+  }
+  __pyx_t_1 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_HREF); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 359, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_1, Py_None); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 359, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 359, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_4 = ((!__pyx_t_3) != 0);
+  if (__pyx_t_4) {
 
-    /* "gumbocy.pyx":330
+    /* "gumbocy.pyx":360
  * 
- *         if not attrs.values.count(ATTR_HREF):
+ *         if not attrs.values.get(ATTR_HREF):
  *             return             # <<<<<<<<<<<<<<
  * 
  *         if len(attrs.values[ATTR_HREF]) == 0:
  */
     goto __pyx_L0;
 
-    /* "gumbocy.pyx":329
- *     cdef void open_hyperlink(self, Attributes* attrs):
+    /* "gumbocy.pyx":359
+ *     cdef void open_hyperlink(self, Attributes attrs):
  * 
- *         if not attrs.values.count(ATTR_HREF):             # <<<<<<<<<<<<<<
+ *         if not attrs.values.get(ATTR_HREF):             # <<<<<<<<<<<<<<
  *             return
  * 
  */
   }
 
-  /* "gumbocy.pyx":332
+  /* "gumbocy.pyx":362
  *             return
  * 
  *         if len(attrs.values[ATTR_HREF]) == 0:             # <<<<<<<<<<<<<<
  *             return
  * 
  */
-  __pyx_t_2 = strlen((__pyx_v_attrs->values[__pyx_e_7gumbocy_ATTR_HREF])); 
-  __pyx_t_1 = ((__pyx_t_2 == 0) != 0);
-  if (__pyx_t_1) {
+  if (unlikely(__pyx_v_attrs->values == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+    __PYX_ERR(0, 362, __pyx_L1_error)
+  }
+  __pyx_t_2 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_HREF); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 362, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_1 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 362, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_5 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 362, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_4 = ((__pyx_t_5 == 0) != 0);
+  if (__pyx_t_4) {
 
-    /* "gumbocy.pyx":333
+    /* "gumbocy.pyx":363
  * 
  *         if len(attrs.values[ATTR_HREF]) == 0:
  *             return             # <<<<<<<<<<<<<<
@@ -4770,7 +5057,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_open_hyperlink(struct __pyx_obj_7gumbo
  */
     goto __pyx_L0;
 
-    /* "gumbocy.pyx":332
+    /* "gumbocy.pyx":362
  *             return
  * 
  *         if len(attrs.values[ATTR_HREF]) == 0:             # <<<<<<<<<<<<<<
@@ -4779,17 +5066,28 @@ static void __pyx_f_7gumbocy_10HTMLParser_open_hyperlink(struct __pyx_obj_7gumbo
  */
   }
 
-  /* "gumbocy.pyx":335
+  /* "gumbocy.pyx":365
  *             return
  * 
  *         if re2_search(attrs.values[ATTR_HREF], deref(_RE2_IGNORED_HREF)):             # <<<<<<<<<<<<<<
  *             return
  * 
  */
-  __pyx_t_1 = (__pyx_f_7gumbocy_re2_search((__pyx_v_attrs->values[__pyx_e_7gumbocy_ATTR_HREF]), (*__pyx_v_7gumbocy__RE2_IGNORED_HREF)) != 0);
-  if (__pyx_t_1) {
+  if (unlikely(__pyx_v_attrs->values == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+    __PYX_ERR(0, 365, __pyx_L1_error)
+  }
+  __pyx_t_1 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_HREF); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 365, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 365, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_6 = __Pyx_PyObject_AsString(__pyx_t_2); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 365, __pyx_L1_error)
+  __pyx_t_4 = (__pyx_f_7gumbocy_re2_search(__pyx_t_6, (*__pyx_v_7gumbocy__RE2_IGNORED_HREF)) != 0);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (__pyx_t_4) {
 
-    /* "gumbocy.pyx":336
+    /* "gumbocy.pyx":366
  * 
  *         if re2_search(attrs.values[ATTR_HREF], deref(_RE2_IGNORED_HREF)):
  *             return             # <<<<<<<<<<<<<<
@@ -4798,7 +5096,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_open_hyperlink(struct __pyx_obj_7gumbo
  */
     goto __pyx_L0;
 
-    /* "gumbocy.pyx":335
+    /* "gumbocy.pyx":365
  *             return
  * 
  *         if re2_search(attrs.values[ATTR_HREF], deref(_RE2_IGNORED_HREF)):             # <<<<<<<<<<<<<<
@@ -4807,7 +5105,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_open_hyperlink(struct __pyx_obj_7gumbo
  */
   }
 
-  /* "gumbocy.pyx":338
+  /* "gumbocy.pyx":368
  *             return
  * 
  *         self.close_hyperlink()             # <<<<<<<<<<<<<<
@@ -4816,48 +5114,55 @@ static void __pyx_f_7gumbocy_10HTMLParser_open_hyperlink(struct __pyx_obj_7gumbo
  */
   ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->close_hyperlink(__pyx_v_self);
 
-  /* "gumbocy.pyx":339
+  /* "gumbocy.pyx":369
  * 
  *         self.close_hyperlink()
  *         self.current_hyperlink = [attrs.values[ATTR_HREF], ""]             # <<<<<<<<<<<<<<
  * 
  *     cdef void close_hyperlink(self):
  */
-  __pyx_t_3 = __Pyx_PyBytes_FromString((__pyx_v_attrs->values[__pyx_e_7gumbocy_ATTR_HREF])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 339, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyList_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 339, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GIVEREF(__pyx_t_3);
-  PyList_SET_ITEM(__pyx_t_4, 0, __pyx_t_3);
+  if (unlikely(__pyx_v_attrs->values == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+    __PYX_ERR(0, 369, __pyx_L1_error)
+  }
+  __pyx_t_2 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_HREF); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 369, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_1 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 369, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = PyList_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 369, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_GIVEREF(__pyx_t_1);
+  PyList_SET_ITEM(__pyx_t_2, 0, __pyx_t_1);
   __Pyx_INCREF(__pyx_kp_s__5);
   __Pyx_GIVEREF(__pyx_kp_s__5);
-  PyList_SET_ITEM(__pyx_t_4, 1, __pyx_kp_s__5);
-  __pyx_t_3 = 0;
-  __Pyx_GIVEREF(__pyx_t_4);
+  PyList_SET_ITEM(__pyx_t_2, 1, __pyx_kp_s__5);
+  __pyx_t_1 = 0;
+  __Pyx_GIVEREF(__pyx_t_2);
   __Pyx_GOTREF(__pyx_v_self->current_hyperlink);
   __Pyx_DECREF(__pyx_v_self->current_hyperlink);
-  __pyx_v_self->current_hyperlink = __pyx_t_4;
-  __pyx_t_4 = 0;
+  __pyx_v_self->current_hyperlink = __pyx_t_2;
+  __pyx_t_2 = 0;
 
-  /* "gumbocy.pyx":327
+  /* "gumbocy.pyx":357
  *             self.current_hyperlink[1] += text
  * 
- *     cdef void open_hyperlink(self, Attributes* attrs):             # <<<<<<<<<<<<<<
+ *     cdef void open_hyperlink(self, Attributes attrs):             # <<<<<<<<<<<<<<
  * 
- *         if not attrs.values.count(ATTR_HREF):
+ *         if not attrs.values.get(ATTR_HREF):
  */
 
   /* function exit code */
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
   __Pyx_WriteUnraisable("gumbocy.HTMLParser.open_hyperlink", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
 }
 
-/* "gumbocy.pyx":341
+/* "gumbocy.pyx":371
  *         self.current_hyperlink = [attrs.values[ATTR_HREF], ""]
  * 
  *     cdef void close_hyperlink(self):             # <<<<<<<<<<<<<<
@@ -4876,40 +5181,40 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
   int __pyx_t_6;
   __Pyx_RefNannySetupContext("close_hyperlink", 0);
 
-  /* "gumbocy.pyx":342
+  /* "gumbocy.pyx":372
  * 
  *     cdef void close_hyperlink(self):
  *         if self.current_hyperlink:             # <<<<<<<<<<<<<<
  *             href = self.current_hyperlink[0]
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->current_hyperlink); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 342, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->current_hyperlink); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 372, __pyx_L1_error)
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":343
+    /* "gumbocy.pyx":373
  *     cdef void close_hyperlink(self):
  *         if self.current_hyperlink:
  *             href = self.current_hyperlink[0]             # <<<<<<<<<<<<<<
  * 
  *             # TODO: absolute links to same domain
  */
-    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_self->current_hyperlink, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 343, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_self->current_hyperlink, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 373, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_v_href = __pyx_t_2;
     __pyx_t_2 = 0;
 
-    /* "gumbocy.pyx":346
+    /* "gumbocy.pyx":376
  * 
  *             # TODO: absolute links to same domain
  *             if re2_search(href, deref(_RE2_EXTERNAL_HREF)):             # <<<<<<<<<<<<<<
  *                 if self.analyze_external_hyperlinks:
  *                     if href.startswith("http://") or href.startswith("https://") or href.startswith("//"):
  */
-    __pyx_t_3 = __Pyx_PyObject_AsString(__pyx_v_href); if (unlikely((!__pyx_t_3) && PyErr_Occurred())) __PYX_ERR(0, 346, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_AsString(__pyx_v_href); if (unlikely((!__pyx_t_3) && PyErr_Occurred())) __PYX_ERR(0, 376, __pyx_L1_error)
     __pyx_t_1 = (__pyx_f_7gumbocy_re2_search(__pyx_t_3, (*__pyx_v_7gumbocy__RE2_EXTERNAL_HREF)) != 0);
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":347
+      /* "gumbocy.pyx":377
  *             # TODO: absolute links to same domain
  *             if re2_search(href, deref(_RE2_EXTERNAL_HREF)):
  *                 if self.analyze_external_hyperlinks:             # <<<<<<<<<<<<<<
@@ -4919,49 +5224,49 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
       __pyx_t_1 = (__pyx_v_self->analyze_external_hyperlinks != 0);
       if (__pyx_t_1) {
 
-        /* "gumbocy.pyx":348
+        /* "gumbocy.pyx":378
  *             if re2_search(href, deref(_RE2_EXTERNAL_HREF)):
  *                 if self.analyze_external_hyperlinks:
  *                     if href.startswith("http://") or href.startswith("https://") or href.startswith("//"):             # <<<<<<<<<<<<<<
  *                         self.analysis["external_hyperlinks"].append(tuple(self.current_hyperlink))
  *             else:
  */
-        __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_href, __pyx_n_s_startswith); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 348, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_href, __pyx_n_s_startswith); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 378, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 348, __pyx_L1_error)
+        __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 378, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 348, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 378, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
         if (!__pyx_t_5) {
         } else {
           __pyx_t_1 = __pyx_t_5;
           goto __pyx_L7_bool_binop_done;
         }
-        __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_href, __pyx_n_s_startswith); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 348, __pyx_L1_error)
+        __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_href, __pyx_n_s_startswith); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 378, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
-        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 348, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 378, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-        __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 348, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 378, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         if (!__pyx_t_5) {
         } else {
           __pyx_t_1 = __pyx_t_5;
           goto __pyx_L7_bool_binop_done;
         }
-        __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_href, __pyx_n_s_startswith); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 348, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_href, __pyx_n_s_startswith); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 378, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_tuple__9, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 348, __pyx_L1_error)
+        __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_tuple__9, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 378, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 348, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 378, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
         __pyx_t_1 = __pyx_t_5;
         __pyx_L7_bool_binop_done:;
         if (__pyx_t_1) {
 
-          /* "gumbocy.pyx":349
+          /* "gumbocy.pyx":379
  *                 if self.analyze_external_hyperlinks:
  *                     if href.startswith("http://") or href.startswith("https://") or href.startswith("//"):
  *                         self.analysis["external_hyperlinks"].append(tuple(self.current_hyperlink))             # <<<<<<<<<<<<<<
@@ -4970,17 +5275,17 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
  */
           if (unlikely(__pyx_v_self->analysis == Py_None)) {
             PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-            __PYX_ERR(0, 349, __pyx_L1_error)
+            __PYX_ERR(0, 379, __pyx_L1_error)
           }
-          __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_self->analysis, __pyx_n_s_external_hyperlinks); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 349, __pyx_L1_error)
+          __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_self->analysis, __pyx_n_s_external_hyperlinks); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 379, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_4);
-          __pyx_t_2 = PySequence_Tuple(__pyx_v_self->current_hyperlink); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 349, __pyx_L1_error)
+          __pyx_t_2 = PySequence_Tuple(__pyx_v_self->current_hyperlink); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 379, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_2);
-          __pyx_t_6 = __Pyx_PyObject_Append(__pyx_t_4, __pyx_t_2); if (unlikely(__pyx_t_6 == -1)) __PYX_ERR(0, 349, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_Append(__pyx_t_4, __pyx_t_2); if (unlikely(__pyx_t_6 == -1)) __PYX_ERR(0, 379, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
           __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-          /* "gumbocy.pyx":348
+          /* "gumbocy.pyx":378
  *             if re2_search(href, deref(_RE2_EXTERNAL_HREF)):
  *                 if self.analyze_external_hyperlinks:
  *                     if href.startswith("http://") or href.startswith("https://") or href.startswith("//"):             # <<<<<<<<<<<<<<
@@ -4989,7 +5294,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
  */
         }
 
-        /* "gumbocy.pyx":347
+        /* "gumbocy.pyx":377
  *             # TODO: absolute links to same domain
  *             if re2_search(href, deref(_RE2_EXTERNAL_HREF)):
  *                 if self.analyze_external_hyperlinks:             # <<<<<<<<<<<<<<
@@ -4998,7 +5303,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
  */
       }
 
-      /* "gumbocy.pyx":346
+      /* "gumbocy.pyx":376
  * 
  *             # TODO: absolute links to same domain
  *             if re2_search(href, deref(_RE2_EXTERNAL_HREF)):             # <<<<<<<<<<<<<<
@@ -5008,7 +5313,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
       goto __pyx_L4;
     }
 
-    /* "gumbocy.pyx":351
+    /* "gumbocy.pyx":381
  *                         self.analysis["external_hyperlinks"].append(tuple(self.current_hyperlink))
  *             else:
  *                 if self.analyze_internal_hyperlinks:             # <<<<<<<<<<<<<<
@@ -5019,7 +5324,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
       __pyx_t_1 = (__pyx_v_self->analyze_internal_hyperlinks != 0);
       if (__pyx_t_1) {
 
-        /* "gumbocy.pyx":352
+        /* "gumbocy.pyx":382
  *             else:
  *                 if self.analyze_internal_hyperlinks:
  *                     self.analysis["internal_hyperlinks"].append(tuple(self.current_hyperlink))             # <<<<<<<<<<<<<<
@@ -5028,17 +5333,17 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
  */
         if (unlikely(__pyx_v_self->analysis == Py_None)) {
           PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-          __PYX_ERR(0, 352, __pyx_L1_error)
+          __PYX_ERR(0, 382, __pyx_L1_error)
         }
-        __pyx_t_2 = __Pyx_PyDict_GetItem(__pyx_v_self->analysis, __pyx_n_s_internal_hyperlinks); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 352, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyDict_GetItem(__pyx_v_self->analysis, __pyx_n_s_internal_hyperlinks); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 382, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_4 = PySequence_Tuple(__pyx_v_self->current_hyperlink); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 352, __pyx_L1_error)
+        __pyx_t_4 = PySequence_Tuple(__pyx_v_self->current_hyperlink); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 382, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
-        __pyx_t_6 = __Pyx_PyObject_Append(__pyx_t_2, __pyx_t_4); if (unlikely(__pyx_t_6 == -1)) __PYX_ERR(0, 352, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_Append(__pyx_t_2, __pyx_t_4); if (unlikely(__pyx_t_6 == -1)) __PYX_ERR(0, 382, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-        /* "gumbocy.pyx":351
+        /* "gumbocy.pyx":381
  *                         self.analysis["external_hyperlinks"].append(tuple(self.current_hyperlink))
  *             else:
  *                 if self.analyze_internal_hyperlinks:             # <<<<<<<<<<<<<<
@@ -5049,7 +5354,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
     }
     __pyx_L4:;
 
-    /* "gumbocy.pyx":354
+    /* "gumbocy.pyx":384
  *                     self.analysis["internal_hyperlinks"].append(tuple(self.current_hyperlink))
  * 
  *             self.current_hyperlink = None             # <<<<<<<<<<<<<<
@@ -5062,7 +5367,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
     __Pyx_DECREF(__pyx_v_self->current_hyperlink);
     __pyx_v_self->current_hyperlink = Py_None;
 
-    /* "gumbocy.pyx":342
+    /* "gumbocy.pyx":372
  * 
  *     cdef void close_hyperlink(self):
  *         if self.current_hyperlink:             # <<<<<<<<<<<<<<
@@ -5071,7 +5376,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
  */
   }
 
-  /* "gumbocy.pyx":341
+  /* "gumbocy.pyx":371
  *         self.current_hyperlink = [attrs.values[ATTR_HREF], ""]
  * 
  *     cdef void close_hyperlink(self):             # <<<<<<<<<<<<<<
@@ -5090,7 +5395,7 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
   __Pyx_RefNannyFinishContext();
 }
 
-/* "gumbocy.pyx":356
+/* "gumbocy.pyx":386
  *             self.current_hyperlink = None
  * 
  *     cdef bint _traverse_node(self, int level, gumbocy.GumboNode* node, bint is_head, bint is_hidden, bint is_boilerplate, bint is_boilerplate_bypassed, bint is_hyperlink):             # <<<<<<<<<<<<<<
@@ -5100,11 +5405,11 @@ static void __pyx_f_7gumbocy_10HTMLParser_close_hyperlink(struct __pyx_obj_7gumb
 
 static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumbocy_HTMLParser *__pyx_v_self, int __pyx_v_level, GumboNode *__pyx_v_node, int __pyx_v_is_head, int __pyx_v_is_hidden, int __pyx_v_is_boilerplate, int __pyx_v_is_boilerplate_bypassed, int __pyx_v_is_hyperlink) {
   GumboStringPiece __pyx_v_gsp;
-  struct __pyx_t_7gumbocy_Attributes __pyx_v_attrs;
-  int __pyx_v_tag_n;
   char const *__pyx_v_tag_name;
+  int __pyx_v_tag_n;
   PyObject *__pyx_v_py_tag_name = NULL;
-  char *__pyx_v_v;
+  struct __pyx_obj_7gumbocy_Attributes *__pyx_v_attrs = NULL;
+  PyObject *__pyx_v_v = NULL;
   GumboNode *__pyx_v_first_child;
   unsigned int __pyx_v_i;
   GumboNode *__pyx_v_child;
@@ -5117,17 +5422,18 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
   PyObject *__pyx_t_5 = NULL;
   PyObject *__pyx_t_6 = NULL;
   char const *__pyx_t_7;
-  std::vector<char *> ::iterator __pyx_t_8;
-  std::vector<char *>  *__pyx_t_9;
-  char *__pyx_t_10;
-  int __pyx_t_11;
+  Py_ssize_t __pyx_t_8;
+  char const *__pyx_t_9;
+  int __pyx_t_10;
+  PyObject *__pyx_t_11 = NULL;
   int __pyx_t_12;
-  unsigned int __pyx_t_13;
+  PyObject *__pyx_t_13 = NULL;
   unsigned int __pyx_t_14;
+  unsigned int __pyx_t_15;
   __Pyx_RefNannySetupContext("_traverse_node", 0);
 
-  /* "gumbocy.pyx":362
- *         cdef Attributes attrs
+  /* "gumbocy.pyx":393
+ *         cdef int tag_n
  * 
  *         if level > self.nesting_limit:             # <<<<<<<<<<<<<<
  *             return 0
@@ -5136,7 +5442,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
   __pyx_t_1 = ((__pyx_v_level > __pyx_v_self->nesting_limit) != 0);
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":363
+    /* "gumbocy.pyx":394
  * 
  *         if level > self.nesting_limit:
  *             return 0             # <<<<<<<<<<<<<<
@@ -5146,8 +5452,8 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     __pyx_r = 0;
     goto __pyx_L0;
 
-    /* "gumbocy.pyx":362
- *         cdef Attributes attrs
+    /* "gumbocy.pyx":393
+ *         cdef int tag_n
  * 
  *         if level > self.nesting_limit:             # <<<<<<<<<<<<<<
  *             return 0
@@ -5155,7 +5461,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
   }
 
-  /* "gumbocy.pyx":365
+  /* "gumbocy.pyx":396
  *             return 0
  * 
  *         if node.type == gumbocy.GUMBO_NODE_TEXT:             # <<<<<<<<<<<<<<
@@ -5165,7 +5471,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
   switch (__pyx_v_node->type) {
     case GUMBO_NODE_TEXT:
 
-    /* "gumbocy.pyx":367
+    /* "gumbocy.pyx":398
  *         if node.type == gumbocy.GUMBO_NODE_TEXT:
  * 
  *             if (self.analyze_internal_hyperlinks or self.analyze_external_hyperlinks) and is_hyperlink:             # <<<<<<<<<<<<<<
@@ -5189,19 +5495,19 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     __pyx_L5_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":368
+      /* "gumbocy.pyx":399
  * 
  *             if (self.analyze_internal_hyperlinks or self.analyze_external_hyperlinks) and is_hyperlink:
  *                 self.add_hyperlink_text(node.v.text.text)             # <<<<<<<<<<<<<<
  * 
  *             if self.analyze_word_groups and not is_head and not is_hidden and (not is_boilerplate or is_boilerplate_bypassed):
  */
-      __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_node->v.text.text); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 368, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_node->v.text.text); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 399, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->add_hyperlink_text(__pyx_v_self, __pyx_t_3);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-      /* "gumbocy.pyx":367
+      /* "gumbocy.pyx":398
  *         if node.type == gumbocy.GUMBO_NODE_TEXT:
  * 
  *             if (self.analyze_internal_hyperlinks or self.analyze_external_hyperlinks) and is_hyperlink:             # <<<<<<<<<<<<<<
@@ -5210,7 +5516,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     }
 
-    /* "gumbocy.pyx":370
+    /* "gumbocy.pyx":401
  *                 self.add_hyperlink_text(node.v.text.text)
  * 
  *             if self.analyze_word_groups and not is_head and not is_hidden and (not is_boilerplate or is_boilerplate_bypassed):             # <<<<<<<<<<<<<<
@@ -5246,19 +5552,19 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     __pyx_L9_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":371
+      /* "gumbocy.pyx":402
  * 
  *             if self.analyze_word_groups and not is_head and not is_hidden and (not is_boilerplate or is_boilerplate_bypassed):
  *                 self.add_text(node.v.text.text)             # <<<<<<<<<<<<<<
  * 
  *         elif node.type == gumbocy.GUMBO_NODE_ELEMENT:
  */
-      __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_node->v.text.text); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 371, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_node->v.text.text); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 402, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->add_text(__pyx_v_self, __pyx_t_3);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-      /* "gumbocy.pyx":370
+      /* "gumbocy.pyx":401
  *                 self.add_hyperlink_text(node.v.text.text)
  * 
  *             if self.analyze_word_groups and not is_head and not is_hidden and (not is_boilerplate or is_boilerplate_bypassed):             # <<<<<<<<<<<<<<
@@ -5267,7 +5573,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     }
 
-    /* "gumbocy.pyx":365
+    /* "gumbocy.pyx":396
  *             return 0
  * 
  *         if node.type == gumbocy.GUMBO_NODE_TEXT:             # <<<<<<<<<<<<<<
@@ -5276,7 +5582,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     break;
 
-    /* "gumbocy.pyx":373
+    /* "gumbocy.pyx":404
  *                 self.add_text(node.v.text.text)
  * 
  *         elif node.type == gumbocy.GUMBO_NODE_ELEMENT:             # <<<<<<<<<<<<<<
@@ -5285,7 +5591,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     case GUMBO_NODE_ELEMENT:
 
-    /* "gumbocy.pyx":375
+    /* "gumbocy.pyx":406
  *         elif node.type == gumbocy.GUMBO_NODE_ELEMENT:
  * 
  *             tag_n = <int> node.v.element.tag             # <<<<<<<<<<<<<<
@@ -5294,7 +5600,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     __pyx_v_tag_n = ((int)__pyx_v_node->v.element.tag);
 
-    /* "gumbocy.pyx":377
+    /* "gumbocy.pyx":408
  *             tag_n = <int> node.v.element.tag
  * 
  *             if self.head_only and self.tags_ignore_head_only.count(tag_n):             # <<<<<<<<<<<<<<
@@ -5312,7 +5618,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     __pyx_L15_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":378
+      /* "gumbocy.pyx":409
  * 
  *             if self.head_only and self.tags_ignore_head_only.count(tag_n):
  *                 return 1             # <<<<<<<<<<<<<<
@@ -5322,7 +5628,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
       __pyx_r = 1;
       goto __pyx_L0;
 
-      /* "gumbocy.pyx":377
+      /* "gumbocy.pyx":408
  *             tag_n = <int> node.v.element.tag
  * 
  *             if self.head_only and self.tags_ignore_head_only.count(tag_n):             # <<<<<<<<<<<<<<
@@ -5331,7 +5637,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     }
 
-    /* "gumbocy.pyx":380
+    /* "gumbocy.pyx":411
  *                 return 1
  * 
  *             if self.tags_ignore.count(tag_n):             # <<<<<<<<<<<<<<
@@ -5341,7 +5647,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     __pyx_t_1 = (__pyx_v_self->tags_ignore.count(__pyx_v_tag_n) != 0);
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":381
+      /* "gumbocy.pyx":412
  * 
  *             if self.tags_ignore.count(tag_n):
  *                 return 0             # <<<<<<<<<<<<<<
@@ -5351,7 +5657,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
       __pyx_r = 0;
       goto __pyx_L0;
 
-      /* "gumbocy.pyx":380
+      /* "gumbocy.pyx":411
  *                 return 1
  * 
  *             if self.tags_ignore.count(tag_n):             # <<<<<<<<<<<<<<
@@ -5360,7 +5666,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     }
 
-    /* "gumbocy.pyx":383
+    /* "gumbocy.pyx":414
  *                 return 0
  * 
  *             tag_name = gumbocy.gumbo_normalized_tagname(node.v.element.tag)             # <<<<<<<<<<<<<<
@@ -5369,20 +5675,20 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     __pyx_v_tag_name = gumbo_normalized_tagname(__pyx_v_node->v.element.tag);
 
-    /* "gumbocy.pyx":386
+    /* "gumbocy.pyx":417
  * 
  *             # When we find an unknown tag, find its tag_name in the buffer
  *             if tag_name == b"":             # <<<<<<<<<<<<<<
  *                 gsp = node.v.element.original_tag
  *                 gumbo_tag_from_original_text(&gsp)
  */
-    __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 386, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 417, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = (__Pyx_PyBytes_Equals(__pyx_t_3, __pyx_kp_b__5, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 386, __pyx_L1_error)
+    __pyx_t_1 = (__Pyx_PyBytes_Equals(__pyx_t_3, __pyx_kp_b__5, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 417, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":387
+      /* "gumbocy.pyx":418
  *             # When we find an unknown tag, find its tag_name in the buffer
  *             if tag_name == b"":
  *                 gsp = node.v.element.original_tag             # <<<<<<<<<<<<<<
@@ -5392,7 +5698,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
       __pyx_t_4 = __pyx_v_node->v.element.original_tag;
       __pyx_v_gsp = __pyx_t_4;
 
-      /* "gumbocy.pyx":388
+      /* "gumbocy.pyx":419
  *             if tag_name == b"":
  *                 gsp = node.v.element.original_tag
  *                 gumbo_tag_from_original_text(&gsp)             # <<<<<<<<<<<<<<
@@ -5401,27 +5707,27 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
       gumbo_tag_from_original_text((&__pyx_v_gsp));
 
-      /* "gumbocy.pyx":389
+      /* "gumbocy.pyx":420
  *                 gsp = node.v.element.original_tag
  *                 gumbo_tag_from_original_text(&gsp)
  *                 py_tag_name = str(gsp.data)[0:gsp.length].lower()  # TODO try to do that only in C!             # <<<<<<<<<<<<<<
  *                 tag_name = <const char *> py_tag_name
  * 
  */
-      __pyx_t_5 = __Pyx_PyBytes_FromString(__pyx_v_gsp.data); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 389, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyBytes_FromString(__pyx_v_gsp.data); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 420, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 389, __pyx_L1_error)
+      __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 420, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GIVEREF(__pyx_t_5);
       PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5);
       __pyx_t_5 = 0;
-      __pyx_t_5 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_6, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 389, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_6, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 420, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __pyx_t_6 = __Pyx_PyObject_GetSlice(__pyx_t_5, 0, __pyx_v_gsp.length, NULL, NULL, NULL, 1, 1, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 389, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyObject_GetSlice(__pyx_t_5, 0, __pyx_v_gsp.length, NULL, NULL, NULL, 1, 1, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 420, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_lower); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 389, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_lower); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 420, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __pyx_t_6 = NULL;
@@ -5435,27 +5741,27 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
         }
       }
       if (__pyx_t_6) {
-        __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 389, __pyx_L1_error)
+        __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 420, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       } else {
-        __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 389, __pyx_L1_error)
+        __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 420, __pyx_L1_error)
       }
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __pyx_v_py_tag_name = __pyx_t_3;
       __pyx_t_3 = 0;
 
-      /* "gumbocy.pyx":390
+      /* "gumbocy.pyx":421
  *                 gumbo_tag_from_original_text(&gsp)
  *                 py_tag_name = str(gsp.data)[0:gsp.length].lower()  # TODO try to do that only in C!
  *                 tag_name = <const char *> py_tag_name             # <<<<<<<<<<<<<<
  * 
- *             if self.has_attributes_whitelist:
+ *             # if self.has_attributes_whitelist:
  */
-      __pyx_t_7 = __Pyx_PyObject_AsString(__pyx_v_py_tag_name); if (unlikely((!__pyx_t_7) && PyErr_Occurred())) __PYX_ERR(0, 390, __pyx_L1_error)
+      __pyx_t_7 = __Pyx_PyObject_AsString(__pyx_v_py_tag_name); if (unlikely((!__pyx_t_7) && PyErr_Occurred())) __PYX_ERR(0, 421, __pyx_L1_error)
       __pyx_v_tag_name = ((char const *)__pyx_t_7);
 
-      /* "gumbocy.pyx":386
+      /* "gumbocy.pyx":417
  * 
  *             # When we find an unknown tag, find its tag_name in the buffer
  *             if tag_name == b"":             # <<<<<<<<<<<<<<
@@ -5464,172 +5770,188 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     }
 
-    /* "gumbocy.pyx":392
- *                 tag_name = <const char *> py_tag_name
+    /* "gumbocy.pyx":425
+ *             # if self.has_attributes_whitelist:
  * 
- *             if self.has_attributes_whitelist:             # <<<<<<<<<<<<<<
+ *             attrs = self.get_attributes(node)             # <<<<<<<<<<<<<<
  * 
- *                 attrs = self.get_attributes(node)
+ *             if self.has_classes_ignore and attrs.size_classes > 0:
  */
-    __pyx_t_1 = (__pyx_v_self->has_attributes_whitelist != 0);
+    __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->get_attributes(__pyx_v_self, __pyx_v_node)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 425, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_v_attrs = ((struct __pyx_obj_7gumbocy_Attributes *)__pyx_t_3);
+    __pyx_t_3 = 0;
+
+    /* "gumbocy.pyx":427
+ *             attrs = self.get_attributes(node)
+ * 
+ *             if self.has_classes_ignore and attrs.size_classes > 0:             # <<<<<<<<<<<<<<
+ *                 for v in attrs.classes:
+ *                     if re2_search(v, deref(self.classes_ignore)):
+ */
+    __pyx_t_2 = (__pyx_v_self->has_classes_ignore != 0);
+    if (__pyx_t_2) {
+    } else {
+      __pyx_t_1 = __pyx_t_2;
+      goto __pyx_L20_bool_binop_done;
+    }
+    __pyx_t_2 = ((__pyx_v_attrs->size_classes > 0) != 0);
+    __pyx_t_1 = __pyx_t_2;
+    __pyx_L20_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":394
- *             if self.has_attributes_whitelist:
+      /* "gumbocy.pyx":428
  * 
- *                 attrs = self.get_attributes(node)             # <<<<<<<<<<<<<<
- * 
- *                 if self.has_classes_ignore and attrs.has_classes:
- */
-      __pyx_v_attrs = ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->get_attributes(__pyx_v_self, __pyx_v_node);
-
-      /* "gumbocy.pyx":396
- *                 attrs = self.get_attributes(node)
- * 
- *                 if self.has_classes_ignore and attrs.has_classes:             # <<<<<<<<<<<<<<
- *                     for v in attrs.classes:
- *                         if re2_search(v, deref(self.classes_ignore)):
- */
-      __pyx_t_2 = (__pyx_v_self->has_classes_ignore != 0);
-      if (__pyx_t_2) {
-      } else {
-        __pyx_t_1 = __pyx_t_2;
-        goto __pyx_L21_bool_binop_done;
-      }
-      __pyx_t_2 = (__pyx_v_attrs.has_classes != 0);
-      __pyx_t_1 = __pyx_t_2;
-      __pyx_L21_bool_binop_done:;
-      if (__pyx_t_1) {
-
-        /* "gumbocy.pyx":397
- * 
- *                 if self.has_classes_ignore and attrs.has_classes:
- *                     for v in attrs.classes:             # <<<<<<<<<<<<<<
- *                         if re2_search(v, deref(self.classes_ignore)):
- *                             return 0
- */
-        __pyx_t_9 = &__pyx_v_attrs.classes;
-        __pyx_t_8 = __pyx_t_9->begin();
-        for (;;) {
-          if (!(__pyx_t_8 != __pyx_t_9->end())) break;
-          __pyx_t_10 = *__pyx_t_8;
-          ++__pyx_t_8;
-          __pyx_v_v = __pyx_t_10;
-
-          /* "gumbocy.pyx":398
- *                 if self.has_classes_ignore and attrs.has_classes:
- *                     for v in attrs.classes:
- *                         if re2_search(v, deref(self.classes_ignore)):             # <<<<<<<<<<<<<<
- *                             return 0
- * 
- */
-          __pyx_t_1 = (__pyx_f_7gumbocy_re2_search(__pyx_v_v, (*__pyx_v_self->classes_ignore)) != 0);
-          if (__pyx_t_1) {
-
-            /* "gumbocy.pyx":399
- *                     for v in attrs.classes:
- *                         if re2_search(v, deref(self.classes_ignore)):
- *                             return 0             # <<<<<<<<<<<<<<
- * 
- *                 if self.has_ids_ignore and attrs.values.count(ATTR_ID):
- */
-            __pyx_r = 0;
-            goto __pyx_L0;
-
-            /* "gumbocy.pyx":398
- *                 if self.has_classes_ignore and attrs.has_classes:
- *                     for v in attrs.classes:
- *                         if re2_search(v, deref(self.classes_ignore)):             # <<<<<<<<<<<<<<
- *                             return 0
- * 
- */
-          }
-
-          /* "gumbocy.pyx":397
- * 
- *                 if self.has_classes_ignore and attrs.has_classes:
- *                     for v in attrs.classes:             # <<<<<<<<<<<<<<
- *                         if re2_search(v, deref(self.classes_ignore)):
- *                             return 0
- */
-        }
-
-        /* "gumbocy.pyx":396
- *                 attrs = self.get_attributes(node)
- * 
- *                 if self.has_classes_ignore and attrs.has_classes:             # <<<<<<<<<<<<<<
- *                     for v in attrs.classes:
- *                         if re2_search(v, deref(self.classes_ignore)):
- */
-      }
-
-      /* "gumbocy.pyx":401
- *                             return 0
- * 
- *                 if self.has_ids_ignore and attrs.values.count(ATTR_ID):             # <<<<<<<<<<<<<<
- *                     if re2_search(attrs.values[ATTR_ID], deref(self.ids_ignore)):
+ *             if self.has_classes_ignore and attrs.size_classes > 0:
+ *                 for v in attrs.classes:             # <<<<<<<<<<<<<<
+ *                     if re2_search(v, deref(self.classes_ignore)):
  *                         return 0
  */
-      __pyx_t_2 = (__pyx_v_self->has_ids_ignore != 0);
-      if (__pyx_t_2) {
-      } else {
-        __pyx_t_1 = __pyx_t_2;
-        goto __pyx_L27_bool_binop_done;
+      if (unlikely(__pyx_v_attrs->classes == Py_None)) {
+        PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
+        __PYX_ERR(0, 428, __pyx_L1_error)
       }
-      __pyx_t_2 = (__pyx_v_attrs.values.count(__pyx_e_7gumbocy_ATTR_ID) != 0);
-      __pyx_t_1 = __pyx_t_2;
-      __pyx_L27_bool_binop_done:;
-      if (__pyx_t_1) {
+      __pyx_t_3 = __pyx_v_attrs->classes; __Pyx_INCREF(__pyx_t_3); __pyx_t_8 = 0;
+      for (;;) {
+        if (__pyx_t_8 >= PyList_GET_SIZE(__pyx_t_3)) break;
+        #if CYTHON_COMPILING_IN_CPYTHON
+        __pyx_t_5 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_8); __Pyx_INCREF(__pyx_t_5); __pyx_t_8++; if (unlikely(0 < 0)) __PYX_ERR(0, 428, __pyx_L1_error)
+        #else
+        __pyx_t_5 = PySequence_ITEM(__pyx_t_3, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 428, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_5);
+        #endif
+        __Pyx_XDECREF_SET(__pyx_v_v, __pyx_t_5);
+        __pyx_t_5 = 0;
 
-        /* "gumbocy.pyx":402
- * 
- *                 if self.has_ids_ignore and attrs.values.count(ATTR_ID):
- *                     if re2_search(attrs.values[ATTR_ID], deref(self.ids_ignore)):             # <<<<<<<<<<<<<<
+        /* "gumbocy.pyx":429
+ *             if self.has_classes_ignore and attrs.size_classes > 0:
+ *                 for v in attrs.classes:
+ *                     if re2_search(v, deref(self.classes_ignore)):             # <<<<<<<<<<<<<<
  *                         return 0
  * 
  */
-        __pyx_t_1 = (__pyx_f_7gumbocy_re2_search((__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_ID]), (*__pyx_v_self->ids_ignore)) != 0);
+        __pyx_t_9 = __Pyx_PyObject_AsString(__pyx_v_v); if (unlikely((!__pyx_t_9) && PyErr_Occurred())) __PYX_ERR(0, 429, __pyx_L1_error)
+        __pyx_t_1 = (__pyx_f_7gumbocy_re2_search(__pyx_t_9, (*__pyx_v_self->classes_ignore)) != 0);
         if (__pyx_t_1) {
 
-          /* "gumbocy.pyx":403
- *                 if self.has_ids_ignore and attrs.values.count(ATTR_ID):
- *                     if re2_search(attrs.values[ATTR_ID], deref(self.ids_ignore)):
+          /* "gumbocy.pyx":430
+ *                 for v in attrs.classes:
+ *                     if re2_search(v, deref(self.classes_ignore)):
  *                         return 0             # <<<<<<<<<<<<<<
  * 
- *             if node.v.element.tag == gumbocy.GUMBO_TAG_TITLE:
+ *             if self.has_ids_ignore and attrs.values.get(ATTR_ID):
  */
           __pyx_r = 0;
+          __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
           goto __pyx_L0;
 
-          /* "gumbocy.pyx":402
- * 
- *                 if self.has_ids_ignore and attrs.values.count(ATTR_ID):
- *                     if re2_search(attrs.values[ATTR_ID], deref(self.ids_ignore)):             # <<<<<<<<<<<<<<
+          /* "gumbocy.pyx":429
+ *             if self.has_classes_ignore and attrs.size_classes > 0:
+ *                 for v in attrs.classes:
+ *                     if re2_search(v, deref(self.classes_ignore)):             # <<<<<<<<<<<<<<
  *                         return 0
  * 
  */
         }
 
-        /* "gumbocy.pyx":401
- *                             return 0
+        /* "gumbocy.pyx":428
  * 
- *                 if self.has_ids_ignore and attrs.values.count(ATTR_ID):             # <<<<<<<<<<<<<<
- *                     if re2_search(attrs.values[ATTR_ID], deref(self.ids_ignore)):
+ *             if self.has_classes_ignore and attrs.size_classes > 0:
+ *                 for v in attrs.classes:             # <<<<<<<<<<<<<<
+ *                     if re2_search(v, deref(self.classes_ignore)):
  *                         return 0
  */
       }
+      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-      /* "gumbocy.pyx":392
- *                 tag_name = <const char *> py_tag_name
+      /* "gumbocy.pyx":427
+ *             attrs = self.get_attributes(node)
  * 
- *             if self.has_attributes_whitelist:             # <<<<<<<<<<<<<<
- * 
- *                 attrs = self.get_attributes(node)
+ *             if self.has_classes_ignore and attrs.size_classes > 0:             # <<<<<<<<<<<<<<
+ *                 for v in attrs.classes:
+ *                     if re2_search(v, deref(self.classes_ignore)):
  */
     }
 
-    /* "gumbocy.pyx":405
+    /* "gumbocy.pyx":432
  *                         return 0
+ * 
+ *             if self.has_ids_ignore and attrs.values.get(ATTR_ID):             # <<<<<<<<<<<<<<
+ *                 if re2_search(attrs.values[ATTR_ID], deref(self.ids_ignore)):
+ *                     return 0
+ */
+    __pyx_t_2 = (__pyx_v_self->has_ids_ignore != 0);
+    if (__pyx_t_2) {
+    } else {
+      __pyx_t_1 = __pyx_t_2;
+      goto __pyx_L26_bool_binop_done;
+    }
+    if (unlikely(__pyx_v_attrs->values == Py_None)) {
+      PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+      __PYX_ERR(0, 432, __pyx_L1_error)
+    }
+    __pyx_t_3 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ID); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 432, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_5 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 432, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 432, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_1 = __pyx_t_2;
+    __pyx_L26_bool_binop_done:;
+    if (__pyx_t_1) {
+
+      /* "gumbocy.pyx":433
+ * 
+ *             if self.has_ids_ignore and attrs.values.get(ATTR_ID):
+ *                 if re2_search(attrs.values[ATTR_ID], deref(self.ids_ignore)):             # <<<<<<<<<<<<<<
+ *                     return 0
+ * 
+ */
+      if (unlikely(__pyx_v_attrs->values == Py_None)) {
+        PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+        __PYX_ERR(0, 433, __pyx_L1_error)
+      }
+      __pyx_t_5 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ID); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 433, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __pyx_t_3 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 433, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_3);
+      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+      __pyx_t_9 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_9) && PyErr_Occurred())) __PYX_ERR(0, 433, __pyx_L1_error)
+      __pyx_t_1 = (__pyx_f_7gumbocy_re2_search(__pyx_t_9, (*__pyx_v_self->ids_ignore)) != 0);
+      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+      if (__pyx_t_1) {
+
+        /* "gumbocy.pyx":434
+ *             if self.has_ids_ignore and attrs.values.get(ATTR_ID):
+ *                 if re2_search(attrs.values[ATTR_ID], deref(self.ids_ignore)):
+ *                     return 0             # <<<<<<<<<<<<<<
+ * 
+ *             if node.v.element.tag == gumbocy.GUMBO_TAG_TITLE:
+ */
+        __pyx_r = 0;
+        goto __pyx_L0;
+
+        /* "gumbocy.pyx":433
+ * 
+ *             if self.has_ids_ignore and attrs.values.get(ATTR_ID):
+ *                 if re2_search(attrs.values[ATTR_ID], deref(self.ids_ignore)):             # <<<<<<<<<<<<<<
+ *                     return 0
+ * 
+ */
+      }
+
+      /* "gumbocy.pyx":432
+ *                         return 0
+ * 
+ *             if self.has_ids_ignore and attrs.values.get(ATTR_ID):             # <<<<<<<<<<<<<<
+ *                 if re2_search(attrs.values[ATTR_ID], deref(self.ids_ignore)):
+ *                     return 0
+ */
+    }
+
+    /* "gumbocy.pyx":436
+ *                     return 0
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_TITLE:             # <<<<<<<<<<<<<<
  *                 if not self.analysis.get("title"):
@@ -5638,7 +5960,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     __pyx_t_1 = ((__pyx_v_node->v.element.tag == GUMBO_TAG_TITLE) != 0);
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":406
+      /* "gumbocy.pyx":437
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_TITLE:
  *                 if not self.analysis.get("title"):             # <<<<<<<<<<<<<<
@@ -5647,16 +5969,16 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
       if (unlikely(__pyx_v_self->analysis == Py_None)) {
         PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
-        __PYX_ERR(0, 406, __pyx_L1_error)
+        __PYX_ERR(0, 437, __pyx_L1_error)
       }
-      __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_self->analysis, __pyx_n_s_title, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 406, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_self->analysis, __pyx_n_s_title, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 437, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 406, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 437, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       __pyx_t_2 = ((!__pyx_t_1) != 0);
       if (__pyx_t_2) {
 
-        /* "gumbocy.pyx":407
+        /* "gumbocy.pyx":438
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_TITLE:
  *                 if not self.analysis.get("title"):
  *                     if node.v.element.children.length > 0:             # <<<<<<<<<<<<<<
@@ -5666,7 +5988,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
         __pyx_t_2 = ((__pyx_v_node->v.element.children.length > 0) != 0);
         if (__pyx_t_2) {
 
-          /* "gumbocy.pyx":408
+          /* "gumbocy.pyx":439
  *                 if not self.analysis.get("title"):
  *                     if node.v.element.children.length > 0:
  *                         first_child = <gumbocy.GumboNode *> node.v.element.children.data[0]             # <<<<<<<<<<<<<<
@@ -5675,7 +5997,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
           __pyx_v_first_child = ((GumboNode *)(__pyx_v_node->v.element.children.data[0]));
 
-          /* "gumbocy.pyx":409
+          /* "gumbocy.pyx":440
  *                     if node.v.element.children.length > 0:
  *                         first_child = <gumbocy.GumboNode *> node.v.element.children.data[0]
  *                         if first_child.type == gumbocy.GUMBO_NODE_TEXT:             # <<<<<<<<<<<<<<
@@ -5685,23 +6007,23 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
           __pyx_t_2 = ((__pyx_v_first_child->type == GUMBO_NODE_TEXT) != 0);
           if (__pyx_t_2) {
 
-            /* "gumbocy.pyx":410
+            /* "gumbocy.pyx":441
  *                         first_child = <gumbocy.GumboNode *> node.v.element.children.data[0]
  *                         if first_child.type == gumbocy.GUMBO_NODE_TEXT:
  *                             self.analysis["title"] = first_child.v.text.text             # <<<<<<<<<<<<<<
  *                 return 0
  * 
  */
-            __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_first_child->v.text.text); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 410, __pyx_L1_error)
+            __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_first_child->v.text.text); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 441, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_3);
             if (unlikely(__pyx_v_self->analysis == Py_None)) {
               PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-              __PYX_ERR(0, 410, __pyx_L1_error)
+              __PYX_ERR(0, 441, __pyx_L1_error)
             }
-            if (unlikely(PyDict_SetItem(__pyx_v_self->analysis, __pyx_n_s_title, __pyx_t_3) < 0)) __PYX_ERR(0, 410, __pyx_L1_error)
+            if (unlikely(PyDict_SetItem(__pyx_v_self->analysis, __pyx_n_s_title, __pyx_t_3) < 0)) __PYX_ERR(0, 441, __pyx_L1_error)
             __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-            /* "gumbocy.pyx":409
+            /* "gumbocy.pyx":440
  *                     if node.v.element.children.length > 0:
  *                         first_child = <gumbocy.GumboNode *> node.v.element.children.data[0]
  *                         if first_child.type == gumbocy.GUMBO_NODE_TEXT:             # <<<<<<<<<<<<<<
@@ -5710,7 +6032,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
           }
 
-          /* "gumbocy.pyx":407
+          /* "gumbocy.pyx":438
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_TITLE:
  *                 if not self.analysis.get("title"):
  *                     if node.v.element.children.length > 0:             # <<<<<<<<<<<<<<
@@ -5719,7 +6041,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
         }
 
-        /* "gumbocy.pyx":406
+        /* "gumbocy.pyx":437
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_TITLE:
  *                 if not self.analysis.get("title"):             # <<<<<<<<<<<<<<
@@ -5728,7 +6050,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
       }
 
-      /* "gumbocy.pyx":411
+      /* "gumbocy.pyx":442
  *                         if first_child.type == gumbocy.GUMBO_NODE_TEXT:
  *                             self.analysis["title"] = first_child.v.text.text
  *                 return 0             # <<<<<<<<<<<<<<
@@ -5738,8 +6060,8 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
       __pyx_r = 0;
       goto __pyx_L0;
 
-      /* "gumbocy.pyx":405
- *                         return 0
+      /* "gumbocy.pyx":436
+ *                     return 0
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_TITLE:             # <<<<<<<<<<<<<<
  *                 if not self.analysis.get("title"):
@@ -5747,7 +6069,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     }
 
-    /* "gumbocy.pyx":413
+    /* "gumbocy.pyx":444
  *                 return 0
  * 
  *             self.current_stack.append(tag_name)             # <<<<<<<<<<<<<<
@@ -5756,14 +6078,14 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     if (unlikely(__pyx_v_self->current_stack == Py_None)) {
       PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "append");
-      __PYX_ERR(0, 413, __pyx_L1_error)
+      __PYX_ERR(0, 444, __pyx_L1_error)
     }
-    __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 444, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_11 = __Pyx_PyList_Append(__pyx_v_self->current_stack, __pyx_t_3); if (unlikely(__pyx_t_11 == -1)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __pyx_t_10 = __Pyx_PyList_Append(__pyx_v_self->current_stack, __pyx_t_3); if (unlikely(__pyx_t_10 == -1)) __PYX_ERR(0, 444, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "gumbocy.pyx":415
+    /* "gumbocy.pyx":446
  *             self.current_stack.append(tag_name)
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_HEAD:             # <<<<<<<<<<<<<<
@@ -5773,7 +6095,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     __pyx_t_2 = ((__pyx_v_node->v.element.tag == GUMBO_TAG_HEAD) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":416
+      /* "gumbocy.pyx":447
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_HEAD:
  *                 is_head = 1             # <<<<<<<<<<<<<<
@@ -5782,97 +6104,114 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
       __pyx_v_is_head = 1;
 
-      /* "gumbocy.pyx":415
+      /* "gumbocy.pyx":446
  *             self.current_stack.append(tag_name)
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_HEAD:             # <<<<<<<<<<<<<<
  *                 is_head = 1
  * 
  */
-      goto __pyx_L34;
+      goto __pyx_L33;
     }
 
-    /* "gumbocy.pyx":418
+    /* "gumbocy.pyx":449
  *                 is_head = 1
  * 
  *             elif node.v.element.tag == gumbocy.GUMBO_TAG_A:             # <<<<<<<<<<<<<<
- *                 self.open_hyperlink(&attrs)
+ *                 self.open_hyperlink(attrs)
  *                 is_hyperlink = 1
  */
     __pyx_t_2 = ((__pyx_v_node->v.element.tag == GUMBO_TAG_A) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":419
+      /* "gumbocy.pyx":450
  * 
  *             elif node.v.element.tag == gumbocy.GUMBO_TAG_A:
- *                 self.open_hyperlink(&attrs)             # <<<<<<<<<<<<<<
+ *                 self.open_hyperlink(attrs)             # <<<<<<<<<<<<<<
  *                 is_hyperlink = 1
  * 
  */
-      ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->open_hyperlink(__pyx_v_self, (&__pyx_v_attrs));
+      ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->open_hyperlink(__pyx_v_self, __pyx_v_attrs);
 
-      /* "gumbocy.pyx":420
+      /* "gumbocy.pyx":451
  *             elif node.v.element.tag == gumbocy.GUMBO_TAG_A:
- *                 self.open_hyperlink(&attrs)
+ *                 self.open_hyperlink(attrs)
  *                 is_hyperlink = 1             # <<<<<<<<<<<<<<
  * 
  *             elif node.v.element.tag == gumbocy.GUMBO_TAG_IMG:
  */
       __pyx_v_is_hyperlink = 1;
 
-      /* "gumbocy.pyx":418
+      /* "gumbocy.pyx":449
  *                 is_head = 1
  * 
  *             elif node.v.element.tag == gumbocy.GUMBO_TAG_A:             # <<<<<<<<<<<<<<
- *                 self.open_hyperlink(&attrs)
+ *                 self.open_hyperlink(attrs)
  *                 is_hyperlink = 1
  */
-      goto __pyx_L34;
+      goto __pyx_L33;
     }
 
-    /* "gumbocy.pyx":422
+    /* "gumbocy.pyx":453
  *                 is_hyperlink = 1
  * 
  *             elif node.v.element.tag == gumbocy.GUMBO_TAG_IMG:             # <<<<<<<<<<<<<<
  *                 self.close_word_group()
- *                 if attrs.values.count(ATTR_ALT):
+ *                 if attrs.values.get(ATTR_ALT):
  */
     __pyx_t_2 = ((__pyx_v_node->v.element.tag == GUMBO_TAG_IMG) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":423
+      /* "gumbocy.pyx":454
  * 
  *             elif node.v.element.tag == gumbocy.GUMBO_TAG_IMG:
  *                 self.close_word_group()             # <<<<<<<<<<<<<<
- *                 if attrs.values.count(ATTR_ALT):
+ *                 if attrs.values.get(ATTR_ALT):
  *                     self.add_text(attrs.values[ATTR_ALT])
  */
       ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->close_word_group(__pyx_v_self);
 
-      /* "gumbocy.pyx":424
+      /* "gumbocy.pyx":455
  *             elif node.v.element.tag == gumbocy.GUMBO_TAG_IMG:
  *                 self.close_word_group()
- *                 if attrs.values.count(ATTR_ALT):             # <<<<<<<<<<<<<<
+ *                 if attrs.values.get(ATTR_ALT):             # <<<<<<<<<<<<<<
  *                     self.add_text(attrs.values[ATTR_ALT])
  *                     self.close_word_group()
  */
-      __pyx_t_2 = (__pyx_v_attrs.values.count(__pyx_e_7gumbocy_ATTR_ALT) != 0);
+      if (unlikely(__pyx_v_attrs->values == Py_None)) {
+        PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+        __PYX_ERR(0, 455, __pyx_L1_error)
+      }
+      __pyx_t_3 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ALT); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 455, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_3);
+      __pyx_t_5 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 455, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+      __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 455, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       if (__pyx_t_2) {
 
-        /* "gumbocy.pyx":425
+        /* "gumbocy.pyx":456
  *                 self.close_word_group()
- *                 if attrs.values.count(ATTR_ALT):
+ *                 if attrs.values.get(ATTR_ALT):
  *                     self.add_text(attrs.values[ATTR_ALT])             # <<<<<<<<<<<<<<
  *                     self.close_word_group()
  * 
  */
-        __pyx_t_3 = __Pyx_PyBytes_FromString((__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_ALT])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 425, __pyx_L1_error)
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 456, __pyx_L1_error)
+        }
+        __pyx_t_5 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_ALT); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 456, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_5);
+        __pyx_t_3 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 456, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
+        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
         ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->add_text(__pyx_v_self, __pyx_t_3);
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-        /* "gumbocy.pyx":426
- *                 if attrs.values.count(ATTR_ALT):
+        /* "gumbocy.pyx":457
+ *                 if attrs.values.get(ATTR_ALT):
  *                     self.add_text(attrs.values[ATTR_ALT])
  *                     self.close_word_group()             # <<<<<<<<<<<<<<
  * 
@@ -5880,26 +6219,26 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
         ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->close_word_group(__pyx_v_self);
 
-        /* "gumbocy.pyx":424
+        /* "gumbocy.pyx":455
  *             elif node.v.element.tag == gumbocy.GUMBO_TAG_IMG:
  *                 self.close_word_group()
- *                 if attrs.values.count(ATTR_ALT):             # <<<<<<<<<<<<<<
+ *                 if attrs.values.get(ATTR_ALT):             # <<<<<<<<<<<<<<
  *                     self.add_text(attrs.values[ATTR_ALT])
  *                     self.close_word_group()
  */
       }
 
-      /* "gumbocy.pyx":422
+      /* "gumbocy.pyx":453
  *                 is_hyperlink = 1
  * 
  *             elif node.v.element.tag == gumbocy.GUMBO_TAG_IMG:             # <<<<<<<<<<<<<<
  *                 self.close_word_group()
- *                 if attrs.values.count(ATTR_ALT):
+ *                 if attrs.values.get(ATTR_ALT):
  */
     }
-    __pyx_L34:;
+    __pyx_L33:;
 
-    /* "gumbocy.pyx":435
+    /* "gumbocy.pyx":466
  * 
  * 
  *             if is_head:             # <<<<<<<<<<<<<<
@@ -5909,7 +6248,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     __pyx_t_2 = (__pyx_v_is_head != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":436
+      /* "gumbocy.pyx":467
  * 
  *             if is_head:
  *                 if node.v.element.tag == gumbocy.GUMBO_TAG_LINK:             # <<<<<<<<<<<<<<
@@ -5919,44 +6258,64 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
       __pyx_t_2 = ((__pyx_v_node->v.element.tag == GUMBO_TAG_LINK) != 0);
       if (__pyx_t_2) {
 
-        /* "gumbocy.pyx":439
+        /* "gumbocy.pyx":470
  * 
  *                     # TODO: more properties
- *                     if attrs.values.count(ATTR_REL) and attrs.values.count(ATTR_HREF):             # <<<<<<<<<<<<<<
+ *                     if attrs.values.get(ATTR_REL) and attrs.values.get(ATTR_HREF):             # <<<<<<<<<<<<<<
  *                         self.analysis.setdefault("head_links", [])
  *                         self.analysis["head_links"].append({"rel": attrs.values[ATTR_REL], "href": attrs.values[ATTR_HREF]})
  */
-        __pyx_t_1 = (__pyx_v_attrs.values.count(__pyx_e_7gumbocy_ATTR_REL) != 0);
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+          __PYX_ERR(0, 470, __pyx_L1_error)
+        }
+        __pyx_t_3 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_REL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 470, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
+        __pyx_t_5 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 470, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_5);
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 470, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
         if (__pyx_t_1) {
         } else {
           __pyx_t_2 = __pyx_t_1;
-          goto __pyx_L39_bool_binop_done;
+          goto __pyx_L38_bool_binop_done;
         }
-        __pyx_t_1 = (__pyx_v_attrs.values.count(__pyx_e_7gumbocy_ATTR_HREF) != 0);
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+          __PYX_ERR(0, 470, __pyx_L1_error)
+        }
+        __pyx_t_5 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_HREF); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 470, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_5);
+        __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_5, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 470, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
+        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+        __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 470, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
         __pyx_t_2 = __pyx_t_1;
-        __pyx_L39_bool_binop_done:;
+        __pyx_L38_bool_binop_done:;
         if (__pyx_t_2) {
 
-          /* "gumbocy.pyx":440
+          /* "gumbocy.pyx":471
  *                     # TODO: more properties
- *                     if attrs.values.count(ATTR_REL) and attrs.values.count(ATTR_HREF):
+ *                     if attrs.values.get(ATTR_REL) and attrs.values.get(ATTR_HREF):
  *                         self.analysis.setdefault("head_links", [])             # <<<<<<<<<<<<<<
  *                         self.analysis["head_links"].append({"rel": attrs.values[ATTR_REL], "href": attrs.values[ATTR_HREF]})
  * 
  */
           if (unlikely(__pyx_v_self->analysis == Py_None)) {
             PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "setdefault");
-            __PYX_ERR(0, 440, __pyx_L1_error)
+            __PYX_ERR(0, 471, __pyx_L1_error)
           }
-          __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 440, __pyx_L1_error)
+          __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 471, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_3);
-          __pyx_t_5 = __Pyx_PyDict_SetDefault(__pyx_v_self->analysis, __pyx_n_s_head_links, __pyx_t_3, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 440, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyDict_SetDefault(__pyx_v_self->analysis, __pyx_n_s_head_links, __pyx_t_3, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 471, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_5);
           __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-          /* "gumbocy.pyx":441
- *                     if attrs.values.count(ATTR_REL) and attrs.values.count(ATTR_HREF):
+          /* "gumbocy.pyx":472
+ *                     if attrs.values.get(ATTR_REL) and attrs.values.get(ATTR_HREF):
  *                         self.analysis.setdefault("head_links", [])
  *                         self.analysis["head_links"].append({"rel": attrs.values[ATTR_REL], "href": attrs.values[ATTR_HREF]})             # <<<<<<<<<<<<<<
  * 
@@ -5964,93 +6323,138 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
           if (unlikely(__pyx_v_self->analysis == Py_None)) {
             PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-            __PYX_ERR(0, 441, __pyx_L1_error)
+            __PYX_ERR(0, 472, __pyx_L1_error)
           }
-          __pyx_t_5 = __Pyx_PyDict_GetItem(__pyx_v_self->analysis, __pyx_n_s_head_links); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 441, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyDict_GetItem(__pyx_v_self->analysis, __pyx_n_s_head_links); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 472, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_5);
-          __pyx_t_3 = PyDict_New(); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 441, __pyx_L1_error)
+          __pyx_t_3 = PyDict_New(); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 472, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_3);
-          __pyx_t_6 = __Pyx_PyBytes_FromString((__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_REL])); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 441, __pyx_L1_error)
+          if (unlikely(__pyx_v_attrs->values == Py_None)) {
+            PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+            __PYX_ERR(0, 472, __pyx_L1_error)
+          }
+          __pyx_t_6 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_REL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 472, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_rel, __pyx_t_6) < 0) __PYX_ERR(0, 441, __pyx_L1_error)
+          __pyx_t_11 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_6); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 472, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_11);
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-          __pyx_t_6 = __Pyx_PyBytes_FromString((__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_HREF])); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 441, __pyx_L1_error)
+          if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_rel, __pyx_t_11) < 0) __PYX_ERR(0, 472, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+          if (unlikely(__pyx_v_attrs->values == Py_None)) {
+            PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+            __PYX_ERR(0, 472, __pyx_L1_error)
+          }
+          __pyx_t_11 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_HREF); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 472, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_11);
+          __pyx_t_6 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_11); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 472, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_href, __pyx_t_6) < 0) __PYX_ERR(0, 441, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+          if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_href, __pyx_t_6) < 0) __PYX_ERR(0, 472, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-          __pyx_t_11 = __Pyx_PyObject_Append(__pyx_t_5, __pyx_t_3); if (unlikely(__pyx_t_11 == -1)) __PYX_ERR(0, 441, __pyx_L1_error)
+          __pyx_t_10 = __Pyx_PyObject_Append(__pyx_t_5, __pyx_t_3); if (unlikely(__pyx_t_10 == -1)) __PYX_ERR(0, 472, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
           __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-          /* "gumbocy.pyx":439
+          /* "gumbocy.pyx":470
  * 
  *                     # TODO: more properties
- *                     if attrs.values.count(ATTR_REL) and attrs.values.count(ATTR_HREF):             # <<<<<<<<<<<<<<
+ *                     if attrs.values.get(ATTR_REL) and attrs.values.get(ATTR_HREF):             # <<<<<<<<<<<<<<
  *                         self.analysis.setdefault("head_links", [])
  *                         self.analysis["head_links"].append({"rel": attrs.values[ATTR_REL], "href": attrs.values[ATTR_HREF]})
  */
         }
 
-        /* "gumbocy.pyx":436
+        /* "gumbocy.pyx":467
  * 
  *             if is_head:
  *                 if node.v.element.tag == gumbocy.GUMBO_TAG_LINK:             # <<<<<<<<<<<<<<
  * 
  *                     # TODO: more properties
  */
-        goto __pyx_L37;
+        goto __pyx_L36;
       }
 
-      /* "gumbocy.pyx":443
+      /* "gumbocy.pyx":474
  *                         self.analysis["head_links"].append({"rel": attrs.values[ATTR_REL], "href": attrs.values[ATTR_HREF]})
  * 
  *                 elif self.has_metas_whitelist and node.v.element.tag == gumbocy.GUMBO_TAG_META:             # <<<<<<<<<<<<<<
- *                     if attrs.values.count(ATTR_CONTENT):
  * 
+ *                     if attrs.values.get(ATTR_CONTENT):
  */
       __pyx_t_1 = (__pyx_v_self->has_metas_whitelist != 0);
       if (__pyx_t_1) {
       } else {
         __pyx_t_2 = __pyx_t_1;
-        goto __pyx_L41_bool_binop_done;
+        goto __pyx_L40_bool_binop_done;
       }
       __pyx_t_1 = ((__pyx_v_node->v.element.tag == GUMBO_TAG_META) != 0);
       __pyx_t_2 = __pyx_t_1;
-      __pyx_L41_bool_binop_done:;
+      __pyx_L40_bool_binop_done:;
       if (__pyx_t_2) {
 
-        /* "gumbocy.pyx":444
- * 
+        /* "gumbocy.pyx":476
  *                 elif self.has_metas_whitelist and node.v.element.tag == gumbocy.GUMBO_TAG_META:
- *                     if attrs.values.count(ATTR_CONTENT):             # <<<<<<<<<<<<<<
  * 
- *                         if attrs.values.count(ATTR_NAME):
+ *                     if attrs.values.get(ATTR_CONTENT):             # <<<<<<<<<<<<<<
+ * 
+ *                         if attrs.values.get(ATTR_NAME):
  */
-        __pyx_t_2 = (__pyx_v_attrs.values.count(__pyx_e_7gumbocy_ATTR_CONTENT) != 0);
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+          __PYX_ERR(0, 476, __pyx_L1_error)
+        }
+        __pyx_t_3 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_CONTENT); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 476, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
+        __pyx_t_5 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 476, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_5);
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 476, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
         if (__pyx_t_2) {
 
-          /* "gumbocy.pyx":446
- *                     if attrs.values.count(ATTR_CONTENT):
+          /* "gumbocy.pyx":478
+ *                     if attrs.values.get(ATTR_CONTENT):
  * 
- *                         if attrs.values.count(ATTR_NAME):             # <<<<<<<<<<<<<<
+ *                         if attrs.values.get(ATTR_NAME):             # <<<<<<<<<<<<<<
  *                             if re2_search(attrs.values[ATTR_NAME], deref(self.metas_whitelist)):
  *                                 self.analysis.setdefault("head_metas", {})
  */
-          __pyx_t_2 = (__pyx_v_attrs.values.count(__pyx_e_7gumbocy_ATTR_NAME) != 0);
+          if (unlikely(__pyx_v_attrs->values == Py_None)) {
+            PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+            __PYX_ERR(0, 478, __pyx_L1_error)
+          }
+          __pyx_t_5 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_NAME); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 478, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_5);
+          __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_5, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 478, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_3);
+          __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+          __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 478, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
           if (__pyx_t_2) {
 
-            /* "gumbocy.pyx":447
+            /* "gumbocy.pyx":479
  * 
- *                         if attrs.values.count(ATTR_NAME):
+ *                         if attrs.values.get(ATTR_NAME):
  *                             if re2_search(attrs.values[ATTR_NAME], deref(self.metas_whitelist)):             # <<<<<<<<<<<<<<
  *                                 self.analysis.setdefault("head_metas", {})
  *                                 self.analysis["head_metas"][attrs.values[ATTR_NAME]] = str(attrs.values[ATTR_CONTENT]).strip()
  */
-            __pyx_t_2 = (__pyx_f_7gumbocy_re2_search((__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_NAME]), (*__pyx_v_self->metas_whitelist)) != 0);
+            if (unlikely(__pyx_v_attrs->values == Py_None)) {
+              PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+              __PYX_ERR(0, 479, __pyx_L1_error)
+            }
+            __pyx_t_3 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_NAME); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 479, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_3);
+            __pyx_t_5 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 479, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_5);
+            __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+            __pyx_t_9 = __Pyx_PyObject_AsString(__pyx_t_5); if (unlikely((!__pyx_t_9) && PyErr_Occurred())) __PYX_ERR(0, 479, __pyx_L1_error)
+            __pyx_t_2 = (__pyx_f_7gumbocy_re2_search(__pyx_t_9, (*__pyx_v_self->metas_whitelist)) != 0);
+            __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
             if (__pyx_t_2) {
 
-              /* "gumbocy.pyx":448
- *                         if attrs.values.count(ATTR_NAME):
+              /* "gumbocy.pyx":480
+ *                         if attrs.values.get(ATTR_NAME):
  *                             if re2_search(attrs.values[ATTR_NAME], deref(self.metas_whitelist)):
  *                                 self.analysis.setdefault("head_metas", {})             # <<<<<<<<<<<<<<
  *                                 self.analysis["head_metas"][attrs.values[ATTR_NAME]] = str(attrs.values[ATTR_CONTENT]).strip()
@@ -6058,107 +6462,142 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
               if (unlikely(__pyx_v_self->analysis == Py_None)) {
                 PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "setdefault");
-                __PYX_ERR(0, 448, __pyx_L1_error)
+                __PYX_ERR(0, 480, __pyx_L1_error)
               }
-              __pyx_t_3 = PyDict_New(); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 448, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_3);
-              __pyx_t_5 = __Pyx_PyDict_SetDefault(__pyx_v_self->analysis, __pyx_n_s_head_metas, __pyx_t_3, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 448, __pyx_L1_error)
+              __pyx_t_5 = PyDict_New(); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 480, __pyx_L1_error)
               __Pyx_GOTREF(__pyx_t_5);
-              __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+              __pyx_t_3 = __Pyx_PyDict_SetDefault(__pyx_v_self->analysis, __pyx_n_s_head_metas, __pyx_t_5, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 480, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_3);
               __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+              __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-              /* "gumbocy.pyx":449
+              /* "gumbocy.pyx":481
  *                             if re2_search(attrs.values[ATTR_NAME], deref(self.metas_whitelist)):
  *                                 self.analysis.setdefault("head_metas", {})
  *                                 self.analysis["head_metas"][attrs.values[ATTR_NAME]] = str(attrs.values[ATTR_CONTENT]).strip()             # <<<<<<<<<<<<<<
  * 
- *                         elif attrs.values.count(ATTR_PROPERTY):
+ *                         elif attrs.values.get(ATTR_PROPERTY):
  */
-              __pyx_t_3 = __Pyx_PyBytes_FromString((__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_CONTENT])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 449, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_3);
-              __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 449, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_6);
-              __Pyx_GIVEREF(__pyx_t_3);
-              PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_3);
-              __pyx_t_3 = 0;
-              __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 449, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_3);
-              __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-              __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_strip); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 449, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_6);
-              __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-              __pyx_t_3 = NULL;
-              if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_6))) {
-                __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_6);
-                if (likely(__pyx_t_3)) {
-                  PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
-                  __Pyx_INCREF(__pyx_t_3);
-                  __Pyx_INCREF(function);
-                  __Pyx_DECREF_SET(__pyx_t_6, function);
-                }
+              if (unlikely(__pyx_v_attrs->values == Py_None)) {
+                PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+                __PYX_ERR(0, 481, __pyx_L1_error)
               }
-              if (__pyx_t_3) {
-                __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 449, __pyx_L1_error)
-                __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-              } else {
-                __pyx_t_5 = __Pyx_PyObject_CallNoArg(__pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 449, __pyx_L1_error)
-              }
+              __pyx_t_5 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_CONTENT); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 481, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_5);
+              __pyx_t_6 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 481, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_6);
+              __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+              __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 481, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_5);
+              __Pyx_GIVEREF(__pyx_t_6);
+              PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_6);
+              __pyx_t_6 = 0;
+              __pyx_t_6 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_5, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 481, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_6);
+              __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+              __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_strip); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 481, __pyx_L1_error)
               __Pyx_GOTREF(__pyx_t_5);
               __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+              __pyx_t_6 = NULL;
+              if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_5))) {
+                __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_5);
+                if (likely(__pyx_t_6)) {
+                  PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
+                  __Pyx_INCREF(__pyx_t_6);
+                  __Pyx_INCREF(function);
+                  __Pyx_DECREF_SET(__pyx_t_5, function);
+                }
+              }
+              if (__pyx_t_6) {
+                __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 481, __pyx_L1_error)
+                __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+              } else {
+                __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 481, __pyx_L1_error)
+              }
+              __Pyx_GOTREF(__pyx_t_3);
+              __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
               if (unlikely(__pyx_v_self->analysis == Py_None)) {
                 PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-                __PYX_ERR(0, 449, __pyx_L1_error)
+                __PYX_ERR(0, 481, __pyx_L1_error)
               }
-              __pyx_t_6 = __Pyx_PyDict_GetItem(__pyx_v_self->analysis, __pyx_n_s_head_metas); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 449, __pyx_L1_error)
+              __pyx_t_5 = __Pyx_PyDict_GetItem(__pyx_v_self->analysis, __pyx_n_s_head_metas); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 481, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_5);
+              if (unlikely(__pyx_v_attrs->values == Py_None)) {
+                PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+                __PYX_ERR(0, 481, __pyx_L1_error)
+              }
+              __pyx_t_6 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_NAME); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 481, __pyx_L1_error)
               __Pyx_GOTREF(__pyx_t_6);
-              __pyx_t_3 = __Pyx_PyBytes_FromString((__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_NAME])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 449, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_3);
-              if (unlikely(PyObject_SetItem(__pyx_t_6, __pyx_t_3, __pyx_t_5) < 0)) __PYX_ERR(0, 449, __pyx_L1_error)
+              __pyx_t_11 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_6); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 481, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_11);
               __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-              __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+              if (unlikely(PyObject_SetItem(__pyx_t_5, __pyx_t_11, __pyx_t_3) < 0)) __PYX_ERR(0, 481, __pyx_L1_error)
               __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+              __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+              __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-              /* "gumbocy.pyx":447
+              /* "gumbocy.pyx":479
  * 
- *                         if attrs.values.count(ATTR_NAME):
+ *                         if attrs.values.get(ATTR_NAME):
  *                             if re2_search(attrs.values[ATTR_NAME], deref(self.metas_whitelist)):             # <<<<<<<<<<<<<<
  *                                 self.analysis.setdefault("head_metas", {})
  *                                 self.analysis["head_metas"][attrs.values[ATTR_NAME]] = str(attrs.values[ATTR_CONTENT]).strip()
  */
             }
 
-            /* "gumbocy.pyx":446
- *                     if attrs.values.count(ATTR_CONTENT):
+            /* "gumbocy.pyx":478
+ *                     if attrs.values.get(ATTR_CONTENT):
  * 
- *                         if attrs.values.count(ATTR_NAME):             # <<<<<<<<<<<<<<
+ *                         if attrs.values.get(ATTR_NAME):             # <<<<<<<<<<<<<<
  *                             if re2_search(attrs.values[ATTR_NAME], deref(self.metas_whitelist)):
  *                                 self.analysis.setdefault("head_metas", {})
  */
-            goto __pyx_L44;
+            goto __pyx_L43;
           }
 
-          /* "gumbocy.pyx":451
+          /* "gumbocy.pyx":483
  *                                 self.analysis["head_metas"][attrs.values[ATTR_NAME]] = str(attrs.values[ATTR_CONTENT]).strip()
  * 
- *                         elif attrs.values.count(ATTR_PROPERTY):             # <<<<<<<<<<<<<<
+ *                         elif attrs.values.get(ATTR_PROPERTY):             # <<<<<<<<<<<<<<
  *                             if re2_search(attrs.values[ATTR_PROPERTY], deref(self.metas_whitelist)):
  *                                 self.analysis.setdefault("head_metas", {})
  */
-          __pyx_t_2 = (__pyx_v_attrs.values.count(__pyx_e_7gumbocy_ATTR_PROPERTY) != 0);
+          if (unlikely(__pyx_v_attrs->values == Py_None)) {
+            PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+            __PYX_ERR(0, 483, __pyx_L1_error)
+          }
+          __pyx_t_3 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_PROPERTY); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 483, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_3);
+          __pyx_t_11 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 483, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_11);
+          __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+          __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_11); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 483, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
           if (__pyx_t_2) {
 
-            /* "gumbocy.pyx":452
+            /* "gumbocy.pyx":484
  * 
- *                         elif attrs.values.count(ATTR_PROPERTY):
+ *                         elif attrs.values.get(ATTR_PROPERTY):
  *                             if re2_search(attrs.values[ATTR_PROPERTY], deref(self.metas_whitelist)):             # <<<<<<<<<<<<<<
  *                                 self.analysis.setdefault("head_metas", {})
  *                                 self.analysis["head_metas"][attrs.values[ATTR_PROPERTY]] = str(attrs.values[ATTR_CONTENT]).strip()
  */
-            __pyx_t_2 = (__pyx_f_7gumbocy_re2_search((__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_PROPERTY]), (*__pyx_v_self->metas_whitelist)) != 0);
+            if (unlikely(__pyx_v_attrs->values == Py_None)) {
+              PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+              __PYX_ERR(0, 484, __pyx_L1_error)
+            }
+            __pyx_t_11 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_PROPERTY); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 484, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_11);
+            __pyx_t_3 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_11); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 484, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_3);
+            __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+            __pyx_t_9 = __Pyx_PyObject_AsString(__pyx_t_3); if (unlikely((!__pyx_t_9) && PyErr_Occurred())) __PYX_ERR(0, 484, __pyx_L1_error)
+            __pyx_t_2 = (__pyx_f_7gumbocy_re2_search(__pyx_t_9, (*__pyx_v_self->metas_whitelist)) != 0);
+            __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
             if (__pyx_t_2) {
 
-              /* "gumbocy.pyx":453
- *                         elif attrs.values.count(ATTR_PROPERTY):
+              /* "gumbocy.pyx":485
+ *                         elif attrs.values.get(ATTR_PROPERTY):
  *                             if re2_search(attrs.values[ATTR_PROPERTY], deref(self.metas_whitelist)):
  *                                 self.analysis.setdefault("head_metas", {})             # <<<<<<<<<<<<<<
  *                                 self.analysis["head_metas"][attrs.values[ATTR_PROPERTY]] = str(attrs.values[ATTR_CONTENT]).strip()
@@ -6166,173 +6605,204 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
               if (unlikely(__pyx_v_self->analysis == Py_None)) {
                 PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "setdefault");
-                __PYX_ERR(0, 453, __pyx_L1_error)
+                __PYX_ERR(0, 485, __pyx_L1_error)
               }
-              __pyx_t_5 = PyDict_New(); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 453, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_5);
-              __pyx_t_3 = __Pyx_PyDict_SetDefault(__pyx_v_self->analysis, __pyx_n_s_head_metas, __pyx_t_5, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 453, __pyx_L1_error)
+              __pyx_t_3 = PyDict_New(); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 485, __pyx_L1_error)
               __Pyx_GOTREF(__pyx_t_3);
-              __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+              __pyx_t_11 = __Pyx_PyDict_SetDefault(__pyx_v_self->analysis, __pyx_n_s_head_metas, __pyx_t_3, 1); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 485, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_11);
               __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+              __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
 
-              /* "gumbocy.pyx":454
+              /* "gumbocy.pyx":486
  *                             if re2_search(attrs.values[ATTR_PROPERTY], deref(self.metas_whitelist)):
  *                                 self.analysis.setdefault("head_metas", {})
  *                                 self.analysis["head_metas"][attrs.values[ATTR_PROPERTY]] = str(attrs.values[ATTR_CONTENT]).strip()             # <<<<<<<<<<<<<<
  * 
  *                 elif node.v.element.tag == gumbocy.GUMBO_TAG_BASE:
  */
-              __pyx_t_5 = __Pyx_PyBytes_FromString((__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_CONTENT])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 454, __pyx_L1_error)
+              if (unlikely(__pyx_v_attrs->values == Py_None)) {
+                PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+                __PYX_ERR(0, 486, __pyx_L1_error)
+              }
+              __pyx_t_3 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_CONTENT); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 486, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_3);
+              __pyx_t_5 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 486, __pyx_L1_error)
               __Pyx_GOTREF(__pyx_t_5);
-              __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 454, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_6);
+              __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+              __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 486, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_3);
               __Pyx_GIVEREF(__pyx_t_5);
-              PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5);
+              PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_5);
               __pyx_t_5 = 0;
-              __pyx_t_5 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_6, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 454, __pyx_L1_error)
+              __pyx_t_5 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_3, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 486, __pyx_L1_error)
               __Pyx_GOTREF(__pyx_t_5);
-              __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-              __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_strip); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 454, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_6);
+              __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+              __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_strip); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 486, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_3);
               __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
               __pyx_t_5 = NULL;
-              if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_6))) {
-                __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_6);
+              if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_3))) {
+                __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_3);
                 if (likely(__pyx_t_5)) {
-                  PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
+                  PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
                   __Pyx_INCREF(__pyx_t_5);
                   __Pyx_INCREF(function);
-                  __Pyx_DECREF_SET(__pyx_t_6, function);
+                  __Pyx_DECREF_SET(__pyx_t_3, function);
                 }
               }
               if (__pyx_t_5) {
-                __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 454, __pyx_L1_error)
+                __pyx_t_11 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_5); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 486, __pyx_L1_error)
                 __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
               } else {
-                __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 454, __pyx_L1_error)
+                __pyx_t_11 = __Pyx_PyObject_CallNoArg(__pyx_t_3); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 486, __pyx_L1_error)
               }
-              __Pyx_GOTREF(__pyx_t_3);
-              __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+              __Pyx_GOTREF(__pyx_t_11);
+              __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
               if (unlikely(__pyx_v_self->analysis == Py_None)) {
                 PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-                __PYX_ERR(0, 454, __pyx_L1_error)
+                __PYX_ERR(0, 486, __pyx_L1_error)
               }
-              __pyx_t_6 = __Pyx_PyDict_GetItem(__pyx_v_self->analysis, __pyx_n_s_head_metas); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 454, __pyx_L1_error)
-              __Pyx_GOTREF(__pyx_t_6);
-              __pyx_t_5 = __Pyx_PyBytes_FromString((__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_PROPERTY])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 454, __pyx_L1_error)
+              __pyx_t_3 = __Pyx_PyDict_GetItem(__pyx_v_self->analysis, __pyx_n_s_head_metas); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 486, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_3);
+              if (unlikely(__pyx_v_attrs->values == Py_None)) {
+                PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+                __PYX_ERR(0, 486, __pyx_L1_error)
+              }
+              __pyx_t_5 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_PROPERTY); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 486, __pyx_L1_error)
               __Pyx_GOTREF(__pyx_t_5);
-              if (unlikely(PyObject_SetItem(__pyx_t_6, __pyx_t_5, __pyx_t_3) < 0)) __PYX_ERR(0, 454, __pyx_L1_error)
-              __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+              __pyx_t_6 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 486, __pyx_L1_error)
+              __Pyx_GOTREF(__pyx_t_6);
               __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+              if (unlikely(PyObject_SetItem(__pyx_t_3, __pyx_t_6, __pyx_t_11) < 0)) __PYX_ERR(0, 486, __pyx_L1_error)
               __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+              __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+              __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
 
-              /* "gumbocy.pyx":452
+              /* "gumbocy.pyx":484
  * 
- *                         elif attrs.values.count(ATTR_PROPERTY):
+ *                         elif attrs.values.get(ATTR_PROPERTY):
  *                             if re2_search(attrs.values[ATTR_PROPERTY], deref(self.metas_whitelist)):             # <<<<<<<<<<<<<<
  *                                 self.analysis.setdefault("head_metas", {})
  *                                 self.analysis["head_metas"][attrs.values[ATTR_PROPERTY]] = str(attrs.values[ATTR_CONTENT]).strip()
  */
             }
 
-            /* "gumbocy.pyx":451
+            /* "gumbocy.pyx":483
  *                                 self.analysis["head_metas"][attrs.values[ATTR_NAME]] = str(attrs.values[ATTR_CONTENT]).strip()
  * 
- *                         elif attrs.values.count(ATTR_PROPERTY):             # <<<<<<<<<<<<<<
+ *                         elif attrs.values.get(ATTR_PROPERTY):             # <<<<<<<<<<<<<<
  *                             if re2_search(attrs.values[ATTR_PROPERTY], deref(self.metas_whitelist)):
  *                                 self.analysis.setdefault("head_metas", {})
  */
           }
-          __pyx_L44:;
+          __pyx_L43:;
 
-          /* "gumbocy.pyx":444
- * 
+          /* "gumbocy.pyx":476
  *                 elif self.has_metas_whitelist and node.v.element.tag == gumbocy.GUMBO_TAG_META:
- *                     if attrs.values.count(ATTR_CONTENT):             # <<<<<<<<<<<<<<
  * 
- *                         if attrs.values.count(ATTR_NAME):
+ *                     if attrs.values.get(ATTR_CONTENT):             # <<<<<<<<<<<<<<
+ * 
+ *                         if attrs.values.get(ATTR_NAME):
  */
         }
 
-        /* "gumbocy.pyx":443
+        /* "gumbocy.pyx":474
  *                         self.analysis["head_links"].append({"rel": attrs.values[ATTR_REL], "href": attrs.values[ATTR_HREF]})
  * 
  *                 elif self.has_metas_whitelist and node.v.element.tag == gumbocy.GUMBO_TAG_META:             # <<<<<<<<<<<<<<
- *                     if attrs.values.count(ATTR_CONTENT):
  * 
+ *                     if attrs.values.get(ATTR_CONTENT):
  */
-        goto __pyx_L37;
+        goto __pyx_L36;
       }
 
-      /* "gumbocy.pyx":456
+      /* "gumbocy.pyx":488
  *                                 self.analysis["head_metas"][attrs.values[ATTR_PROPERTY]] = str(attrs.values[ATTR_CONTENT]).strip()
  * 
  *                 elif node.v.element.tag == gumbocy.GUMBO_TAG_BASE:             # <<<<<<<<<<<<<<
- *                     if attrs.values.count(ATTR_HREF) and "base_url" not in self.analysis:
+ *                     if attrs.values.get(ATTR_HREF) and "base_url" not in self.analysis:
  *                         self.analysis["base_url"] = attrs.values[ATTR_HREF]
  */
       __pyx_t_2 = ((__pyx_v_node->v.element.tag == GUMBO_TAG_BASE) != 0);
       if (__pyx_t_2) {
 
-        /* "gumbocy.pyx":457
+        /* "gumbocy.pyx":489
  * 
  *                 elif node.v.element.tag == gumbocy.GUMBO_TAG_BASE:
- *                     if attrs.values.count(ATTR_HREF) and "base_url" not in self.analysis:             # <<<<<<<<<<<<<<
+ *                     if attrs.values.get(ATTR_HREF) and "base_url" not in self.analysis:             # <<<<<<<<<<<<<<
  *                         self.analysis["base_url"] = attrs.values[ATTR_HREF]
  * 
  */
-        __pyx_t_1 = (__pyx_v_attrs.values.count(__pyx_e_7gumbocy_ATTR_HREF) != 0);
+        if (unlikely(__pyx_v_attrs->values == Py_None)) {
+          PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "get");
+          __PYX_ERR(0, 489, __pyx_L1_error)
+        }
+        __pyx_t_11 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_HREF); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 489, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_11);
+        __pyx_t_6 = __Pyx_PyDict_GetItemDefault(__pyx_v_attrs->values, __pyx_t_11, Py_None); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 489, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+        __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_6); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 489, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         if (__pyx_t_1) {
         } else {
           __pyx_t_2 = __pyx_t_1;
-          goto __pyx_L48_bool_binop_done;
+          goto __pyx_L47_bool_binop_done;
         }
         if (unlikely(__pyx_v_self->analysis == Py_None)) {
           PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-          __PYX_ERR(0, 457, __pyx_L1_error)
+          __PYX_ERR(0, 489, __pyx_L1_error)
         }
-        __pyx_t_1 = (__Pyx_PyDict_ContainsTF(__pyx_n_s_base_url, __pyx_v_self->analysis, Py_NE)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 457, __pyx_L1_error)
+        __pyx_t_1 = (__Pyx_PyDict_ContainsTF(__pyx_n_s_base_url, __pyx_v_self->analysis, Py_NE)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 489, __pyx_L1_error)
         __pyx_t_12 = (__pyx_t_1 != 0);
         __pyx_t_2 = __pyx_t_12;
-        __pyx_L48_bool_binop_done:;
+        __pyx_L47_bool_binop_done:;
         if (__pyx_t_2) {
 
-          /* "gumbocy.pyx":458
+          /* "gumbocy.pyx":490
  *                 elif node.v.element.tag == gumbocy.GUMBO_TAG_BASE:
- *                     if attrs.values.count(ATTR_HREF) and "base_url" not in self.analysis:
+ *                     if attrs.values.get(ATTR_HREF) and "base_url" not in self.analysis:
  *                         self.analysis["base_url"] = attrs.values[ATTR_HREF]             # <<<<<<<<<<<<<<
  * 
  *             # TODO is_article
  */
-          __pyx_t_3 = __Pyx_PyBytes_FromString((__pyx_v_attrs.values[__pyx_e_7gumbocy_ATTR_HREF])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 458, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_3);
+          if (unlikely(__pyx_v_attrs->values == Py_None)) {
+            PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+            __PYX_ERR(0, 490, __pyx_L1_error)
+          }
+          __pyx_t_6 = __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_e_7gumbocy_ATTR_HREF); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 490, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_6);
+          __pyx_t_11 = __Pyx_PyDict_GetItem(__pyx_v_attrs->values, __pyx_t_6); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 490, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_11);
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           if (unlikely(__pyx_v_self->analysis == Py_None)) {
             PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-            __PYX_ERR(0, 458, __pyx_L1_error)
+            __PYX_ERR(0, 490, __pyx_L1_error)
           }
-          if (unlikely(PyDict_SetItem(__pyx_v_self->analysis, __pyx_n_s_base_url, __pyx_t_3) < 0)) __PYX_ERR(0, 458, __pyx_L1_error)
-          __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+          if (unlikely(PyDict_SetItem(__pyx_v_self->analysis, __pyx_n_s_base_url, __pyx_t_11) < 0)) __PYX_ERR(0, 490, __pyx_L1_error)
+          __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
 
-          /* "gumbocy.pyx":457
+          /* "gumbocy.pyx":489
  * 
  *                 elif node.v.element.tag == gumbocy.GUMBO_TAG_BASE:
- *                     if attrs.values.count(ATTR_HREF) and "base_url" not in self.analysis:             # <<<<<<<<<<<<<<
+ *                     if attrs.values.get(ATTR_HREF) and "base_url" not in self.analysis:             # <<<<<<<<<<<<<<
  *                         self.analysis["base_url"] = attrs.values[ATTR_HREF]
  * 
  */
         }
 
-        /* "gumbocy.pyx":456
+        /* "gumbocy.pyx":488
  *                                 self.analysis["head_metas"][attrs.values[ATTR_PROPERTY]] = str(attrs.values[ATTR_CONTENT]).strip()
  * 
  *                 elif node.v.element.tag == gumbocy.GUMBO_TAG_BASE:             # <<<<<<<<<<<<<<
- *                     if attrs.values.count(ATTR_HREF) and "base_url" not in self.analysis:
+ *                     if attrs.values.get(ATTR_HREF) and "base_url" not in self.analysis:
  *                         self.analysis["base_url"] = attrs.values[ATTR_HREF]
  */
       }
-      __pyx_L37:;
+      __pyx_L36:;
 
-      /* "gumbocy.pyx":435
+      /* "gumbocy.pyx":466
  * 
  * 
  *             if is_head:             # <<<<<<<<<<<<<<
@@ -6341,36 +6811,36 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     }
 
-    /* "gumbocy.pyx":462
+    /* "gumbocy.pyx":494
  *             # TODO is_article
  * 
  *             if not is_hidden:             # <<<<<<<<<<<<<<
- *                 is_hidden = self.guess_node_hidden(node, &attrs)
+ *                 is_hidden = self.guess_node_hidden(node, attrs)
  * 
  */
     __pyx_t_2 = ((!(__pyx_v_is_hidden != 0)) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":463
+      /* "gumbocy.pyx":495
  * 
  *             if not is_hidden:
- *                 is_hidden = self.guess_node_hidden(node, &attrs)             # <<<<<<<<<<<<<<
+ *                 is_hidden = self.guess_node_hidden(node, attrs)             # <<<<<<<<<<<<<<
  * 
  *             if is_boilerplate and not is_boilerplate_bypassed:
  */
-      __pyx_v_is_hidden = ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->guess_node_hidden(__pyx_v_self, __pyx_v_node, (&__pyx_v_attrs));
+      __pyx_v_is_hidden = ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->guess_node_hidden(__pyx_v_self, __pyx_v_node, __pyx_v_attrs);
 
-      /* "gumbocy.pyx":462
+      /* "gumbocy.pyx":494
  *             # TODO is_article
  * 
  *             if not is_hidden:             # <<<<<<<<<<<<<<
- *                 is_hidden = self.guess_node_hidden(node, &attrs)
+ *                 is_hidden = self.guess_node_hidden(node, attrs)
  * 
  */
     }
 
-    /* "gumbocy.pyx":465
- *                 is_hidden = self.guess_node_hidden(node, &attrs)
+    /* "gumbocy.pyx":497
+ *                 is_hidden = self.guess_node_hidden(node, attrs)
  * 
  *             if is_boilerplate and not is_boilerplate_bypassed:             # <<<<<<<<<<<<<<
  *                 if self.tags_boilerplate_bypass.count(tag_n):
@@ -6380,14 +6850,14 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     if (__pyx_t_12) {
     } else {
       __pyx_t_2 = __pyx_t_12;
-      goto __pyx_L52_bool_binop_done;
+      goto __pyx_L51_bool_binop_done;
     }
     __pyx_t_12 = ((!(__pyx_v_is_boilerplate_bypassed != 0)) != 0);
     __pyx_t_2 = __pyx_t_12;
-    __pyx_L52_bool_binop_done:;
+    __pyx_L51_bool_binop_done:;
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":466
+      /* "gumbocy.pyx":498
  * 
  *             if is_boilerplate and not is_boilerplate_bypassed:
  *                 if self.tags_boilerplate_bypass.count(tag_n):             # <<<<<<<<<<<<<<
@@ -6397,7 +6867,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
       __pyx_t_2 = (__pyx_v_self->tags_boilerplate_bypass.count(__pyx_v_tag_n) != 0);
       if (__pyx_t_2) {
 
-        /* "gumbocy.pyx":467
+        /* "gumbocy.pyx":499
  *             if is_boilerplate and not is_boilerplate_bypassed:
  *                 if self.tags_boilerplate_bypass.count(tag_n):
  *                     is_boilerplate_bypassed = True             # <<<<<<<<<<<<<<
@@ -6406,7 +6876,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
         __pyx_v_is_boilerplate_bypassed = 1;
 
-        /* "gumbocy.pyx":466
+        /* "gumbocy.pyx":498
  * 
  *             if is_boilerplate and not is_boilerplate_bypassed:
  *                 if self.tags_boilerplate_bypass.count(tag_n):             # <<<<<<<<<<<<<<
@@ -6415,8 +6885,8 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
       }
 
-      /* "gumbocy.pyx":465
- *                 is_hidden = self.guess_node_hidden(node, &attrs)
+      /* "gumbocy.pyx":497
+ *                 is_hidden = self.guess_node_hidden(node, attrs)
  * 
  *             if is_boilerplate and not is_boilerplate_bypassed:             # <<<<<<<<<<<<<<
  *                 if self.tags_boilerplate_bypass.count(tag_n):
@@ -6424,35 +6894,80 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     }
 
-    /* "gumbocy.pyx":469
+    /* "gumbocy.pyx":501
  *                     is_boilerplate_bypassed = True
  * 
  *             if not is_boilerplate:             # <<<<<<<<<<<<<<
- *                 is_boilerplate = self.guess_node_boilerplate(node, &attrs)
- * 
+ *                 is_boilerplate = self.guess_node_boilerplate(node, attrs)
+ *             print " " * level, "BOILER", tag_name, is_boilerplate, dict(attrs.values), attrs.classes
  */
     __pyx_t_2 = ((!(__pyx_v_is_boilerplate != 0)) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":470
+      /* "gumbocy.pyx":502
  * 
  *             if not is_boilerplate:
- *                 is_boilerplate = self.guess_node_boilerplate(node, &attrs)             # <<<<<<<<<<<<<<
+ *                 is_boilerplate = self.guess_node_boilerplate(node, attrs)             # <<<<<<<<<<<<<<
+ *             print " " * level, "BOILER", tag_name, is_boilerplate, dict(attrs.values), attrs.classes
  * 
- *             # Close the word group
  */
-      __pyx_v_is_boilerplate = ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->guess_node_boilerplate(__pyx_v_self, __pyx_v_node, (&__pyx_v_attrs));
+      __pyx_v_is_boilerplate = ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->guess_node_boilerplate(__pyx_v_self, __pyx_v_node, __pyx_v_attrs);
 
-      /* "gumbocy.pyx":469
+      /* "gumbocy.pyx":501
  *                     is_boilerplate_bypassed = True
  * 
  *             if not is_boilerplate:             # <<<<<<<<<<<<<<
- *                 is_boilerplate = self.guess_node_boilerplate(node, &attrs)
- * 
+ *                 is_boilerplate = self.guess_node_boilerplate(node, attrs)
+ *             print " " * level, "BOILER", tag_name, is_boilerplate, dict(attrs.values), attrs.classes
  */
     }
 
-    /* "gumbocy.pyx":473
+    /* "gumbocy.pyx":503
+ *             if not is_boilerplate:
+ *                 is_boilerplate = self.guess_node_boilerplate(node, attrs)
+ *             print " " * level, "BOILER", tag_name, is_boilerplate, dict(attrs.values), attrs.classes             # <<<<<<<<<<<<<<
+ * 
+ *             # Close the word group
+ */
+    __pyx_t_11 = __Pyx_PyInt_From_int(__pyx_v_level); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 503, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_11);
+    __pyx_t_6 = PyNumber_Multiply(__pyx_kp_s__4, __pyx_t_11); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 503, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+    __pyx_t_11 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 503, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_11);
+    __pyx_t_3 = __Pyx_PyBool_FromLong(__pyx_v_is_boilerplate); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 503, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    if (unlikely(__pyx_v_attrs->values == Py_None)) {
+      PyErr_SetString(PyExc_TypeError, "'NoneType' is not iterable");
+      __PYX_ERR(0, 503, __pyx_L1_error)
+    }
+    __pyx_t_5 = PyDict_Copy(__pyx_v_attrs->values); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 503, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_13 = PyTuple_New(6); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 503, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_13);
+    __Pyx_GIVEREF(__pyx_t_6);
+    PyTuple_SET_ITEM(__pyx_t_13, 0, __pyx_t_6);
+    __Pyx_INCREF(__pyx_n_s_BOILER);
+    __Pyx_GIVEREF(__pyx_n_s_BOILER);
+    PyTuple_SET_ITEM(__pyx_t_13, 1, __pyx_n_s_BOILER);
+    __Pyx_GIVEREF(__pyx_t_11);
+    PyTuple_SET_ITEM(__pyx_t_13, 2, __pyx_t_11);
+    __Pyx_GIVEREF(__pyx_t_3);
+    PyTuple_SET_ITEM(__pyx_t_13, 3, __pyx_t_3);
+    __Pyx_GIVEREF(__pyx_t_5);
+    PyTuple_SET_ITEM(__pyx_t_13, 4, __pyx_t_5);
+    __Pyx_INCREF(__pyx_v_attrs->classes);
+    __Pyx_GIVEREF(__pyx_v_attrs->classes);
+    PyTuple_SET_ITEM(__pyx_t_13, 5, __pyx_v_attrs->classes);
+    __pyx_t_6 = 0;
+    __pyx_t_11 = 0;
+    __pyx_t_3 = 0;
+    __pyx_t_5 = 0;
+    if (__Pyx_Print(0, __pyx_t_13, 1) < 0) __PYX_ERR(0, 503, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+
+    /* "gumbocy.pyx":506
  * 
  *             # Close the word group
  *             if self.tags_separators.count(tag_n):             # <<<<<<<<<<<<<<
@@ -6462,7 +6977,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     __pyx_t_2 = (__pyx_v_self->tags_separators.count(__pyx_v_tag_n) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":474
+      /* "gumbocy.pyx":507
  *             # Close the word group
  *             if self.tags_separators.count(tag_n):
  *                 self.close_word_group()             # <<<<<<<<<<<<<<
@@ -6471,7 +6986,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
       ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->close_word_group(__pyx_v_self);
 
-      /* "gumbocy.pyx":473
+      /* "gumbocy.pyx":506
  * 
  *             # Close the word group
  *             if self.tags_separators.count(tag_n):             # <<<<<<<<<<<<<<
@@ -6480,18 +6995,18 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     }
 
-    /* "gumbocy.pyx":477
+    /* "gumbocy.pyx":510
  * 
  *             # Call _traverse_node() recursively for each of the children
  *             for i in range(node.v.element.children.length):             # <<<<<<<<<<<<<<
  *                 child = <gumbocy.GumboNode *>node.v.element.children.data[i]
  *                 if self._traverse_node(level + 1, child, is_head, is_hidden, is_boilerplate, is_boilerplate_bypassed, is_hyperlink) == 1:
  */
-    __pyx_t_13 = __pyx_v_node->v.element.children.length;
-    for (__pyx_t_14 = 0; __pyx_t_14 < __pyx_t_13; __pyx_t_14+=1) {
-      __pyx_v_i = __pyx_t_14;
+    __pyx_t_14 = __pyx_v_node->v.element.children.length;
+    for (__pyx_t_15 = 0; __pyx_t_15 < __pyx_t_14; __pyx_t_15+=1) {
+      __pyx_v_i = __pyx_t_15;
 
-      /* "gumbocy.pyx":478
+      /* "gumbocy.pyx":511
  *             # Call _traverse_node() recursively for each of the children
  *             for i in range(node.v.element.children.length):
  *                 child = <gumbocy.GumboNode *>node.v.element.children.data[i]             # <<<<<<<<<<<<<<
@@ -6500,7 +7015,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
       __pyx_v_child = ((GumboNode *)(__pyx_v_node->v.element.children.data[__pyx_v_i]));
 
-      /* "gumbocy.pyx":479
+      /* "gumbocy.pyx":512
  *             for i in range(node.v.element.children.length):
  *                 child = <gumbocy.GumboNode *>node.v.element.children.data[i]
  *                 if self._traverse_node(level + 1, child, is_head, is_hidden, is_boilerplate, is_boilerplate_bypassed, is_hyperlink) == 1:             # <<<<<<<<<<<<<<
@@ -6510,16 +7025,16 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
       __pyx_t_2 = ((((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->_traverse_node(__pyx_v_self, (__pyx_v_level + 1), __pyx_v_child, __pyx_v_is_head, __pyx_v_is_hidden, __pyx_v_is_boilerplate, __pyx_v_is_boilerplate_bypassed, __pyx_v_is_hyperlink) == 1) != 0);
       if (__pyx_t_2) {
 
-        /* "gumbocy.pyx":480
+        /* "gumbocy.pyx":513
  *                 child = <gumbocy.GumboNode *>node.v.element.children.data[i]
  *                 if self._traverse_node(level + 1, child, is_head, is_hidden, is_boilerplate, is_boilerplate_bypassed, is_hyperlink) == 1:
  *                     break             # <<<<<<<<<<<<<<
  * 
  *             # Close the word group
  */
-        goto __pyx_L58_break;
+        goto __pyx_L57_break;
 
-        /* "gumbocy.pyx":479
+        /* "gumbocy.pyx":512
  *             for i in range(node.v.element.children.length):
  *                 child = <gumbocy.GumboNode *>node.v.element.children.data[i]
  *                 if self._traverse_node(level + 1, child, is_head, is_hidden, is_boilerplate, is_boilerplate_bypassed, is_hyperlink) == 1:             # <<<<<<<<<<<<<<
@@ -6528,9 +7043,9 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
       }
     }
-    __pyx_L58_break:;
+    __pyx_L57_break:;
 
-    /* "gumbocy.pyx":483
+    /* "gumbocy.pyx":516
  * 
  *             # Close the word group
  *             if self.tags_separators.count(tag_n):             # <<<<<<<<<<<<<<
@@ -6540,7 +7055,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     __pyx_t_2 = (__pyx_v_self->tags_separators.count(__pyx_v_tag_n) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":484
+      /* "gumbocy.pyx":517
  *             # Close the word group
  *             if self.tags_separators.count(tag_n):
  *                 self.close_word_group()             # <<<<<<<<<<<<<<
@@ -6549,7 +7064,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
       ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->close_word_group(__pyx_v_self);
 
-      /* "gumbocy.pyx":483
+      /* "gumbocy.pyx":516
  * 
  *             # Close the word group
  *             if self.tags_separators.count(tag_n):             # <<<<<<<<<<<<<<
@@ -6558,7 +7073,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     }
 
-    /* "gumbocy.pyx":486
+    /* "gumbocy.pyx":519
  *                 self.close_word_group()
  * 
  *             self.current_stack.pop()             # <<<<<<<<<<<<<<
@@ -6567,13 +7082,13 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     if (unlikely(__pyx_v_self->current_stack == Py_None)) {
       PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "pop");
-      __PYX_ERR(0, 486, __pyx_L1_error)
+      __PYX_ERR(0, 519, __pyx_L1_error)
     }
-    __pyx_t_3 = __Pyx_PyList_Pop(__pyx_v_self->current_stack); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 486, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_13 = __Pyx_PyList_Pop(__pyx_v_self->current_stack); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 519, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_13);
+    __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
 
-    /* "gumbocy.pyx":488
+    /* "gumbocy.pyx":521
  *             self.current_stack.pop()
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_A:             # <<<<<<<<<<<<<<
@@ -6583,7 +7098,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     __pyx_t_2 = ((__pyx_v_node->v.element.tag == GUMBO_TAG_A) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":489
+      /* "gumbocy.pyx":522
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_A:
  *                 self.close_hyperlink()             # <<<<<<<<<<<<<<
@@ -6592,7 +7107,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
       ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->close_hyperlink(__pyx_v_self);
 
-      /* "gumbocy.pyx":488
+      /* "gumbocy.pyx":521
  *             self.current_stack.pop()
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_A:             # <<<<<<<<<<<<<<
@@ -6601,7 +7116,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     }
 
-    /* "gumbocy.pyx":491
+    /* "gumbocy.pyx":524
  *                 self.close_hyperlink()
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_HEAD:             # <<<<<<<<<<<<<<
@@ -6611,7 +7126,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     __pyx_t_2 = ((__pyx_v_node->v.element.tag == GUMBO_TAG_HEAD) != 0);
     if (__pyx_t_2) {
 
-      /* "gumbocy.pyx":492
+      /* "gumbocy.pyx":525
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_HEAD:
  *                 if self.head_only:             # <<<<<<<<<<<<<<
@@ -6621,7 +7136,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
       __pyx_t_2 = (__pyx_v_self->head_only != 0);
       if (__pyx_t_2) {
 
-        /* "gumbocy.pyx":493
+        /* "gumbocy.pyx":526
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_HEAD:
  *                 if self.head_only:
  *                     return 1             # <<<<<<<<<<<<<<
@@ -6631,7 +7146,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
         __pyx_r = 1;
         goto __pyx_L0;
 
-        /* "gumbocy.pyx":492
+        /* "gumbocy.pyx":525
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_HEAD:
  *                 if self.head_only:             # <<<<<<<<<<<<<<
@@ -6640,7 +7155,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
       }
 
-      /* "gumbocy.pyx":491
+      /* "gumbocy.pyx":524
  *                 self.close_hyperlink()
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_HEAD:             # <<<<<<<<<<<<<<
@@ -6649,7 +7164,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
  */
     }
 
-    /* "gumbocy.pyx":373
+    /* "gumbocy.pyx":404
  *                 self.add_text(node.v.text.text)
  * 
  *         elif node.type == gumbocy.GUMBO_NODE_ELEMENT:             # <<<<<<<<<<<<<<
@@ -6660,7 +7175,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
     default: break;
   }
 
-  /* "gumbocy.pyx":495
+  /* "gumbocy.pyx":528
  *                     return 1
  * 
  *         return 0             # <<<<<<<<<<<<<<
@@ -6670,7 +7185,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "gumbocy.pyx":356
+  /* "gumbocy.pyx":386
  *             self.current_hyperlink = None
  * 
  *     cdef bint _traverse_node(self, int level, gumbocy.GumboNode* node, bint is_head, bint is_hidden, bint is_boilerplate, bint is_boilerplate_bypassed, bint is_hyperlink):             # <<<<<<<<<<<<<<
@@ -6683,15 +7198,19 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node(struct __pyx_obj_7gumboc
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_XDECREF(__pyx_t_11);
+  __Pyx_XDECREF(__pyx_t_13);
   __Pyx_WriteUnraisable("gumbocy.HTMLParser._traverse_node", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_py_tag_name);
+  __Pyx_XDECREF((PyObject *)__pyx_v_attrs);
+  __Pyx_XDECREF(__pyx_v_v);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "gumbocy.pyx":497
+/* "gumbocy.pyx":530
  *         return 0
  * 
  *     def parse(self, char* html):             # <<<<<<<<<<<<<<
@@ -6708,7 +7227,7 @@ static PyObject *__pyx_pw_7gumbocy_10HTMLParser_3parse(PyObject *__pyx_v_self, P
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("parse (wrapper)", 0);
   assert(__pyx_arg_html); {
-    __pyx_v_html = __Pyx_PyObject_AsString(__pyx_arg_html); if (unlikely((!__pyx_v_html) && PyErr_Occurred())) __PYX_ERR(0, 497, __pyx_L3_error)
+    __pyx_v_html = __Pyx_PyObject_AsString(__pyx_arg_html); if (unlikely((!__pyx_v_html) && PyErr_Occurred())) __PYX_ERR(0, 530, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -6728,7 +7247,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_2parse(struct __pyx_obj_7gumbocy
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("parse", 0);
 
-  /* "gumbocy.pyx":500
+  /* "gumbocy.pyx":533
  *         """ Do the actual parsing of the HTML with gumbo """
  * 
  *         self.output = gumbocy.gumbo_parse(html)             # <<<<<<<<<<<<<<
@@ -6737,7 +7256,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_2parse(struct __pyx_obj_7gumbocy
  */
   __pyx_v_self->output = gumbo_parse(__pyx_v_html);
 
-  /* "gumbocy.pyx":501
+  /* "gumbocy.pyx":534
  * 
  *         self.output = gumbocy.gumbo_parse(html)
  *         self.has_output = 1             # <<<<<<<<<<<<<<
@@ -6746,7 +7265,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_2parse(struct __pyx_obj_7gumbocy
  */
   __pyx_v_self->has_output = 1;
 
-  /* "gumbocy.pyx":497
+  /* "gumbocy.pyx":530
  *         return 0
  * 
  *     def parse(self, char* html):             # <<<<<<<<<<<<<<
@@ -6761,7 +7280,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_2parse(struct __pyx_obj_7gumbocy
   return __pyx_r;
 }
 
-/* "gumbocy.pyx":503
+/* "gumbocy.pyx":536
  *         self.has_output = 1
  * 
  *     def analyze(self):             # <<<<<<<<<<<<<<
@@ -6790,14 +7309,14 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
   int __pyx_t_2;
   __Pyx_RefNannySetupContext("analyze", 0);
 
-  /* "gumbocy.pyx":506
+  /* "gumbocy.pyx":539
  *         """ Traverse the parsed tree and return the results """
  * 
  *         self.analysis = {}             # <<<<<<<<<<<<<<
  * 
  *         if self.analyze_internal_hyperlinks:
  */
-  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 506, __pyx_L1_error)
+  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 539, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v_self->analysis);
@@ -6805,7 +7324,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
   __pyx_v_self->analysis = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "gumbocy.pyx":508
+  /* "gumbocy.pyx":541
  *         self.analysis = {}
  * 
  *         if self.analyze_internal_hyperlinks:             # <<<<<<<<<<<<<<
@@ -6815,23 +7334,23 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
   __pyx_t_2 = (__pyx_v_self->analyze_internal_hyperlinks != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":509
+    /* "gumbocy.pyx":542
  * 
  *         if self.analyze_internal_hyperlinks:
  *             self.analysis["internal_hyperlinks"] = []             # <<<<<<<<<<<<<<
  * 
  *         if self.analyze_external_hyperlinks:
  */
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 509, __pyx_L1_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 542, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     if (unlikely(__pyx_v_self->analysis == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 509, __pyx_L1_error)
+      __PYX_ERR(0, 542, __pyx_L1_error)
     }
-    if (unlikely(PyDict_SetItem(__pyx_v_self->analysis, __pyx_n_s_internal_hyperlinks, __pyx_t_1) < 0)) __PYX_ERR(0, 509, __pyx_L1_error)
+    if (unlikely(PyDict_SetItem(__pyx_v_self->analysis, __pyx_n_s_internal_hyperlinks, __pyx_t_1) < 0)) __PYX_ERR(0, 542, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "gumbocy.pyx":508
+    /* "gumbocy.pyx":541
  *         self.analysis = {}
  * 
  *         if self.analyze_internal_hyperlinks:             # <<<<<<<<<<<<<<
@@ -6840,7 +7359,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
  */
   }
 
-  /* "gumbocy.pyx":511
+  /* "gumbocy.pyx":544
  *             self.analysis["internal_hyperlinks"] = []
  * 
  *         if self.analyze_external_hyperlinks:             # <<<<<<<<<<<<<<
@@ -6850,23 +7369,23 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
   __pyx_t_2 = (__pyx_v_self->analyze_external_hyperlinks != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":512
+    /* "gumbocy.pyx":545
  * 
  *         if self.analyze_external_hyperlinks:
  *             self.analysis["external_hyperlinks"] = []             # <<<<<<<<<<<<<<
  * 
  *         if self.analyze_word_groups:
  */
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 512, __pyx_L1_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 545, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     if (unlikely(__pyx_v_self->analysis == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 512, __pyx_L1_error)
+      __PYX_ERR(0, 545, __pyx_L1_error)
     }
-    if (unlikely(PyDict_SetItem(__pyx_v_self->analysis, __pyx_n_s_external_hyperlinks, __pyx_t_1) < 0)) __PYX_ERR(0, 512, __pyx_L1_error)
+    if (unlikely(PyDict_SetItem(__pyx_v_self->analysis, __pyx_n_s_external_hyperlinks, __pyx_t_1) < 0)) __PYX_ERR(0, 545, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "gumbocy.pyx":511
+    /* "gumbocy.pyx":544
  *             self.analysis["internal_hyperlinks"] = []
  * 
  *         if self.analyze_external_hyperlinks:             # <<<<<<<<<<<<<<
@@ -6875,7 +7394,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
  */
   }
 
-  /* "gumbocy.pyx":514
+  /* "gumbocy.pyx":547
  *             self.analysis["external_hyperlinks"] = []
  * 
  *         if self.analyze_word_groups:             # <<<<<<<<<<<<<<
@@ -6885,23 +7404,23 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
   __pyx_t_2 = (__pyx_v_self->analyze_word_groups != 0);
   if (__pyx_t_2) {
 
-    /* "gumbocy.pyx":515
+    /* "gumbocy.pyx":548
  * 
  *         if self.analyze_word_groups:
  *             self.analysis["word_groups"] = []             # <<<<<<<<<<<<<<
  * 
  *         self.current_stack = []
  */
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 515, __pyx_L1_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 548, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     if (unlikely(__pyx_v_self->analysis == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 515, __pyx_L1_error)
+      __PYX_ERR(0, 548, __pyx_L1_error)
     }
-    if (unlikely(PyDict_SetItem(__pyx_v_self->analysis, __pyx_n_s_word_groups, __pyx_t_1) < 0)) __PYX_ERR(0, 515, __pyx_L1_error)
+    if (unlikely(PyDict_SetItem(__pyx_v_self->analysis, __pyx_n_s_word_groups, __pyx_t_1) < 0)) __PYX_ERR(0, 548, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "gumbocy.pyx":514
+    /* "gumbocy.pyx":547
  *             self.analysis["external_hyperlinks"] = []
  * 
  *         if self.analyze_word_groups:             # <<<<<<<<<<<<<<
@@ -6910,14 +7429,14 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
  */
   }
 
-  /* "gumbocy.pyx":517
+  /* "gumbocy.pyx":550
  *             self.analysis["word_groups"] = []
  * 
  *         self.current_stack = []             # <<<<<<<<<<<<<<
  *         self.current_word_group = None
  *         self.current_hyperlink = None
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 517, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 550, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v_self->current_stack);
@@ -6925,7 +7444,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
   __pyx_v_self->current_stack = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "gumbocy.pyx":518
+  /* "gumbocy.pyx":551
  * 
  *         self.current_stack = []
  *         self.current_word_group = None             # <<<<<<<<<<<<<<
@@ -6938,7 +7457,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
   __Pyx_DECREF(__pyx_v_self->current_word_group);
   __pyx_v_self->current_word_group = Py_None;
 
-  /* "gumbocy.pyx":519
+  /* "gumbocy.pyx":552
  *         self.current_stack = []
  *         self.current_word_group = None
  *         self.current_hyperlink = None             # <<<<<<<<<<<<<<
@@ -6951,7 +7470,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
   __Pyx_DECREF(__pyx_v_self->current_hyperlink);
   __pyx_v_self->current_hyperlink = Py_None;
 
-  /* "gumbocy.pyx":521
+  /* "gumbocy.pyx":554
  *         self.current_hyperlink = None
  * 
  *         self._traverse_node(0, self.output.root, 0, 0, 0, 0, 0)             # <<<<<<<<<<<<<<
@@ -6960,7 +7479,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
  */
   ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->_traverse_node(__pyx_v_self, 0, __pyx_v_self->output->root, 0, 0, 0, 0, 0);
 
-  /* "gumbocy.pyx":523
+  /* "gumbocy.pyx":556
  *         self._traverse_node(0, self.output.root, 0, 0, 0, 0, 0)
  * 
  *         return self.analysis             # <<<<<<<<<<<<<<
@@ -6972,7 +7491,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
   __pyx_r = __pyx_v_self->analysis;
   goto __pyx_L0;
 
-  /* "gumbocy.pyx":503
+  /* "gumbocy.pyx":536
  *         self.has_output = 1
  * 
  *     def analyze(self):             # <<<<<<<<<<<<<<
@@ -6991,7 +7510,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_4analyze(struct __pyx_obj_7gumbo
   return __pyx_r;
 }
 
-/* "gumbocy.pyx":529
+/* "gumbocy.pyx":562
  *     #
  * 
  *     def listnodes(self):             # <<<<<<<<<<<<<<
@@ -7019,14 +7538,14 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_6listnodes(struct __pyx_obj_7gum
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("listnodes", 0);
 
-  /* "gumbocy.pyx":532
+  /* "gumbocy.pyx":565
  *         """ Return the nodes as a flat list of tuples """
  * 
  *         self.nodes = []             # <<<<<<<<<<<<<<
  * 
  *         self._traverse_node_simple(0, self.output.root)
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 532, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 565, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v_self->nodes);
@@ -7034,7 +7553,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_6listnodes(struct __pyx_obj_7gum
   __pyx_v_self->nodes = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "gumbocy.pyx":534
+  /* "gumbocy.pyx":567
  *         self.nodes = []
  * 
  *         self._traverse_node_simple(0, self.output.root)             # <<<<<<<<<<<<<<
@@ -7043,7 +7562,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_6listnodes(struct __pyx_obj_7gum
  */
   ((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->_traverse_node_simple(__pyx_v_self, 0, __pyx_v_self->output->root);
 
-  /* "gumbocy.pyx":536
+  /* "gumbocy.pyx":569
  *         self._traverse_node_simple(0, self.output.root)
  * 
  *         return self.nodes             # <<<<<<<<<<<<<<
@@ -7055,7 +7574,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_6listnodes(struct __pyx_obj_7gum
   __pyx_r = __pyx_v_self->nodes;
   goto __pyx_L0;
 
-  /* "gumbocy.pyx":529
+  /* "gumbocy.pyx":562
  *     #
  * 
  *     def listnodes(self):             # <<<<<<<<<<<<<<
@@ -7074,7 +7593,7 @@ static PyObject *__pyx_pf_7gumbocy_10HTMLParser_6listnodes(struct __pyx_obj_7gum
   return __pyx_r;
 }
 
-/* "gumbocy.pyx":538
+/* "gumbocy.pyx":571
  *         return self.nodes
  * 
  *     cdef bint _traverse_node_simple(self, int level, gumbocy.GumboNode* node):             # <<<<<<<<<<<<<<
@@ -7115,7 +7634,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
   PyObject *(*__pyx_t_16)(PyObject *);
   __Pyx_RefNannySetupContext("_traverse_node_simple", 0);
 
-  /* "gumbocy.pyx":543
+  /* "gumbocy.pyx":576
  *         cdef GumboStringPiece gsp
  * 
  *         if level > self.nesting_limit:             # <<<<<<<<<<<<<<
@@ -7125,7 +7644,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
   __pyx_t_1 = ((__pyx_v_level > __pyx_v_self->nesting_limit) != 0);
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":544
+    /* "gumbocy.pyx":577
  * 
  *         if level > self.nesting_limit:
  *             return 0             # <<<<<<<<<<<<<<
@@ -7135,7 +7654,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
     __pyx_r = 0;
     goto __pyx_L0;
 
-    /* "gumbocy.pyx":543
+    /* "gumbocy.pyx":576
  *         cdef GumboStringPiece gsp
  * 
  *         if level > self.nesting_limit:             # <<<<<<<<<<<<<<
@@ -7144,7 +7663,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
   }
 
-  /* "gumbocy.pyx":546
+  /* "gumbocy.pyx":579
  *             return 0
  * 
  *         if node.type == gumbocy.GUMBO_NODE_TEXT:             # <<<<<<<<<<<<<<
@@ -7154,7 +7673,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
   switch (__pyx_v_node->type) {
     case GUMBO_NODE_TEXT:
 
-    /* "gumbocy.pyx":547
+    /* "gumbocy.pyx":580
  * 
  *         if node.type == gumbocy.GUMBO_NODE_TEXT:
  *             self.nodes.append((level, None, node.v.text.text))             # <<<<<<<<<<<<<<
@@ -7163,13 +7682,13 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
     if (unlikely(__pyx_v_self->nodes == Py_None)) {
       PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "append");
-      __PYX_ERR(0, 547, __pyx_L1_error)
+      __PYX_ERR(0, 580, __pyx_L1_error)
     }
-    __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_level); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 547, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_level); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 580, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_node->v.text.text); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 547, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_node->v.text.text); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 580, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = PyTuple_New(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 547, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 580, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_GIVEREF(__pyx_t_2);
     PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_2);
@@ -7180,10 +7699,10 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
     PyTuple_SET_ITEM(__pyx_t_4, 2, __pyx_t_3);
     __pyx_t_2 = 0;
     __pyx_t_3 = 0;
-    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_self->nodes, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 547, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_self->nodes, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 580, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "gumbocy.pyx":546
+    /* "gumbocy.pyx":579
  *             return 0
  * 
  *         if node.type == gumbocy.GUMBO_NODE_TEXT:             # <<<<<<<<<<<<<<
@@ -7192,7 +7711,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
     break;
 
-    /* "gumbocy.pyx":549
+    /* "gumbocy.pyx":582
  *             self.nodes.append((level, None, node.v.text.text))
  * 
  *         elif node.type == gumbocy.GUMBO_NODE_ELEMENT:             # <<<<<<<<<<<<<<
@@ -7201,7 +7720,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
     case GUMBO_NODE_ELEMENT:
 
-    /* "gumbocy.pyx":551
+    /* "gumbocy.pyx":584
  *         elif node.type == gumbocy.GUMBO_NODE_ELEMENT:
  * 
  *             tag_n = <int> node.v.element.tag             # <<<<<<<<<<<<<<
@@ -7210,7 +7729,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
     __pyx_v_tag_n = ((int)__pyx_v_node->v.element.tag);
 
-    /* "gumbocy.pyx":553
+    /* "gumbocy.pyx":586
  *             tag_n = <int> node.v.element.tag
  * 
  *             if self.head_only and self.tags_ignore_head_only.count(tag_n):             # <<<<<<<<<<<<<<
@@ -7228,7 +7747,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
     __pyx_L5_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":554
+      /* "gumbocy.pyx":587
  * 
  *             if self.head_only and self.tags_ignore_head_only.count(tag_n):
  *                 return 1             # <<<<<<<<<<<<<<
@@ -7238,7 +7757,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
       __pyx_r = 1;
       goto __pyx_L0;
 
-      /* "gumbocy.pyx":553
+      /* "gumbocy.pyx":586
  *             tag_n = <int> node.v.element.tag
  * 
  *             if self.head_only and self.tags_ignore_head_only.count(tag_n):             # <<<<<<<<<<<<<<
@@ -7247,7 +7766,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
     }
 
-    /* "gumbocy.pyx":556
+    /* "gumbocy.pyx":589
  *                 return 1
  * 
  *             if self.tags_ignore.count(tag_n):             # <<<<<<<<<<<<<<
@@ -7257,7 +7776,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
     __pyx_t_1 = (__pyx_v_self->tags_ignore.count(__pyx_v_tag_n) != 0);
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":557
+      /* "gumbocy.pyx":590
  * 
  *             if self.tags_ignore.count(tag_n):
  *                 return 0             # <<<<<<<<<<<<<<
@@ -7267,7 +7786,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
       __pyx_r = 0;
       goto __pyx_L0;
 
-      /* "gumbocy.pyx":556
+      /* "gumbocy.pyx":589
  *                 return 1
  * 
  *             if self.tags_ignore.count(tag_n):             # <<<<<<<<<<<<<<
@@ -7276,7 +7795,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
     }
 
-    /* "gumbocy.pyx":559
+    /* "gumbocy.pyx":592
  *                 return 0
  * 
  *             tag_name = gumbocy.gumbo_normalized_tagname(node.v.element.tag)             # <<<<<<<<<<<<<<
@@ -7285,20 +7804,20 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
     __pyx_v_tag_name = gumbo_normalized_tagname(__pyx_v_node->v.element.tag);
 
-    /* "gumbocy.pyx":562
+    /* "gumbocy.pyx":595
  * 
  *             # When we find an unknown tag, find its tag_name in the buffer
  *             if tag_name == b"":             # <<<<<<<<<<<<<<
  *                 gsp = node.v.element.original_tag
  *                 gumbo_tag_from_original_text(&gsp)
  */
-    __pyx_t_4 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 562, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 595, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_1 = (__Pyx_PyBytes_Equals(__pyx_t_4, __pyx_kp_b__5, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 562, __pyx_L1_error)
+    __pyx_t_1 = (__Pyx_PyBytes_Equals(__pyx_t_4, __pyx_kp_b__5, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 595, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":563
+      /* "gumbocy.pyx":596
  *             # When we find an unknown tag, find its tag_name in the buffer
  *             if tag_name == b"":
  *                 gsp = node.v.element.original_tag             # <<<<<<<<<<<<<<
@@ -7308,7 +7827,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
       __pyx_t_7 = __pyx_v_node->v.element.original_tag;
       __pyx_v_gsp = __pyx_t_7;
 
-      /* "gumbocy.pyx":564
+      /* "gumbocy.pyx":597
  *             if tag_name == b"":
  *                 gsp = node.v.element.original_tag
  *                 gumbo_tag_from_original_text(&gsp)             # <<<<<<<<<<<<<<
@@ -7317,27 +7836,27 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
       gumbo_tag_from_original_text((&__pyx_v_gsp));
 
-      /* "gumbocy.pyx":565
+      /* "gumbocy.pyx":598
  *                 gsp = node.v.element.original_tag
  *                 gumbo_tag_from_original_text(&gsp)
  *                 py_tag_name = str(gsp.data)[0:gsp.length].lower()  # TODO try to do that only in C!             # <<<<<<<<<<<<<<
  *                 tag_name = <const char *> py_tag_name
  * 
  */
-      __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_gsp.data); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 565, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyBytes_FromString(__pyx_v_gsp.data); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 598, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 565, __pyx_L1_error)
+      __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 598, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_GIVEREF(__pyx_t_3);
       PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_3);
       __pyx_t_3 = 0;
-      __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 565, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 598, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      __pyx_t_2 = __Pyx_PyObject_GetSlice(__pyx_t_3, 0, __pyx_v_gsp.length, NULL, NULL, NULL, 1, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 565, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_GetSlice(__pyx_t_3, 0, __pyx_v_gsp.length, NULL, NULL, NULL, 1, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 598, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-      __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_lower); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 565, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_lower); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 598, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __pyx_t_2 = NULL;
@@ -7351,27 +7870,27 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
         }
       }
       if (__pyx_t_2) {
-        __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 565, __pyx_L1_error)
+        __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 598, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       } else {
-        __pyx_t_4 = __Pyx_PyObject_CallNoArg(__pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 565, __pyx_L1_error)
+        __pyx_t_4 = __Pyx_PyObject_CallNoArg(__pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 598, __pyx_L1_error)
       }
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       __pyx_v_py_tag_name = __pyx_t_4;
       __pyx_t_4 = 0;
 
-      /* "gumbocy.pyx":566
+      /* "gumbocy.pyx":599
  *                 gumbo_tag_from_original_text(&gsp)
  *                 py_tag_name = str(gsp.data)[0:gsp.length].lower()  # TODO try to do that only in C!
  *                 tag_name = <const char *> py_tag_name             # <<<<<<<<<<<<<<
  * 
  *             if self.has_attributes_whitelist:
  */
-      __pyx_t_8 = __Pyx_PyObject_AsString(__pyx_v_py_tag_name); if (unlikely((!__pyx_t_8) && PyErr_Occurred())) __PYX_ERR(0, 566, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyObject_AsString(__pyx_v_py_tag_name); if (unlikely((!__pyx_t_8) && PyErr_Occurred())) __PYX_ERR(0, 599, __pyx_L1_error)
       __pyx_v_tag_name = ((char const *)__pyx_t_8);
 
-      /* "gumbocy.pyx":562
+      /* "gumbocy.pyx":595
  * 
  *             # When we find an unknown tag, find its tag_name in the buffer
  *             if tag_name == b"":             # <<<<<<<<<<<<<<
@@ -7380,7 +7899,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
     }
 
-    /* "gumbocy.pyx":568
+    /* "gumbocy.pyx":601
  *                 tag_name = <const char *> py_tag_name
  * 
  *             if self.has_attributes_whitelist:             # <<<<<<<<<<<<<<
@@ -7390,7 +7909,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
     __pyx_t_1 = (__pyx_v_self->has_attributes_whitelist != 0);
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":571
+      /* "gumbocy.pyx":604
  * 
  *                 # Build a dict with all the whitelisted attributes
  *                 has_attrs = False             # <<<<<<<<<<<<<<
@@ -7399,7 +7918,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
       __pyx_v_has_attrs = 0;
 
-      /* "gumbocy.pyx":572
+      /* "gumbocy.pyx":605
  *                 # Build a dict with all the whitelisted attributes
  *                 has_attrs = False
  *                 attrs = False             # <<<<<<<<<<<<<<
@@ -7409,7 +7928,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
       __Pyx_INCREF(Py_False);
       __pyx_v_attrs = Py_False;
 
-      /* "gumbocy.pyx":573
+      /* "gumbocy.pyx":606
  *                 has_attrs = False
  *                 attrs = False
  *                 for i in range(node.v.element.attributes.length):             # <<<<<<<<<<<<<<
@@ -7420,7 +7939,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
       for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
         __pyx_v_i = __pyx_t_10;
 
-        /* "gumbocy.pyx":574
+        /* "gumbocy.pyx":607
  *                 attrs = False
  *                 for i in range(node.v.element.attributes.length):
  *                     attr = <gumbocy.GumboAttribute *> node.v.element.attributes.data[i]             # <<<<<<<<<<<<<<
@@ -7429,62 +7948,62 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
         __pyx_v_attr = ((GumboAttribute *)(__pyx_v_node->v.element.attributes.data[__pyx_v_i]));
 
-        /* "gumbocy.pyx":575
+        /* "gumbocy.pyx":608
  *                 for i in range(node.v.element.attributes.length):
  *                     attr = <gumbocy.GumboAttribute *> node.v.element.attributes.data[i]
  *                     attr_name = str(attr.name)             # <<<<<<<<<<<<<<
  *                     if re2_search(attr_name, deref(self.attributes_whitelist)):
  *                         if attr_name == b"class":
  */
-        __pyx_t_4 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 575, __pyx_L1_error)
+        __pyx_t_4 = __Pyx_PyBytes_FromString(__pyx_v_attr->name); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 608, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
-        __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 575, __pyx_L1_error)
+        __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 608, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_GIVEREF(__pyx_t_4);
         PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4);
         __pyx_t_4 = 0;
-        __pyx_t_4 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_3, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 575, __pyx_L1_error)
+        __pyx_t_4 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_3, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 608, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
         __Pyx_XDECREF_SET(__pyx_v_attr_name, __pyx_t_4);
         __pyx_t_4 = 0;
 
-        /* "gumbocy.pyx":576
+        /* "gumbocy.pyx":609
  *                     attr = <gumbocy.GumboAttribute *> node.v.element.attributes.data[i]
  *                     attr_name = str(attr.name)
  *                     if re2_search(attr_name, deref(self.attributes_whitelist)):             # <<<<<<<<<<<<<<
  *                         if attr_name == b"class":
  *                             multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
  */
-        __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_attr_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 576, __pyx_L1_error)
+        __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_attr_name); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 609, __pyx_L1_error)
         __pyx_t_1 = (__pyx_f_7gumbocy_re2_search(__pyx_t_11, (*__pyx_v_self->attributes_whitelist)) != 0);
         if (__pyx_t_1) {
 
-          /* "gumbocy.pyx":577
+          /* "gumbocy.pyx":610
  *                     attr_name = str(attr.name)
  *                     if re2_search(attr_name, deref(self.attributes_whitelist)):
  *                         if attr_name == b"class":             # <<<<<<<<<<<<<<
  *                             multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
  *                             if len(multiple_value):
  */
-          __pyx_t_1 = (__Pyx_PyBytes_Equals(__pyx_v_attr_name, __pyx_n_b_class, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 577, __pyx_L1_error)
+          __pyx_t_1 = (__Pyx_PyBytes_Equals(__pyx_v_attr_name, __pyx_n_b_class, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 610, __pyx_L1_error)
           if (__pyx_t_1) {
 
-            /* "gumbocy.pyx":578
+            /* "gumbocy.pyx":611
  *                     if re2_search(attr_name, deref(self.attributes_whitelist)):
  *                         if attr_name == b"class":
  *                             multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))             # <<<<<<<<<<<<<<
  *                             if len(multiple_value):
  *                                 if self.has_classes_ignore:
  */
-            __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_RE_SPLIT_WHITESPACE); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 578, __pyx_L1_error)
+            __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_RE_SPLIT_WHITESPACE); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 611, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_3);
-            __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_split); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 578, __pyx_L1_error)
+            __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_split); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 611, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_2);
             __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-            __pyx_t_13 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 578, __pyx_L1_error)
+            __pyx_t_13 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 611, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_13);
-            __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_t_13, __pyx_n_s_strip); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 578, __pyx_L1_error)
+            __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_t_13, __pyx_n_s_strip); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 611, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_14);
             __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
             __pyx_t_13 = NULL;
@@ -7498,14 +8017,14 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
               }
             }
             if (__pyx_t_13) {
-              __pyx_t_12 = __Pyx_PyObject_CallOneArg(__pyx_t_14, __pyx_t_13); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 578, __pyx_L1_error)
+              __pyx_t_12 = __Pyx_PyObject_CallOneArg(__pyx_t_14, __pyx_t_13); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 611, __pyx_L1_error)
               __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
             } else {
-              __pyx_t_12 = __Pyx_PyObject_CallNoArg(__pyx_t_14); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 578, __pyx_L1_error)
+              __pyx_t_12 = __Pyx_PyObject_CallNoArg(__pyx_t_14); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 611, __pyx_L1_error)
             }
             __Pyx_GOTREF(__pyx_t_12);
             __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
-            __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_lower); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 578, __pyx_L1_error)
+            __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_lower); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 611, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_14);
             __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
             __pyx_t_12 = NULL;
@@ -7519,10 +8038,10 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
               }
             }
             if (__pyx_t_12) {
-              __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_14, __pyx_t_12); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 578, __pyx_L1_error)
+              __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_14, __pyx_t_12); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 611, __pyx_L1_error)
               __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
             } else {
-              __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_14); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 578, __pyx_L1_error)
+              __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_14); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 611, __pyx_L1_error)
             }
             __Pyx_GOTREF(__pyx_t_3);
             __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
@@ -7537,39 +8056,39 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
               }
             }
             if (!__pyx_t_14) {
-              __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 578, __pyx_L1_error)
+              __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 611, __pyx_L1_error)
               __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
               __Pyx_GOTREF(__pyx_t_4);
             } else {
-              __pyx_t_12 = PyTuple_New(1+1); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 578, __pyx_L1_error)
+              __pyx_t_12 = PyTuple_New(1+1); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 611, __pyx_L1_error)
               __Pyx_GOTREF(__pyx_t_12);
               __Pyx_GIVEREF(__pyx_t_14); PyTuple_SET_ITEM(__pyx_t_12, 0, __pyx_t_14); __pyx_t_14 = NULL;
               __Pyx_GIVEREF(__pyx_t_3);
               PyTuple_SET_ITEM(__pyx_t_12, 0+1, __pyx_t_3);
               __pyx_t_3 = 0;
-              __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_12, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 578, __pyx_L1_error)
+              __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_12, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 611, __pyx_L1_error)
               __Pyx_GOTREF(__pyx_t_4);
               __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
             }
             __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-            __pyx_t_2 = __Pyx_PyFrozenSet_New(__pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 578, __pyx_L1_error)
+            __pyx_t_2 = __Pyx_PyFrozenSet_New(__pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 611, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_2);
             __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
             __Pyx_XDECREF_SET(__pyx_v_multiple_value, ((PyObject*)__pyx_t_2));
             __pyx_t_2 = 0;
 
-            /* "gumbocy.pyx":579
+            /* "gumbocy.pyx":612
  *                         if attr_name == b"class":
  *                             multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
  *                             if len(multiple_value):             # <<<<<<<<<<<<<<
  *                                 if self.has_classes_ignore:
  *                                     for v in multiple_value:
  */
-            __pyx_t_15 = PySet_GET_SIZE(__pyx_v_multiple_value); if (unlikely(__pyx_t_15 == -1)) __PYX_ERR(0, 579, __pyx_L1_error)
+            __pyx_t_15 = PySet_GET_SIZE(__pyx_v_multiple_value); if (unlikely(__pyx_t_15 == -1)) __PYX_ERR(0, 612, __pyx_L1_error)
             __pyx_t_1 = (__pyx_t_15 != 0);
             if (__pyx_t_1) {
 
-              /* "gumbocy.pyx":580
+              /* "gumbocy.pyx":613
  *                             multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
  *                             if len(multiple_value):
  *                                 if self.has_classes_ignore:             # <<<<<<<<<<<<<<
@@ -7579,16 +8098,16 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
               __pyx_t_1 = (__pyx_v_self->has_classes_ignore != 0);
               if (__pyx_t_1) {
 
-                /* "gumbocy.pyx":581
+                /* "gumbocy.pyx":614
  *                             if len(multiple_value):
  *                                 if self.has_classes_ignore:
  *                                     for v in multiple_value:             # <<<<<<<<<<<<<<
  *                                         if re2_search(v, deref(self.classes_ignore)):
  *                                             return 0
  */
-                __pyx_t_2 = PyObject_GetIter(__pyx_v_multiple_value); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 581, __pyx_L1_error)
+                __pyx_t_2 = PyObject_GetIter(__pyx_v_multiple_value); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 614, __pyx_L1_error)
                 __Pyx_GOTREF(__pyx_t_2);
-                __pyx_t_16 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 581, __pyx_L1_error)
+                __pyx_t_16 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 614, __pyx_L1_error)
                 for (;;) {
                   {
                     __pyx_t_4 = __pyx_t_16(__pyx_t_2);
@@ -7596,7 +8115,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
                       PyObject* exc_type = PyErr_Occurred();
                       if (exc_type) {
                         if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-                        else __PYX_ERR(0, 581, __pyx_L1_error)
+                        else __PYX_ERR(0, 614, __pyx_L1_error)
                       }
                       break;
                     }
@@ -7605,18 +8124,18 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
                   __Pyx_XDECREF_SET(__pyx_v_v, __pyx_t_4);
                   __pyx_t_4 = 0;
 
-                  /* "gumbocy.pyx":582
+                  /* "gumbocy.pyx":615
  *                                 if self.has_classes_ignore:
  *                                     for v in multiple_value:
  *                                         if re2_search(v, deref(self.classes_ignore)):             # <<<<<<<<<<<<<<
  *                                             return 0
  * 
  */
-                  __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_v); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 582, __pyx_L1_error)
+                  __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_v_v); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 615, __pyx_L1_error)
                   __pyx_t_1 = (__pyx_f_7gumbocy_re2_search(__pyx_t_11, (*__pyx_v_self->classes_ignore)) != 0);
                   if (__pyx_t_1) {
 
-                    /* "gumbocy.pyx":583
+                    /* "gumbocy.pyx":616
  *                                     for v in multiple_value:
  *                                         if re2_search(v, deref(self.classes_ignore)):
  *                                             return 0             # <<<<<<<<<<<<<<
@@ -7627,7 +8146,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
                     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
                     goto __pyx_L0;
 
-                    /* "gumbocy.pyx":582
+                    /* "gumbocy.pyx":615
  *                                 if self.has_classes_ignore:
  *                                     for v in multiple_value:
  *                                         if re2_search(v, deref(self.classes_ignore)):             # <<<<<<<<<<<<<<
@@ -7636,7 +8155,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
                   }
 
-                  /* "gumbocy.pyx":581
+                  /* "gumbocy.pyx":614
  *                             if len(multiple_value):
  *                                 if self.has_classes_ignore:
  *                                     for v in multiple_value:             # <<<<<<<<<<<<<<
@@ -7646,7 +8165,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
                 }
                 __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-                /* "gumbocy.pyx":580
+                /* "gumbocy.pyx":613
  *                             multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
  *                             if len(multiple_value):
  *                                 if self.has_classes_ignore:             # <<<<<<<<<<<<<<
@@ -7655,7 +8174,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
               }
 
-              /* "gumbocy.pyx":585
+              /* "gumbocy.pyx":618
  *                                             return 0
  * 
  *                                 if not has_attrs:             # <<<<<<<<<<<<<<
@@ -7665,19 +8184,19 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
               __pyx_t_1 = ((!(__pyx_v_has_attrs != 0)) != 0);
               if (__pyx_t_1) {
 
-                /* "gumbocy.pyx":586
+                /* "gumbocy.pyx":619
  * 
  *                                 if not has_attrs:
  *                                     attrs = {}             # <<<<<<<<<<<<<<
  *                                     has_attrs = True
  *                                 attrs[attr_name] = multiple_value
  */
-                __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 586, __pyx_L1_error)
+                __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 619, __pyx_L1_error)
                 __Pyx_GOTREF(__pyx_t_2);
                 __Pyx_DECREF_SET(__pyx_v_attrs, __pyx_t_2);
                 __pyx_t_2 = 0;
 
-                /* "gumbocy.pyx":587
+                /* "gumbocy.pyx":620
  *                                 if not has_attrs:
  *                                     attrs = {}
  *                                     has_attrs = True             # <<<<<<<<<<<<<<
@@ -7686,7 +8205,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
                 __pyx_v_has_attrs = 1;
 
-                /* "gumbocy.pyx":585
+                /* "gumbocy.pyx":618
  *                                             return 0
  * 
  *                                 if not has_attrs:             # <<<<<<<<<<<<<<
@@ -7695,16 +8214,16 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
               }
 
-              /* "gumbocy.pyx":588
+              /* "gumbocy.pyx":621
  *                                     attrs = {}
  *                                     has_attrs = True
  *                                 attrs[attr_name] = multiple_value             # <<<<<<<<<<<<<<
  * 
  *                         else:
  */
-              if (unlikely(PyObject_SetItem(__pyx_v_attrs, __pyx_v_attr_name, __pyx_v_multiple_value) < 0)) __PYX_ERR(0, 588, __pyx_L1_error)
+              if (unlikely(PyObject_SetItem(__pyx_v_attrs, __pyx_v_attr_name, __pyx_v_multiple_value) < 0)) __PYX_ERR(0, 621, __pyx_L1_error)
 
-              /* "gumbocy.pyx":579
+              /* "gumbocy.pyx":612
  *                         if attr_name == b"class":
  *                             multiple_value = frozenset(_RE_SPLIT_WHITESPACE.split(attr.value.strip().lower()))
  *                             if len(multiple_value):             # <<<<<<<<<<<<<<
@@ -7713,7 +8232,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
             }
 
-            /* "gumbocy.pyx":577
+            /* "gumbocy.pyx":610
  *                     attr_name = str(attr.name)
  *                     if re2_search(attr_name, deref(self.attributes_whitelist)):
  *                         if attr_name == b"class":             # <<<<<<<<<<<<<<
@@ -7723,7 +8242,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
             goto __pyx_L13;
           }
 
-          /* "gumbocy.pyx":592
+          /* "gumbocy.pyx":625
  *                         else:
  * 
  *                             if not has_attrs:             # <<<<<<<<<<<<<<
@@ -7734,19 +8253,19 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
             __pyx_t_1 = ((!(__pyx_v_has_attrs != 0)) != 0);
             if (__pyx_t_1) {
 
-              /* "gumbocy.pyx":593
+              /* "gumbocy.pyx":626
  * 
  *                             if not has_attrs:
  *                                 attrs = {}             # <<<<<<<<<<<<<<
  *                                 has_attrs = True
  *                             attrs[attr_name] = attr.value
  */
-              __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 593, __pyx_L1_error)
+              __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 626, __pyx_L1_error)
               __Pyx_GOTREF(__pyx_t_2);
               __Pyx_DECREF_SET(__pyx_v_attrs, __pyx_t_2);
               __pyx_t_2 = 0;
 
-              /* "gumbocy.pyx":594
+              /* "gumbocy.pyx":627
  *                             if not has_attrs:
  *                                 attrs = {}
  *                                 has_attrs = True             # <<<<<<<<<<<<<<
@@ -7755,7 +8274,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
               __pyx_v_has_attrs = 1;
 
-              /* "gumbocy.pyx":592
+              /* "gumbocy.pyx":625
  *                         else:
  * 
  *                             if not has_attrs:             # <<<<<<<<<<<<<<
@@ -7764,21 +8283,21 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
             }
 
-            /* "gumbocy.pyx":595
+            /* "gumbocy.pyx":628
  *                                 attrs = {}
  *                                 has_attrs = True
  *                             attrs[attr_name] = attr.value             # <<<<<<<<<<<<<<
  * 
  *                 if not has_attrs:
  */
-            __pyx_t_2 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 595, __pyx_L1_error)
+            __pyx_t_2 = __Pyx_PyBytes_FromString(__pyx_v_attr->value); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 628, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_2);
-            if (unlikely(PyObject_SetItem(__pyx_v_attrs, __pyx_v_attr_name, __pyx_t_2) < 0)) __PYX_ERR(0, 595, __pyx_L1_error)
+            if (unlikely(PyObject_SetItem(__pyx_v_attrs, __pyx_v_attr_name, __pyx_t_2) < 0)) __PYX_ERR(0, 628, __pyx_L1_error)
             __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
           }
           __pyx_L13:;
 
-          /* "gumbocy.pyx":576
+          /* "gumbocy.pyx":609
  *                     attr = <gumbocy.GumboAttribute *> node.v.element.attributes.data[i]
  *                     attr_name = str(attr.name)
  *                     if re2_search(attr_name, deref(self.attributes_whitelist)):             # <<<<<<<<<<<<<<
@@ -7788,7 +8307,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
         }
       }
 
-      /* "gumbocy.pyx":597
+      /* "gumbocy.pyx":630
  *                             attrs[attr_name] = attr.value
  * 
  *                 if not has_attrs:             # <<<<<<<<<<<<<<
@@ -7798,7 +8317,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
       __pyx_t_1 = ((!(__pyx_v_has_attrs != 0)) != 0);
       if (__pyx_t_1) {
 
-        /* "gumbocy.pyx":598
+        /* "gumbocy.pyx":631
  * 
  *                 if not has_attrs:
  *                     self.nodes.append((level, tag_name))             # <<<<<<<<<<<<<<
@@ -7807,13 +8326,13 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
         if (unlikely(__pyx_v_self->nodes == Py_None)) {
           PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "append");
-          __PYX_ERR(0, 598, __pyx_L1_error)
+          __PYX_ERR(0, 631, __pyx_L1_error)
         }
-        __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_level); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 598, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_level); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 631, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_4 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 598, __pyx_L1_error)
+        __pyx_t_4 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 631, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
-        __pyx_t_12 = PyTuple_New(2); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 598, __pyx_L1_error)
+        __pyx_t_12 = PyTuple_New(2); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 631, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
         __Pyx_GIVEREF(__pyx_t_2);
         PyTuple_SET_ITEM(__pyx_t_12, 0, __pyx_t_2);
@@ -7821,10 +8340,10 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
         PyTuple_SET_ITEM(__pyx_t_12, 1, __pyx_t_4);
         __pyx_t_2 = 0;
         __pyx_t_4 = 0;
-        __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_self->nodes, __pyx_t_12); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 598, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_self->nodes, __pyx_t_12); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 631, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
 
-        /* "gumbocy.pyx":597
+        /* "gumbocy.pyx":630
  *                             attrs[attr_name] = attr.value
  * 
  *                 if not has_attrs:             # <<<<<<<<<<<<<<
@@ -7834,7 +8353,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
         goto __pyx_L21;
       }
 
-      /* "gumbocy.pyx":602
+      /* "gumbocy.pyx":635
  *                 else:
  * 
  *                     if self.has_ids_ignore:             # <<<<<<<<<<<<<<
@@ -7845,28 +8364,28 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
         __pyx_t_1 = (__pyx_v_self->has_ids_ignore != 0);
         if (__pyx_t_1) {
 
-          /* "gumbocy.pyx":603
+          /* "gumbocy.pyx":636
  * 
  *                     if self.has_ids_ignore:
  *                         if attrs.get("id") and re2_search(attrs["id"].lower(), deref(self.ids_ignore)):             # <<<<<<<<<<<<<<
  *                             return 0
  * 
  */
-          __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_v_attrs, __pyx_n_s_get); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 603, __pyx_L1_error)
+          __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_v_attrs, __pyx_n_s_get); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 636, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_12);
-          __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_12, __pyx_tuple__10, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 603, __pyx_L1_error)
+          __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_12, __pyx_tuple__10, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 636, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_4);
           __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-          __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 603, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 636, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
           if (__pyx_t_6) {
           } else {
             __pyx_t_1 = __pyx_t_6;
             goto __pyx_L24_bool_binop_done;
           }
-          __pyx_t_12 = PyObject_GetItem(__pyx_v_attrs, __pyx_n_s_id); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 603, __pyx_L1_error)
+          __pyx_t_12 = PyObject_GetItem(__pyx_v_attrs, __pyx_n_s_id); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 636, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_12);
-          __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_lower); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 603, __pyx_L1_error)
+          __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_lower); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 636, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_2);
           __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
           __pyx_t_12 = NULL;
@@ -7880,21 +8399,21 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
             }
           }
           if (__pyx_t_12) {
-            __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_12); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 603, __pyx_L1_error)
+            __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_12); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 636, __pyx_L1_error)
             __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
           } else {
-            __pyx_t_4 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 603, __pyx_L1_error)
+            __pyx_t_4 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 636, __pyx_L1_error)
           }
           __Pyx_GOTREF(__pyx_t_4);
           __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-          __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_t_4); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 603, __pyx_L1_error)
+          __pyx_t_11 = __Pyx_PyObject_AsString(__pyx_t_4); if (unlikely((!__pyx_t_11) && PyErr_Occurred())) __PYX_ERR(0, 636, __pyx_L1_error)
           __pyx_t_6 = (__pyx_f_7gumbocy_re2_search(__pyx_t_11, (*__pyx_v_self->ids_ignore)) != 0);
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
           __pyx_t_1 = __pyx_t_6;
           __pyx_L24_bool_binop_done:;
           if (__pyx_t_1) {
 
-            /* "gumbocy.pyx":604
+            /* "gumbocy.pyx":637
  *                     if self.has_ids_ignore:
  *                         if attrs.get("id") and re2_search(attrs["id"].lower(), deref(self.ids_ignore)):
  *                             return 0             # <<<<<<<<<<<<<<
@@ -7904,7 +8423,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
             __pyx_r = 0;
             goto __pyx_L0;
 
-            /* "gumbocy.pyx":603
+            /* "gumbocy.pyx":636
  * 
  *                     if self.has_ids_ignore:
  *                         if attrs.get("id") and re2_search(attrs["id"].lower(), deref(self.ids_ignore)):             # <<<<<<<<<<<<<<
@@ -7913,7 +8432,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
           }
 
-          /* "gumbocy.pyx":602
+          /* "gumbocy.pyx":635
  *                 else:
  * 
  *                     if self.has_ids_ignore:             # <<<<<<<<<<<<<<
@@ -7922,7 +8441,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
         }
 
-        /* "gumbocy.pyx":606
+        /* "gumbocy.pyx":639
  *                             return 0
  * 
  *                     self.nodes.append((level, tag_name, attrs))             # <<<<<<<<<<<<<<
@@ -7931,13 +8450,13 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
         if (unlikely(__pyx_v_self->nodes == Py_None)) {
           PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "append");
-          __PYX_ERR(0, 606, __pyx_L1_error)
+          __PYX_ERR(0, 639, __pyx_L1_error)
         }
-        __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_level); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 606, __pyx_L1_error)
+        __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_level); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 639, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
-        __pyx_t_2 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 606, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 639, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_12 = PyTuple_New(3); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 606, __pyx_L1_error)
+        __pyx_t_12 = PyTuple_New(3); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 639, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
         __Pyx_GIVEREF(__pyx_t_4);
         PyTuple_SET_ITEM(__pyx_t_12, 0, __pyx_t_4);
@@ -7948,12 +8467,12 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
         PyTuple_SET_ITEM(__pyx_t_12, 2, __pyx_v_attrs);
         __pyx_t_4 = 0;
         __pyx_t_2 = 0;
-        __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_self->nodes, __pyx_t_12); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 606, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_self->nodes, __pyx_t_12); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 639, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
       }
       __pyx_L21:;
 
-      /* "gumbocy.pyx":568
+      /* "gumbocy.pyx":601
  *                 tag_name = <const char *> py_tag_name
  * 
  *             if self.has_attributes_whitelist:             # <<<<<<<<<<<<<<
@@ -7963,7 +8482,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
       goto __pyx_L9;
     }
 
-    /* "gumbocy.pyx":609
+    /* "gumbocy.pyx":642
  * 
  *             else:
  *                 self.nodes.append((level, tag_name))             # <<<<<<<<<<<<<<
@@ -7973,13 +8492,13 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
     /*else*/ {
       if (unlikely(__pyx_v_self->nodes == Py_None)) {
         PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "append");
-        __PYX_ERR(0, 609, __pyx_L1_error)
+        __PYX_ERR(0, 642, __pyx_L1_error)
       }
-      __pyx_t_12 = __Pyx_PyInt_From_int(__pyx_v_level); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 609, __pyx_L1_error)
+      __pyx_t_12 = __Pyx_PyInt_From_int(__pyx_v_level); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 642, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_12);
-      __pyx_t_2 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 609, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyBytes_FromString(__pyx_v_tag_name); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 642, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 609, __pyx_L1_error)
+      __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 642, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_GIVEREF(__pyx_t_12);
       PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_12);
@@ -7987,12 +8506,12 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
       PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_2);
       __pyx_t_12 = 0;
       __pyx_t_2 = 0;
-      __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_self->nodes, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 609, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_self->nodes, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 642, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     }
     __pyx_L9:;
 
-    /* "gumbocy.pyx":612
+    /* "gumbocy.pyx":645
  * 
  *             # Call _iternode() recursively for each of the children
  *             for i in range(node.v.element.children.length):             # <<<<<<<<<<<<<<
@@ -8003,7 +8522,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
     for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
       __pyx_v_i = __pyx_t_10;
 
-      /* "gumbocy.pyx":613
+      /* "gumbocy.pyx":646
  *             # Call _iternode() recursively for each of the children
  *             for i in range(node.v.element.children.length):
  *                 child = <gumbocy.GumboNode *>node.v.element.children.data[i]             # <<<<<<<<<<<<<<
@@ -8012,7 +8531,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
       __pyx_v_child = ((GumboNode *)(__pyx_v_node->v.element.children.data[__pyx_v_i]));
 
-      /* "gumbocy.pyx":614
+      /* "gumbocy.pyx":647
  *             for i in range(node.v.element.children.length):
  *                 child = <gumbocy.GumboNode *>node.v.element.children.data[i]
  *                 if self._traverse_node_simple(level + 1, child) == 1:             # <<<<<<<<<<<<<<
@@ -8022,7 +8541,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
       __pyx_t_1 = ((((struct __pyx_vtabstruct_7gumbocy_HTMLParser *)__pyx_v_self->__pyx_vtab)->_traverse_node_simple(__pyx_v_self, (__pyx_v_level + 1), __pyx_v_child) == 1) != 0);
       if (__pyx_t_1) {
 
-        /* "gumbocy.pyx":615
+        /* "gumbocy.pyx":648
  *                 child = <gumbocy.GumboNode *>node.v.element.children.data[i]
  *                 if self._traverse_node_simple(level + 1, child) == 1:
  *                     break             # <<<<<<<<<<<<<<
@@ -8031,7 +8550,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
         goto __pyx_L27_break;
 
-        /* "gumbocy.pyx":614
+        /* "gumbocy.pyx":647
  *             for i in range(node.v.element.children.length):
  *                 child = <gumbocy.GumboNode *>node.v.element.children.data[i]
  *                 if self._traverse_node_simple(level + 1, child) == 1:             # <<<<<<<<<<<<<<
@@ -8042,7 +8561,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
     }
     __pyx_L27_break:;
 
-    /* "gumbocy.pyx":617
+    /* "gumbocy.pyx":650
  *                     break
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_HEAD and self.head_only:             # <<<<<<<<<<<<<<
@@ -8060,7 +8579,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
     __pyx_L30_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "gumbocy.pyx":618
+      /* "gumbocy.pyx":651
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_HEAD and self.head_only:
  *                 return 1             # <<<<<<<<<<<<<<
@@ -8070,7 +8589,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
       __pyx_r = 1;
       goto __pyx_L0;
 
-      /* "gumbocy.pyx":617
+      /* "gumbocy.pyx":650
  *                     break
  * 
  *             if node.v.element.tag == gumbocy.GUMBO_TAG_HEAD and self.head_only:             # <<<<<<<<<<<<<<
@@ -8079,7 +8598,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
  */
     }
 
-    /* "gumbocy.pyx":549
+    /* "gumbocy.pyx":582
  *             self.nodes.append((level, None, node.v.text.text))
  * 
  *         elif node.type == gumbocy.GUMBO_NODE_ELEMENT:             # <<<<<<<<<<<<<<
@@ -8090,7 +8609,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
     default: break;
   }
 
-  /* "gumbocy.pyx":620
+  /* "gumbocy.pyx":653
  *                 return 1
  * 
  *         return 0             # <<<<<<<<<<<<<<
@@ -8100,7 +8619,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "gumbocy.pyx":538
+  /* "gumbocy.pyx":571
  *         return self.nodes
  * 
  *     cdef bint _traverse_node_simple(self, int level, gumbocy.GumboNode* node):             # <<<<<<<<<<<<<<
@@ -8128,7 +8647,7 @@ static int __pyx_f_7gumbocy_10HTMLParser__traverse_node_simple(struct __pyx_obj_
   return __pyx_r;
 }
 
-/* "gumbocy.pyx":622
+/* "gumbocy.pyx":655
  *         return 0
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -8152,7 +8671,7 @@ static void __pyx_pf_7gumbocy_10HTMLParser_8__dealloc__(struct __pyx_obj_7gumboc
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__dealloc__", 0);
 
-  /* "gumbocy.pyx":625
+  /* "gumbocy.pyx":658
  *         """ Cleanup gumbo memory when the parser is deallocated by Python """
  * 
  *         if self.has_output:             # <<<<<<<<<<<<<<
@@ -8162,7 +8681,7 @@ static void __pyx_pf_7gumbocy_10HTMLParser_8__dealloc__(struct __pyx_obj_7gumboc
   __pyx_t_1 = (__pyx_v_self->has_output != 0);
   if (__pyx_t_1) {
 
-    /* "gumbocy.pyx":626
+    /* "gumbocy.pyx":659
  * 
  *         if self.has_output:
  *             gumbocy.gumbo_destroy_output(&gumbocy.kGumboDefaultOptions, self.output)             # <<<<<<<<<<<<<<
@@ -8170,14 +8689,14 @@ static void __pyx_pf_7gumbocy_10HTMLParser_8__dealloc__(struct __pyx_obj_7gumboc
  */
     gumbo_destroy_output((&kGumboDefaultOptions), __pyx_v_self->output);
 
-    /* "gumbocy.pyx":627
+    /* "gumbocy.pyx":660
  *         if self.has_output:
  *             gumbocy.gumbo_destroy_output(&gumbocy.kGumboDefaultOptions, self.output)
  *             self.has_output = 0             # <<<<<<<<<<<<<<
  */
     __pyx_v_self->has_output = 0;
 
-    /* "gumbocy.pyx":625
+    /* "gumbocy.pyx":658
  *         """ Cleanup gumbo memory when the parser is deallocated by Python """
  * 
  *         if self.has_output:             # <<<<<<<<<<<<<<
@@ -8186,7 +8705,7 @@ static void __pyx_pf_7gumbocy_10HTMLParser_8__dealloc__(struct __pyx_obj_7gumboc
  */
   }
 
-  /* "gumbocy.pyx":622
+  /* "gumbocy.pyx":655
  *         return 0
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -8198,123 +8717,115 @@ static void __pyx_pf_7gumbocy_10HTMLParser_8__dealloc__(struct __pyx_obj_7gumboc
   __Pyx_RefNannyFinishContext();
 }
 
-/* "vector.from_py":49
- * 
- * @cname("__pyx_convert_vector_from_py_char___2a_")
- * cdef vector[X] __pyx_convert_vector_from_py_char___2a_(object o) except *:             # <<<<<<<<<<<<<<
- *     cdef vector[X] v
- *     for item in o:
- */
-
-static std::vector<char *>  __pyx_convert_vector_from_py_char___2a_(PyObject *__pyx_v_o) {
-  std::vector<char *>  __pyx_v_v;
-  PyObject *__pyx_v_item = NULL;
-  std::vector<char *>  __pyx_r;
-  __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  Py_ssize_t __pyx_t_2;
-  PyObject *(*__pyx_t_3)(PyObject *);
-  PyObject *__pyx_t_4 = NULL;
-  char * __pyx_t_5;
-  __Pyx_RefNannySetupContext("__pyx_convert_vector_from_py_char___2a_", 0);
-
-  /* "vector.from_py":51
- * cdef vector[X] __pyx_convert_vector_from_py_char___2a_(object o) except *:
- *     cdef vector[X] v
- *     for item in o:             # <<<<<<<<<<<<<<
- *         v.push_back(X_from_py(item))
- *     return v
- */
-  if (likely(PyList_CheckExact(__pyx_v_o)) || PyTuple_CheckExact(__pyx_v_o)) {
-    __pyx_t_1 = __pyx_v_o; __Pyx_INCREF(__pyx_t_1); __pyx_t_2 = 0;
-    __pyx_t_3 = NULL;
+static PyObject *__pyx_tp_new_7gumbocy_Attributes(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+  struct __pyx_obj_7gumbocy_Attributes *p;
+  PyObject *o;
+  if (likely((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0)) {
+    o = (*t->tp_alloc)(t, 0);
   } else {
-    __pyx_t_2 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_o); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 51, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 51, __pyx_L1_error)
+    o = (PyObject *) PyBaseObject_Type.tp_new(t, __pyx_empty_tuple, 0);
   }
-  for (;;) {
-    if (likely(!__pyx_t_3)) {
-      if (likely(PyList_CheckExact(__pyx_t_1))) {
-        if (__pyx_t_2 >= PyList_GET_SIZE(__pyx_t_1)) break;
-        #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_4 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(1, 51, __pyx_L1_error)
-        #else
-        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 51, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_4);
-        #endif
-      } else {
-        if (__pyx_t_2 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
-        #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_4 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(1, 51, __pyx_L1_error)
-        #else
-        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 51, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_4);
-        #endif
-      }
-    } else {
-      __pyx_t_4 = __pyx_t_3(__pyx_t_1);
-      if (unlikely(!__pyx_t_4)) {
-        PyObject* exc_type = PyErr_Occurred();
-        if (exc_type) {
-          if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(1, 51, __pyx_L1_error)
-        }
-        break;
-      }
-      __Pyx_GOTREF(__pyx_t_4);
-    }
-    __Pyx_XDECREF_SET(__pyx_v_item, __pyx_t_4);
-    __pyx_t_4 = 0;
-
-    /* "vector.from_py":52
- *     cdef vector[X] v
- *     for item in o:
- *         v.push_back(X_from_py(item))             # <<<<<<<<<<<<<<
- *     return v
- * 
- */
-    __pyx_t_5 = __Pyx_PyObject_AsString(__pyx_v_item); if (unlikely(__pyx_t_5 == NULL && PyErr_Occurred())) __PYX_ERR(1, 52, __pyx_L1_error)
-    __pyx_v_v.push_back(__pyx_t_5);
-
-    /* "vector.from_py":51
- * cdef vector[X] __pyx_convert_vector_from_py_char___2a_(object o) except *:
- *     cdef vector[X] v
- *     for item in o:             # <<<<<<<<<<<<<<
- *         v.push_back(X_from_py(item))
- *     return v
- */
-  }
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "vector.from_py":53
- *     for item in o:
- *         v.push_back(X_from_py(item))
- *     return v             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __pyx_r = __pyx_v_v;
-  goto __pyx_L0;
-
-  /* "vector.from_py":49
- * 
- * @cname("__pyx_convert_vector_from_py_char___2a_")
- * cdef vector[X] __pyx_convert_vector_from_py_char___2a_(object o) except *:             # <<<<<<<<<<<<<<
- *     cdef vector[X] v
- *     for item in o:
- */
-
-  /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_AddTraceback("vector.from_py.__pyx_convert_vector_from_py_char___2a_", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_L0:;
-  __Pyx_XDECREF(__pyx_v_item);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
+  if (unlikely(!o)) return 0;
+  p = ((struct __pyx_obj_7gumbocy_Attributes *)o);
+  p->values = ((PyObject*)Py_None); Py_INCREF(Py_None);
+  p->classes = ((PyObject*)Py_None); Py_INCREF(Py_None);
+  return o;
 }
+
+static void __pyx_tp_dealloc_7gumbocy_Attributes(PyObject *o) {
+  struct __pyx_obj_7gumbocy_Attributes *p = (struct __pyx_obj_7gumbocy_Attributes *)o;
+  #if PY_VERSION_HEX >= 0x030400a1
+  if (unlikely(Py_TYPE(o)->tp_finalize) && !_PyGC_FINALIZED(o)) {
+    if (PyObject_CallFinalizerFromDealloc(o)) return;
+  }
+  #endif
+  PyObject_GC_UnTrack(o);
+  Py_CLEAR(p->values);
+  Py_CLEAR(p->classes);
+  (*Py_TYPE(o)->tp_free)(o);
+}
+
+static int __pyx_tp_traverse_7gumbocy_Attributes(PyObject *o, visitproc v, void *a) {
+  int e;
+  struct __pyx_obj_7gumbocy_Attributes *p = (struct __pyx_obj_7gumbocy_Attributes *)o;
+  if (p->values) {
+    e = (*v)(p->values, a); if (e) return e;
+  }
+  if (p->classes) {
+    e = (*v)(p->classes, a); if (e) return e;
+  }
+  return 0;
+}
+
+static int __pyx_tp_clear_7gumbocy_Attributes(PyObject *o) {
+  PyObject* tmp;
+  struct __pyx_obj_7gumbocy_Attributes *p = (struct __pyx_obj_7gumbocy_Attributes *)o;
+  tmp = ((PyObject*)p->values);
+  p->values = ((PyObject*)Py_None); Py_INCREF(Py_None);
+  Py_XDECREF(tmp);
+  tmp = ((PyObject*)p->classes);
+  p->classes = ((PyObject*)Py_None); Py_INCREF(Py_None);
+  Py_XDECREF(tmp);
+  return 0;
+}
+
+static PyTypeObject __pyx_type_7gumbocy_Attributes = {
+  PyVarObject_HEAD_INIT(0, 0)
+  "gumbocy.Attributes", /*tp_name*/
+  sizeof(struct __pyx_obj_7gumbocy_Attributes), /*tp_basicsize*/
+  0, /*tp_itemsize*/
+  __pyx_tp_dealloc_7gumbocy_Attributes, /*tp_dealloc*/
+  0, /*tp_print*/
+  0, /*tp_getattr*/
+  0, /*tp_setattr*/
+  #if PY_MAJOR_VERSION < 3
+  0, /*tp_compare*/
+  #endif
+  #if PY_MAJOR_VERSION >= 3
+  0, /*tp_as_async*/
+  #endif
+  0, /*tp_repr*/
+  0, /*tp_as_number*/
+  0, /*tp_as_sequence*/
+  0, /*tp_as_mapping*/
+  0, /*tp_hash*/
+  0, /*tp_call*/
+  0, /*tp_str*/
+  0, /*tp_getattro*/
+  0, /*tp_setattro*/
+  0, /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
+  0, /*tp_doc*/
+  __pyx_tp_traverse_7gumbocy_Attributes, /*tp_traverse*/
+  __pyx_tp_clear_7gumbocy_Attributes, /*tp_clear*/
+  0, /*tp_richcompare*/
+  0, /*tp_weaklistoffset*/
+  0, /*tp_iter*/
+  0, /*tp_iternext*/
+  0, /*tp_methods*/
+  0, /*tp_members*/
+  0, /*tp_getset*/
+  0, /*tp_base*/
+  0, /*tp_dict*/
+  0, /*tp_descr_get*/
+  0, /*tp_descr_set*/
+  0, /*tp_dictoffset*/
+  0, /*tp_init*/
+  0, /*tp_alloc*/
+  __pyx_tp_new_7gumbocy_Attributes, /*tp_new*/
+  0, /*tp_free*/
+  0, /*tp_is_gc*/
+  0, /*tp_bases*/
+  0, /*tp_mro*/
+  0, /*tp_cache*/
+  0, /*tp_subclasses*/
+  0, /*tp_weaklist*/
+  0, /*tp_del*/
+  0, /*tp_version_tag*/
+  #if PY_VERSION_HEX >= 0x030400a1
+  0, /*tp_finalize*/
+  #endif
+};
 static struct __pyx_vtabstruct_7gumbocy_HTMLParser __pyx_vtable_7gumbocy_HTMLParser;
 
 static PyObject *__pyx_tp_new_7gumbocy_HTMLParser(PyTypeObject *t, PyObject *a, PyObject *k) {
@@ -8504,6 +9015,7 @@ static struct PyModuleDef __pyx_moduledef = {
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_, __pyx_k_, sizeof(__pyx_k_), 0, 0, 1, 0},
+  {&__pyx_n_s_BOILER, __pyx_k_BOILER, sizeof(__pyx_k_BOILER), 0, 0, 1, 1},
   {&__pyx_n_s_RE_SPLIT_WHITESPACE, __pyx_k_RE_SPLIT_WHITESPACE, sizeof(__pyx_k_RE_SPLIT_WHITESPACE), 0, 0, 1, 1},
   {&__pyx_kp_s__2, __pyx_k__2, sizeof(__pyx_k__2), 0, 0, 1, 0},
   {&__pyx_kp_s__3, __pyx_k__3, sizeof(__pyx_k__3), 0, 0, 1, 0},
@@ -8526,8 +9038,11 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_classes_hidden, __pyx_k_classes_hidden, sizeof(__pyx_k_classes_hidden), 0, 0, 1, 1},
   {&__pyx_n_s_classes_ignore, __pyx_k_classes_ignore, sizeof(__pyx_k_classes_ignore), 0, 0, 1, 1},
   {&__pyx_n_s_compile, __pyx_k_compile, sizeof(__pyx_k_compile), 0, 0, 1, 1},
+  {&__pyx_n_b_content, __pyx_k_content, sizeof(__pyx_k_content), 0, 0, 0, 1},
   {&__pyx_n_s_content, __pyx_k_content, sizeof(__pyx_k_content), 0, 0, 1, 1},
+  {&__pyx_n_s_end, __pyx_k_end, sizeof(__pyx_k_end), 0, 0, 1, 1},
   {&__pyx_n_s_external_hyperlinks, __pyx_k_external_hyperlinks, sizeof(__pyx_k_external_hyperlinks), 0, 0, 1, 1},
+  {&__pyx_n_s_file, __pyx_k_file, sizeof(__pyx_k_file), 0, 0, 1, 1},
   {&__pyx_n_s_get, __pyx_k_get, sizeof(__pyx_k_get), 0, 0, 1, 1},
   {&__pyx_n_s_head_links, __pyx_k_head_links, sizeof(__pyx_k_head_links), 0, 0, 1, 1},
   {&__pyx_n_s_head_metas, __pyx_k_head_metas, sizeof(__pyx_k_head_metas), 0, 0, 1, 1},
@@ -8553,6 +9068,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_nesting_limit, __pyx_k_nesting_limit, sizeof(__pyx_k_nesting_limit), 0, 0, 1, 1},
   {&__pyx_n_s_options, __pyx_k_options, sizeof(__pyx_k_options), 0, 0, 1, 1},
   {&__pyx_n_s_pop, __pyx_k_pop, sizeof(__pyx_k_pop), 0, 0, 1, 1},
+  {&__pyx_n_s_print, __pyx_k_print, sizeof(__pyx_k_print), 0, 0, 1, 1},
   {&__pyx_n_b_property, __pyx_k_property, sizeof(__pyx_k_property), 0, 0, 0, 1},
   {&__pyx_n_s_property, __pyx_k_property, sizeof(__pyx_k_property), 0, 0, 1, 1},
   {&__pyx_n_s_pyx_vtable, __pyx_k_pyx_vtable, sizeof(__pyx_k_pyx_vtable), 0, 0, 1, 1},
@@ -8581,7 +9097,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 256, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 280, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -8591,31 +9107,31 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "gumbocy.pyx":348
+  /* "gumbocy.pyx":378
  *             if re2_search(href, deref(_RE2_EXTERNAL_HREF)):
  *                 if self.analyze_external_hyperlinks:
  *                     if href.startswith("http://") or href.startswith("https://") or href.startswith("//"):             # <<<<<<<<<<<<<<
  *                         self.analysis["external_hyperlinks"].append(tuple(self.current_hyperlink))
  *             else:
  */
-  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_kp_s_http); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 348, __pyx_L1_error)
+  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_kp_s_http); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 378, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__6);
   __Pyx_GIVEREF(__pyx_tuple__6);
-  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_kp_s_https); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 348, __pyx_L1_error)
+  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_kp_s_https); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 378, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
-  __pyx_tuple__9 = PyTuple_Pack(1, __pyx_kp_s__8); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 348, __pyx_L1_error)
+  __pyx_tuple__9 = PyTuple_Pack(1, __pyx_kp_s__8); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 378, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__9);
   __Pyx_GIVEREF(__pyx_tuple__9);
 
-  /* "gumbocy.pyx":603
+  /* "gumbocy.pyx":636
  * 
  *                     if self.has_ids_ignore:
  *                         if attrs.get("id") and re2_search(attrs["id"].lower(), deref(self.ids_ignore)):             # <<<<<<<<<<<<<<
  *                             return 0
  * 
  */
-  __pyx_tuple__10 = PyTuple_Pack(1, __pyx_n_s_id); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 603, __pyx_L1_error)
+  __pyx_tuple__10 = PyTuple_Pack(1, __pyx_n_s_id); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 636, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__10);
   __Pyx_GIVEREF(__pyx_tuple__10);
 
@@ -8732,21 +9248,25 @@ PyMODINIT_FUNC PyInit_gumbocy(void)
   /*--- Variable export code ---*/
   /*--- Function export code ---*/
   /*--- Type init code ---*/
+  if (PyType_Ready(&__pyx_type_7gumbocy_Attributes) < 0) __PYX_ERR(0, 54, __pyx_L1_error)
+  __pyx_type_7gumbocy_Attributes.tp_print = 0;
+  if (PyObject_SetAttrString(__pyx_m, "Attributes", (PyObject *)&__pyx_type_7gumbocy_Attributes) < 0) __PYX_ERR(0, 54, __pyx_L1_error)
+  __pyx_ptype_7gumbocy_Attributes = &__pyx_type_7gumbocy_Attributes;
   __pyx_vtabptr_7gumbocy_HTMLParser = &__pyx_vtable_7gumbocy_HTMLParser;
-  __pyx_vtable_7gumbocy_HTMLParser.guess_node_hidden = (int (*)(struct __pyx_obj_7gumbocy_HTMLParser *, GumboNode *, struct __pyx_t_7gumbocy_Attributes *))__pyx_f_7gumbocy_10HTMLParser_guess_node_hidden;
-  __pyx_vtable_7gumbocy_HTMLParser.guess_node_boilerplate = (int (*)(struct __pyx_obj_7gumbocy_HTMLParser *, GumboNode *, struct __pyx_t_7gumbocy_Attributes *))__pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate;
-  __pyx_vtable_7gumbocy_HTMLParser.get_attributes = (struct __pyx_t_7gumbocy_Attributes (*)(struct __pyx_obj_7gumbocy_HTMLParser *, GumboNode *))__pyx_f_7gumbocy_10HTMLParser_get_attributes;
+  __pyx_vtable_7gumbocy_HTMLParser.guess_node_hidden = (int (*)(struct __pyx_obj_7gumbocy_HTMLParser *, GumboNode *, struct __pyx_obj_7gumbocy_Attributes *))__pyx_f_7gumbocy_10HTMLParser_guess_node_hidden;
+  __pyx_vtable_7gumbocy_HTMLParser.guess_node_boilerplate = (int (*)(struct __pyx_obj_7gumbocy_HTMLParser *, GumboNode *, struct __pyx_obj_7gumbocy_Attributes *))__pyx_f_7gumbocy_10HTMLParser_guess_node_boilerplate;
+  __pyx_vtable_7gumbocy_HTMLParser.get_attributes = (struct __pyx_obj_7gumbocy_Attributes *(*)(struct __pyx_obj_7gumbocy_HTMLParser *, GumboNode *))__pyx_f_7gumbocy_10HTMLParser_get_attributes;
   __pyx_vtable_7gumbocy_HTMLParser.close_word_group = (void (*)(struct __pyx_obj_7gumbocy_HTMLParser *))__pyx_f_7gumbocy_10HTMLParser_close_word_group;
   __pyx_vtable_7gumbocy_HTMLParser.add_text = (void (*)(struct __pyx_obj_7gumbocy_HTMLParser *, PyObject *))__pyx_f_7gumbocy_10HTMLParser_add_text;
   __pyx_vtable_7gumbocy_HTMLParser.add_hyperlink_text = (void (*)(struct __pyx_obj_7gumbocy_HTMLParser *, PyObject *))__pyx_f_7gumbocy_10HTMLParser_add_hyperlink_text;
-  __pyx_vtable_7gumbocy_HTMLParser.open_hyperlink = (void (*)(struct __pyx_obj_7gumbocy_HTMLParser *, struct __pyx_t_7gumbocy_Attributes *))__pyx_f_7gumbocy_10HTMLParser_open_hyperlink;
+  __pyx_vtable_7gumbocy_HTMLParser.open_hyperlink = (void (*)(struct __pyx_obj_7gumbocy_HTMLParser *, struct __pyx_obj_7gumbocy_Attributes *))__pyx_f_7gumbocy_10HTMLParser_open_hyperlink;
   __pyx_vtable_7gumbocy_HTMLParser.close_hyperlink = (void (*)(struct __pyx_obj_7gumbocy_HTMLParser *))__pyx_f_7gumbocy_10HTMLParser_close_hyperlink;
   __pyx_vtable_7gumbocy_HTMLParser._traverse_node = (int (*)(struct __pyx_obj_7gumbocy_HTMLParser *, int, GumboNode *, int, int, int, int, int))__pyx_f_7gumbocy_10HTMLParser__traverse_node;
   __pyx_vtable_7gumbocy_HTMLParser._traverse_node_simple = (int (*)(struct __pyx_obj_7gumbocy_HTMLParser *, int, GumboNode *))__pyx_f_7gumbocy_10HTMLParser__traverse_node_simple;
-  if (PyType_Ready(&__pyx_type_7gumbocy_HTMLParser) < 0) __PYX_ERR(0, 44, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_7gumbocy_HTMLParser) < 0) __PYX_ERR(0, 65, __pyx_L1_error)
   __pyx_type_7gumbocy_HTMLParser.tp_print = 0;
-  if (__Pyx_SetVtable(__pyx_type_7gumbocy_HTMLParser.tp_dict, __pyx_vtabptr_7gumbocy_HTMLParser) < 0) __PYX_ERR(0, 44, __pyx_L1_error)
-  if (PyObject_SetAttrString(__pyx_m, "HTMLParser", (PyObject *)&__pyx_type_7gumbocy_HTMLParser) < 0) __PYX_ERR(0, 44, __pyx_L1_error)
+  if (__Pyx_SetVtable(__pyx_type_7gumbocy_HTMLParser.tp_dict, __pyx_vtabptr_7gumbocy_HTMLParser) < 0) __PYX_ERR(0, 65, __pyx_L1_error)
+  if (PyObject_SetAttrString(__pyx_m, "HTMLParser", (PyObject *)&__pyx_type_7gumbocy_HTMLParser) < 0) __PYX_ERR(0, 65, __pyx_L1_error)
   __pyx_ptype_7gumbocy_HTMLParser = &__pyx_type_7gumbocy_HTMLParser;
   /*--- Type import code ---*/
   /*--- Variable import code ---*/
@@ -8862,14 +9382,6 @@ PyMODINIT_FUNC PyInit_gumbocy(void)
   __Pyx_GOTREF(__pyx_t_1);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_1) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "vector.from_py":49
- * 
- * @cname("__pyx_convert_vector_from_py_char___2a_")
- * cdef vector[X] __pyx_convert_vector_from_py_char___2a_(object o) except *:             # <<<<<<<<<<<<<<
- *     cdef vector[X] v
- *     for item in o:
- */
 
   /*--- Wrapped vars code ---*/
 
@@ -9196,6 +9708,26 @@ static void __Pyx_WriteUnraisable(const char *name, CYTHON_UNUSED int clineno,
 #endif
 }
 
+/* PyObjectCall */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {
+    PyObject *result;
+    ternaryfunc call = func->ob_type->tp_call;
+    if (unlikely(!call))
+        return PyObject_Call(func, arg, kw);
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
+        return NULL;
+    result = (*call)(func, arg, kw);
+    Py_LeaveRecursiveCall();
+    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "NULL result without error in PyObject_Call");
+    }
+    return result;
+}
+#endif
+
 /* BytesEquals */
 static CYTHON_INLINE int __Pyx_PyBytes_Equals(PyObject* s1, PyObject* s2, int equals) {
 #if CYTHON_COMPILING_IN_PYPY
@@ -9251,26 +9783,6 @@ static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name) {
     }
     return result;
 }
-
-/* PyObjectCall */
-  #if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {
-    PyObject *result;
-    ternaryfunc call = func->ob_type->tp_call;
-    if (unlikely(!call))
-        return PyObject_Call(func, arg, kw);
-    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
-        return NULL;
-    result = (*call)(func, arg, kw);
-    Py_LeaveRecursiveCall();
-    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "NULL result without error in PyObject_Call");
-    }
-    return result;
-}
-#endif
 
 /* PyObjectCallMethO */
   #if CYTHON_COMPILING_IN_CPYTHON
@@ -10048,6 +10560,33 @@ bad:
     }
 
 /* CIntToPy */
+            static CYTHON_INLINE PyObject* __Pyx_PyInt_From___pyx_t_7gumbocy_AttributeNames(__pyx_t_7gumbocy_AttributeNames value) {
+    const __pyx_t_7gumbocy_AttributeNames neg_one = (__pyx_t_7gumbocy_AttributeNames) -1, const_zero = (__pyx_t_7gumbocy_AttributeNames) 0;
+    const int is_unsigned = neg_one > const_zero;
+    if (is_unsigned) {
+        if (sizeof(__pyx_t_7gumbocy_AttributeNames) < sizeof(long)) {
+            return PyInt_FromLong((long) value);
+        } else if (sizeof(__pyx_t_7gumbocy_AttributeNames) <= sizeof(unsigned long)) {
+            return PyLong_FromUnsignedLong((unsigned long) value);
+        } else if (sizeof(__pyx_t_7gumbocy_AttributeNames) <= sizeof(unsigned PY_LONG_LONG)) {
+            return PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG) value);
+        }
+    } else {
+        if (sizeof(__pyx_t_7gumbocy_AttributeNames) <= sizeof(long)) {
+            return PyInt_FromLong((long) value);
+        } else if (sizeof(__pyx_t_7gumbocy_AttributeNames) <= sizeof(PY_LONG_LONG)) {
+            return PyLong_FromLongLong((PY_LONG_LONG) value);
+        }
+    }
+    {
+        int one = 1; int little = (int)*(unsigned char *)&one;
+        unsigned char *bytes = (unsigned char *)&value;
+        return _PyLong_FromByteArray(bytes, sizeof(__pyx_t_7gumbocy_AttributeNames),
+                                     little, !is_unsigned);
+    }
+}
+
+/* CIntToPy */
             static CYTHON_INLINE PyObject* __Pyx_PyInt_From_unsigned_int(unsigned int value) {
     const unsigned int neg_one = (unsigned int) -1, const_zero = (unsigned int) 0;
     const int is_unsigned = neg_one > const_zero;
@@ -10127,6 +10666,112 @@ bad:
                                      little, !is_unsigned);
     }
 }
+
+/* Print */
+            #if !CYTHON_COMPILING_IN_PYPY && PY_MAJOR_VERSION < 3
+static PyObject *__Pyx_GetStdout(void) {
+    PyObject *f = PySys_GetObject((char *)"stdout");
+    if (!f) {
+        PyErr_SetString(PyExc_RuntimeError, "lost sys.stdout");
+    }
+    return f;
+}
+static int __Pyx_Print(PyObject* f, PyObject *arg_tuple, int newline) {
+    int i;
+    if (!f) {
+        if (!(f = __Pyx_GetStdout()))
+            return -1;
+    }
+    Py_INCREF(f);
+    for (i=0; i < PyTuple_GET_SIZE(arg_tuple); i++) {
+        PyObject* v;
+        if (PyFile_SoftSpace(f, 1)) {
+            if (PyFile_WriteString(" ", f) < 0)
+                goto error;
+        }
+        v = PyTuple_GET_ITEM(arg_tuple, i);
+        if (PyFile_WriteObject(v, f, Py_PRINT_RAW) < 0)
+            goto error;
+        if (PyString_Check(v)) {
+            char *s = PyString_AsString(v);
+            Py_ssize_t len = PyString_Size(v);
+            if (len > 0) {
+                switch (s[len-1]) {
+                    case ' ': break;
+                    case '\f': case '\r': case '\n': case '\t': case '\v':
+                        PyFile_SoftSpace(f, 0);
+                        break;
+                    default:  break;
+                }
+            }
+        }
+    }
+    if (newline) {
+        if (PyFile_WriteString("\n", f) < 0)
+            goto error;
+        PyFile_SoftSpace(f, 0);
+    }
+    Py_DECREF(f);
+    return 0;
+error:
+    Py_DECREF(f);
+    return -1;
+}
+#else
+static int __Pyx_Print(PyObject* stream, PyObject *arg_tuple, int newline) {
+    PyObject* kwargs = 0;
+    PyObject* result = 0;
+    PyObject* end_string;
+    if (unlikely(!__pyx_print)) {
+        __pyx_print = PyObject_GetAttr(__pyx_b, __pyx_n_s_print);
+        if (!__pyx_print)
+            return -1;
+    }
+    if (stream) {
+        kwargs = PyDict_New();
+        if (unlikely(!kwargs))
+            return -1;
+        if (unlikely(PyDict_SetItem(kwargs, __pyx_n_s_file, stream) < 0))
+            goto bad;
+        if (!newline) {
+            end_string = PyUnicode_FromStringAndSize(" ", 1);
+            if (unlikely(!end_string))
+                goto bad;
+            if (PyDict_SetItem(kwargs, __pyx_n_s_end, end_string) < 0) {
+                Py_DECREF(end_string);
+                goto bad;
+            }
+            Py_DECREF(end_string);
+        }
+    } else if (!newline) {
+        if (unlikely(!__pyx_print_kwargs)) {
+            __pyx_print_kwargs = PyDict_New();
+            if (unlikely(!__pyx_print_kwargs))
+                return -1;
+            end_string = PyUnicode_FromStringAndSize(" ", 1);
+            if (unlikely(!end_string))
+                return -1;
+            if (PyDict_SetItem(__pyx_print_kwargs, __pyx_n_s_end, end_string) < 0) {
+                Py_DECREF(end_string);
+                return -1;
+            }
+            Py_DECREF(end_string);
+        }
+        kwargs = __pyx_print_kwargs;
+    }
+    result = PyObject_Call(__pyx_print, arg_tuple, kwargs);
+    if (unlikely(kwargs) && (kwargs != __pyx_print_kwargs))
+        Py_DECREF(kwargs);
+    if (!result)
+        return -1;
+    Py_DECREF(result);
+    return 0;
+bad:
+    if (kwargs != __pyx_print_kwargs)
+        Py_XDECREF(kwargs);
+    return -1;
+}
+#endif
 
 /* CIntFromPy */
             static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
