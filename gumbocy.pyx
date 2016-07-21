@@ -1,4 +1,5 @@
 import re
+import urlparse
 cimport gumbocy
 cimport re2cy
 from libcpp.unordered_set cimport unordered_set
@@ -17,7 +18,7 @@ cdef bint re2_search(const char* s, re2cy.RE2 &pattern):
     return re2cy.RE2.PartialMatchN(s, pattern, empty_args, 0)
 
 cdef re2cy.RE2 *_RE2_SEARCH_STYLE_HIDDEN = new re2cy.RE2(r"(display\s*\:\s*none)|(visibility\s*\:\s*hidden)")
-cdef re2cy.RE2 *_RE2_EXTERNAL_HREF = new re2cy.RE2(r"^(?:[A-Za-z0-9\+\.\-]+\:)?\/\/")
+cdef re2cy.RE2 *_RE2_ABSOLUTE_HREF = new re2cy.RE2(r"^(?:[A-Za-z0-9\+\.\-]+\:)?\/\/")
 cdef re2cy.RE2 *_RE2_IGNORED_HREF = new re2cy.RE2(r"^(?:javascript|mailto|ftp|about)\:")
 
 _RE_SPLIT_WHITESPACE = re.compile(r"\s+")
@@ -99,6 +100,12 @@ cdef class HTMLParser:
 
     # Variables reinitialized at each parse()
     cdef list current_stack
+
+    cdef bint has_url
+    cdef char* url
+    cdef char* netloc
+    cdef char* scheme
+    cdef re2cy.RE2* internal_netloc_search
 
     cdef dict analysis
 
@@ -344,6 +351,7 @@ cdef class HTMLParser:
 
 
     cdef void add_text(self, text):
+        """ Adds inner text to the current word group """
 
         if not self.current_word_group:
             self.current_word_group = [text.strip(), self.current_stack[-1]]
@@ -351,10 +359,16 @@ cdef class HTMLParser:
             self.current_word_group[0] += " " + text.strip()
 
     cdef void add_hyperlink_text(self, text):
+        """ Adds inner text to the currently open hyperlink """
+
         if self.current_hyperlink:
             self.current_hyperlink[1] += text
 
     cdef void open_hyperlink(self, Attributes attrs):
+        """ Opens a new hyperlink """
+
+        if not self.analyze_external_hyperlinks and not self.analyze_internal_hyperlinks:
+            return
 
         if not attrs.values.get(ATTR_HREF):
             return
@@ -369,17 +383,35 @@ cdef class HTMLParser:
         self.current_hyperlink = [attrs.values[ATTR_HREF], ""]
 
     cdef void close_hyperlink(self):
+        """ Closes the current hyperlink if any, and decides if it's an external or internal link """
+
+        cdef bint is_external = 0
+
+        if not self.analyze_external_hyperlinks and not self.analyze_internal_hyperlinks:
+            return
+
         if self.current_hyperlink:
             href = self.current_hyperlink[0]
 
-            # TODO: absolute links to same domain
-            if re2_search(href, deref(_RE2_EXTERNAL_HREF)):
+            if re2_search(href, deref(_RE2_ABSOLUTE_HREF)):
+                is_external = 1
+
+                if self.has_url:
+
+                    if href.startswith("//"):
+                        href = self.scheme + ":" + href
+
+                    # This may be an absolute link but to the same domain
+                    if re2_search(href, deref(self.internal_netloc_search)):
+                        is_external = 0
+                        href = href.split(self.netloc, 1)[1]
+
+            if is_external:
                 if self.analyze_external_hyperlinks:
-                    if href.startswith("http://") or href.startswith("https://") or href.startswith("//"):
-                        self.analysis["external_hyperlinks"].append(tuple(self.current_hyperlink))
-            else:
-                if self.analyze_internal_hyperlinks:
-                    self.analysis["internal_hyperlinks"].append(tuple(self.current_hyperlink))
+                    self.analysis["external_hyperlinks"].append((href, self.current_hyperlink[1]))
+
+            elif self.analyze_internal_hyperlinks:
+                self.analysis["internal_hyperlinks"].append((href, self.current_hyperlink[1]))
 
             self.current_hyperlink = None
 
@@ -535,16 +567,28 @@ cdef class HTMLParser:
         self.output = gumbocy.gumbo_parse(html)
         self.has_output = 1
 
-    def analyze(self):
+    def analyze(self, url=None):
         """ Traverse the parsed tree and return the results """
 
         self.analysis = {}
+        self.has_url = 0
 
-        if self.analyze_internal_hyperlinks:
-            self.analysis["internal_hyperlinks"] = []
+        if self.analyze_internal_hyperlinks or self.analyze_external_hyperlinks:
 
-        if self.analyze_external_hyperlinks:
-            self.analysis["external_hyperlinks"] = []
+            if url:
+                self.has_url = 1
+                self.url = url
+                parsed = urlparse.urlparse(url)
+                netloc = parsed.netloc.lower()
+                self.netloc = netloc
+                self.scheme = parsed.scheme
+                self.internal_netloc_search = new re2cy.RE2("^http(?:s)?://%s" % re.escape(self.netloc))
+
+            if self.analyze_internal_hyperlinks:
+                self.analysis["internal_hyperlinks"] = []
+
+            if self.analyze_external_hyperlinks:
+                self.analysis["external_hyperlinks"] = []
 
         if self.analyze_word_groups:
             self.analysis["word_groups"] = []
