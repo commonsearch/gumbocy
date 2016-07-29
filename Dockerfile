@@ -12,6 +12,9 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 	python-dev \
 	bzip2
 
+# Upgrade pip
+RUN pip install --upgrade --ignore-installed pip
+
 RUN mkdir -p /cosr/gumbocy
 
 ADD Makefile /Makefile
