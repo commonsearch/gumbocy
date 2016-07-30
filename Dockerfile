@@ -8,24 +8,25 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 	make \
 	libtool \
 	ca-certificates \
+#	python3-pip \
+#	python3-dev \
 	python-pip \
 	python-dev \
 	bzip2
 
 # Upgrade pip
+# RUN pip3 install --upgrade --ignore-installed pip
 RUN pip install --upgrade --ignore-installed pip
 
-RUN mkdir -p /cosr/gumbocy
-
-ADD Makefile /Makefile
-
-ADD requirements.txt /requirements.txt
-RUN pip install -r requirements.txt
-
-RUN make gumbo_build
-
-# Install gumbo system-wide
-RUN cd gumbo-parser && make install && ldconfig
+# Install Gumbo
+ENV GUMBO_VERSION 0.10.1
+RUN curl -sL https://github.com/google/gumbo-parser/archive/v$GUMBO_VERSION.tar.gz > gumbo.tgz && \
+	rm -rf gumbo-parser-$GUMBO_VERSION gumbo-parser && \
+	tar zxf gumbo.tgz && \
+	mv gumbo-parser-$GUMBO_VERSION gumbo-parser && \
+	cd gumbo-parser && ./autogen.sh && ./configure && make && \
+	make install && ldconfig && cd .. && \
+	rm -rf gumbo.tgz gumbo-parser
 
 
 # Optional dependencies for benchmarking
@@ -34,10 +35,7 @@ RUN apt-get install -y --no-install-recommends \
 	libxslt1-dev \
 	zlib1g-dev
 
-ADD requirements-benchmark.txt /requirements-benchmark.txt
-RUN pip install -r requirements-benchmark.txt
-RUN ln -s /usr/local/lib/libgumbo.so /usr/local/lib/python2.7/dist-packages/gumbo/libgumbo.so
-
+# RUN ln -s /usr/local/lib/libgumbo.so /usr/lib/python2.7/dist-packages/gumbo/libgumbo.so
 
 # Install PyPy
 RUN curl -L 'https://bitbucket.org/squeaky/portable-pypy/downloads/pypy-5.3.1-linux_x86_64-portable.tar.bz2' -o /pypy.tar.bz2 && \
@@ -46,8 +44,6 @@ RUN curl -L 'https://bitbucket.org/squeaky/portable-pypy/downloads/pypy-5.3.1-li
 
 RUN /opt/pypy/bin/pypy -m ensurepip
 RUN /opt/pypy/bin/pip install --upgrade --ignore-installed pip
-RUN /opt/pypy/bin/pip install -r /requirements.txt
-RUN /opt/pypy/bin/pip install -r /requirements-benchmark.txt
 
 # Install RE2
 RUN mkdir -p /tmp/re2 && \
@@ -56,3 +52,17 @@ RUN mkdir -p /tmp/re2 && \
 	make && make install && \
 	rm -rf /tmp/re2 && \
 	ldconfig
+
+# Install Python dependencies
+
+ADD requirements-benchmark.txt /requirements-benchmark.txt
+ADD requirements.txt /requirements.txt
+# RUN pip3 install -r requirements.txt
+# RUN pip3 install -r requirements-benchmark.txt
+RUN pip install -r requirements.txt
+RUN pip install -r requirements-benchmark.txt
+RUN /opt/pypy/bin/pip install -r /requirements.txt
+RUN /opt/pypy/bin/pip install setuptools==18.5  # Because of html5lib
+RUN /opt/pypy/bin/pip install -r /requirements-benchmark.txt
+
+RUN mkdir -p /cosr/gumbocy

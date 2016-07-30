@@ -1,5 +1,3 @@
-GUMBO_VERSION ?= 0.10.1
-
 clean:
 	rm -rf *.so build *.c *.cpp *.html dist .cache tests/__pycache__ *.rst
 
@@ -27,14 +25,6 @@ ifeq ($(GUMBOCY_PYTHON_VERSION), pypy)
 else
 	py.test tests/ -vs
 endif
-
-gumbo_build:
-	curl -L https://github.com/google/gumbo-parser/archive/v$(GUMBO_VERSION).tar.gz > gumbo.tgz
-	rm -rf gumbo-parser-$(GUMBO_VERSION) gumbo-parser
-	tar zxf gumbo.tgz
-	mv gumbo-parser-$(GUMBO_VERSION) gumbo-parser
-	cd gumbo-parser && ./autogen.sh && ./configure && make
-	rm -rf gumbo.tgz
 
 docker_build:
 	docker build -t commonsearch/gumbocy .
