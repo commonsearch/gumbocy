@@ -45,6 +45,7 @@ RUN curl -L 'https://bitbucket.org/squeaky/portable-pypy/downloads/pypy-5.3.1-li
   rm /pypy.tar.bz2
 
 RUN /opt/pypy/bin/pypy -m ensurepip
+RUN /opt/pypy/bin/pip install --upgrade --ignore-installed pip
 RUN /opt/pypy/bin/pip install -r /requirements.txt
 RUN /opt/pypy/bin/pip install -r /requirements-benchmark.txt
 
