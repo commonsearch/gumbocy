@@ -45,11 +45,12 @@ def test_get_hyperlinks():
     assert len(links["all"]) == 0
 
     links = _links("""<html><head><title>Test title</title></head><body>
-        <a href="http://sub.test.com/page1?q=2&a=b#xxx">Y</a>
+        <a href="http://sub.test.com/page1?q=2&a=b#xxx" rel="nofollow">Y</a>
     </body></html>""")
     assert len(links["all"]) == 1
     assert links["external"][0][0] == "http://sub.test.com/page1?q=2&a=b#xxx"
     assert links["external"][0][1] == "Y"
+    assert links["external"][0][2] == "nofollow"
 
     links = _links("""<html><head><title>Test title</title></head><body>
         <a href="/page1?q=2&a=b#xxx">Y X</a>
@@ -57,6 +58,7 @@ def test_get_hyperlinks():
     assert len(links["all"]) == 1
     assert links["internal"][0][0] == "/page1?q=2&a=b#xxx"
     assert links["internal"][0][1] == "Y X"
+    assert links["internal"][0][2] is None
 
     links = _links("""<html><head><title>Test title</title></head><body>
         <a href="../page1?q=2&a=b#xxx">Y Z</a>

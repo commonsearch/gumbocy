@@ -380,7 +380,9 @@ cdef class HTMLParser:
             return
 
         self.close_hyperlink()
-        self.current_hyperlink = [attrs.values[ATTR_HREF], ""]
+
+        # href, text, rel
+        self.current_hyperlink = [attrs.values[ATTR_HREF], "", attrs.values.get(ATTR_REL)]
 
     cdef void close_hyperlink(self):
         """ Closes the current hyperlink if any, and decides if it's an external or internal link """
@@ -408,10 +410,14 @@ cdef class HTMLParser:
 
             if is_external:
                 if self.analyze_external_hyperlinks:
-                    self.analysis["external_hyperlinks"].append((href, self.current_hyperlink[1]))
+                    self.analysis["external_hyperlinks"].append(
+                        (href, self.current_hyperlink[1], self.current_hyperlink[2])
+                    )
 
             elif self.analyze_internal_hyperlinks:
-                self.analysis["internal_hyperlinks"].append((href, self.current_hyperlink[1]))
+                self.analysis["internal_hyperlinks"].append(
+                    (href, self.current_hyperlink[1], self.current_hyperlink[2])
+                )
 
             self.current_hyperlink = None
 
